@@ -1,0 +1,126 @@
+/* Meridiano — design tokens (fonte da verdade: docs/design-system.md no repo root)
+   Três camadas: primitivo → semântico → componente. Componentes usam só as duas últimas. */
+
+:root {
+  /* ---------- Primitivos: marca ---------- */
+  --navy-900: #1b1740;
+  --navy-800: #29235c;   /* marca: sidebar, títulos, ink forte */
+  --navy-700: #3b3478;
+  --blue-700: #055c95;
+  --blue-600: #0672b9;   /* marca: ação primária */
+  --blue-500: #5396d1;   /* marca: informação, links, bordas de foco */
+  --blue-100: #e3effa;
+  --blue-50:  #f1f7fd;
+  --orange-700: #b8631f; /* laranja escurecido para texto (contraste AA) */
+  --orange-600: #e18334; /* marca: destaque, CTA de lançamento, item ativo */
+  --orange-100: #fbe7d5;
+  --yellow-500: #f9b233; /* marca: badges e ênfase sobre navy */
+  --yellow-100: #fbf297; /* marca: realce suave (linha selecionada, aviso) */
+  --yellow-50:  #fefbe4;
+
+  /* ---------- Primitivos: neutros (puxados para o navy) ---------- */
+  --n-0:   #ffffff;
+  --n-50:  #f6f7fb;
+  --n-100: #eef0f6;
+  --n-200: #e3e6ef;
+  --n-300: #cfd3e1;
+  --n-400: #a3a8bf;
+  --n-500: #6b6f8a;
+  --n-700: #3f4260;
+  --n-900: #1e1b3a;
+
+  /* ---------- Primitivos: semântica de estado ---------- */
+  --green-600: #1f9d63;
+  --green-100: #dcf5e8;
+  --red-600:   #d64545;
+  --red-100:   #fbe2e2;
+
+  /* ---------- Semânticos ---------- */
+  --bg:            var(--n-50);
+  --surface:       var(--n-0);
+  --surface-2:     var(--n-100);
+  --border:        var(--n-200);
+  --border-strong: var(--n-300);
+  --text:          var(--n-900);
+  --text-muted:    var(--n-500);
+  --text-inverse:  var(--n-0);
+  --heading:       var(--navy-800);
+
+  --primary:        var(--blue-600);
+  --primary-hover:  var(--blue-700);
+  --primary-soft:   var(--blue-100);
+  --accent:         var(--orange-600);
+  --accent-hover:   var(--orange-700);
+  --accent-soft:    var(--orange-100);
+  --accent-text:    var(--orange-700);
+  --highlight:      var(--yellow-100);
+  --highlight-soft: var(--yellow-50);
+  --emphasis:       var(--yellow-500);
+  --info:           var(--blue-500);
+  --info-soft:      var(--blue-50);
+  --success:        var(--green-600);
+  --success-soft:   var(--green-100);
+  --danger:         var(--red-600);
+  --danger-soft:    var(--red-100);
+  --warning:        var(--orange-600);
+  --warning-soft:   var(--yellow-50);
+  --focus-ring:     var(--blue-500);
+
+  --sidebar-bg:          var(--navy-800);
+  --sidebar-text:        #cfd0e6;
+  --sidebar-text-active: var(--n-0);
+  --sidebar-active:      var(--orange-600);
+  --sidebar-hover:       var(--navy-700);
+
+  /* ---------- Tipografia ---------- */
+  --font-ui:   "Manrope", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+  --text-xs: 0.75rem;    /* 12 — rótulos, eyebrows */
+  --text-sm: 0.8125rem;  /* 13 — tabelas, formulários densos */
+  --text-md: 0.875rem;   /* 14 — corpo padrão do backoffice */
+  --text-lg: 1rem;       /* 16 — títulos de seção */
+  --text-xl: 1.25rem;    /* 20 — título de página */
+  --text-2xl: 1.625rem;  /* 26 — números de destaque */
+  --leading: 1.45;
+
+  /* ---------- Espaço, raio, sombra ---------- */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+  --radius-sm: 4px;
+  --radius:    8px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 2px rgba(41, 35, 92, 0.06);
+  --shadow-md: 0 4px 14px rgba(41, 35, 92, 0.10);
+  --shadow-lg: 0 12px 32px rgba(41, 35, 92, 0.16);
+
+  /* ---------- Componentes ---------- */
+  --btn-h: 36px;
+  --btn-h-sm: 30px;
+  --btn-radius: var(--radius);
+  --btn-primary-bg: var(--primary);
+  --btn-primary-bg-hover: var(--primary-hover);
+  --btn-primary-text: var(--text-inverse);
+  --btn-accent-bg: var(--accent);
+  --btn-accent-bg-hover: var(--accent-hover);
+  --btn-accent-text: var(--text-inverse);
+  --btn-ghost-text: var(--heading);
+  --btn-ghost-hover: var(--surface-2);
+
+  --input-h: 36px;
+  --input-bg: var(--surface);
+  --input-border: var(--border-strong);
+  --input-border-focus: var(--focus-ring);
+  --input-radius: var(--radius-sm);
+
+  --table-header-bg: var(--surface-2);
+  --table-row-hover: var(--blue-50);
+  --table-row-selected: var(--highlight-soft);
+  --table-border: var(--border);
+
+  --card-bg: var(--surface);
+  --card-border: var(--border);
+  --card-radius: var(--radius-lg);
+
+  --sidebar-w: 232px;
+  --topbar-h: 52px;
+}
