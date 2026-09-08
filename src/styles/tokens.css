@@ -20,13 +20,13 @@
 
   /* ---------- Primitivos: neutros (puxados para o navy) ---------- */
   --n-0:   #ffffff;
-  --n-50:  #f6f7fb;
-  --n-100: #eef0f6;
-  --n-200: #e3e6ef;
-  --n-300: #cfd3e1;
-  --n-400: #a3a8bf;
-  --n-500: #6b6f8a;
-  --n-700: #3f4260;
+  --n-50:  #f5f6fa;
+  --n-100: #eceef4;
+  --n-200: #e4e7ec;
+  --n-300: #cdd1dc;
+  --n-400: #9ea3ba;
+  --n-500: #5f637f;   /* 5,6:1 sobre branco */
+  --n-700: #3a3d58;
   --n-900: #1e1b3a;
 
   /* ---------- Primitivos: semântica de estado ---------- */
@@ -53,9 +53,10 @@
   --accent-hover:   var(--orange-700);
   --accent-soft:    var(--orange-100);
   --accent-text:    var(--orange-700);
-  --highlight:      var(--yellow-100);
-  --highlight-soft: var(--yellow-50);
-  --emphasis:       var(--yellow-500);
+  --attention:      var(--yellow-500);   /* barra/badge de atenção — único uso do amarelo */
+  --attention-soft: var(--yellow-50);
+  --calc:           var(--blue-50);      /* campo preenchido por regra */
+  --selected:       var(--blue-50);      /* linha selecionada */
   --info:           var(--blue-500);
   --info-soft:      var(--blue-50);
   --success:        var(--green-600);
@@ -64,6 +65,8 @@
   --danger-soft:    var(--red-100);
   --warning:        var(--orange-600);
   --warning-soft:   var(--yellow-50);
+  --chip-on-bg:     var(--navy-800);
+  --chip-on-text:   var(--n-0);
   --focus-ring:     var(--blue-500);
 
   --sidebar-bg:          var(--navy-800);
@@ -75,28 +78,28 @@
   /* ---------- Tipografia ---------- */
   --font-ui:   "Manrope", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
-  --text-xs: 0.75rem;    /* 12 — rótulos, eyebrows */
-  --text-sm: 0.8125rem;  /* 13 — tabelas, formulários densos */
-  --text-md: 0.875rem;   /* 14 — corpo padrão do backoffice */
-  --text-lg: 1rem;       /* 16 — títulos de seção */
-  --text-xl: 1.25rem;    /* 20 — título de página */
-  --text-2xl: 1.625rem;  /* 26 — números de destaque */
-  --leading: 1.45;
+  --text-xs: 0.75rem;    /* 12 — apoio, eyebrows */
+  --text-sm: 0.8125rem;  /* 13 — rótulos de campo, célula secundária */
+  --text-md: 0.875rem;   /* 14 — corpo, célula principal, input */
+  --text-lg: 1.0625rem;  /* 17 — título de seção/bloco */
+  --text-xl: 1.5rem;     /* 24 — título de página */
+  --text-2xl: 1.75rem;   /* 28 — KPI */
+  --leading: 1.5;
 
   /* ---------- Espaço, raio, sombra ---------- */
   --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
   --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
-  --radius-sm: 4px;
-  --radius:    8px;
-  --radius-lg: 12px;
+  --radius-sm: 6px;     /* input, botão */
+  --radius:    8px;     /* card, menu */
+  --radius-pill: 999px; /* pill, chip */
   --shadow-sm: 0 1px 2px rgba(41, 35, 92, 0.06);
   --shadow-md: 0 4px 14px rgba(41, 35, 92, 0.10);
   --shadow-lg: 0 12px 32px rgba(41, 35, 92, 0.16);
 
   /* ---------- Componentes ---------- */
-  --btn-h: 36px;
-  --btn-h-sm: 30px;
-  --btn-radius: var(--radius);
+  --btn-h: 40px;
+  --btn-h-sm: 34px;
+  --btn-radius: var(--radius-sm);
   --btn-primary-bg: var(--primary);
   --btn-primary-bg-hover: var(--primary-hover);
   --btn-primary-text: var(--text-inverse);
@@ -106,7 +109,7 @@
   --btn-ghost-text: var(--heading);
   --btn-ghost-hover: var(--surface-2);
 
-  --input-h: 36px;
+  --input-h: 40px;
   --input-bg: var(--surface);
   --input-border: var(--border-strong);
   --input-border-focus: var(--focus-ring);
@@ -114,13 +117,16 @@
 
   --table-header-bg: var(--surface-2);
   --table-row-hover: var(--blue-50);
-  --table-row-selected: var(--highlight-soft);
+  --table-row-selected: var(--selected);
+  --table-row-h: 52px;
   --table-border: var(--border);
 
   --card-bg: var(--surface);
   --card-border: var(--border);
-  --card-radius: var(--radius-lg);
+  --card-radius: var(--radius);
 
-  --sidebar-w: 232px;
-  --topbar-h: 52px;
+  --sidebar-w: 220px;
+  --sidebar-row-h: 42px;
+  --content-max: 1400px;
+  --topbar-h: 56px;
 }
