@@ -73,6 +73,7 @@
   --color-text-secondary: var(--n-700);
   --color-text-muted:     var(--n-500);
   --color-text-inverse:   var(--n-0);
+  --color-text-on-dark-muted: rgb(255 255 255 / 0.78); /* texto secundário sobre navy (login, sidebar) */
   --color-text-heading:   var(--navy-800);
   --color-text-link:      var(--blue-600);
 
