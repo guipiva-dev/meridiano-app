@@ -1,0 +1,17 @@
+.value {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.result {
+  font: var(--type-section);
+  color: var(--color-result-normal);
+}
+.normal {
+  color: inherit;
+}
+.above {
+  color: var(--color-result-above);
+}
+.negative {
+  color: var(--color-result-negative);
+}
