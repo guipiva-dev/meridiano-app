@@ -33,6 +33,9 @@
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+.money.calculated {
+  padding-right: calc(var(--space-3) + 4.5em);
+}
 .check {
   display: inline-flex;
   align-items: center;

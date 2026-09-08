@@ -11,6 +11,6 @@ test("liga label, helper e erro ao controle", () => {
   const input = screen.getByLabelText(/E-mail/);
   expect(input).toHaveAttribute("aria-invalid", "true");
   const ids = input.getAttribute("aria-describedby")!.split(" ");
-  expect(ids).toHaveLength(2);
+  expect(ids).toHaveLength(1);
   expect(screen.getByText("E-mail inválido")).toHaveAttribute("role", "alert");
 });

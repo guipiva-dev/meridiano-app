@@ -35,7 +35,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function
   function sair(e: FocusEvent<HTMLInputElement>) {
     let n = parsearDinheiro(texto);
     if (n !== null && !allowNegative && n < 0) n = Math.abs(n);
-    onChange(n);
+    if (n !== value) onChange(n);
     setEditando(false);
     onBlur?.(e);
   }
@@ -47,6 +47,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function
         id={f?.id}
         aria-describedby={f?.describedBy}
         aria-invalid={f?.invalid ? true : undefined}
+        required={f?.required}
         inputMode="decimal"
         readOnly={readOnly}
         value={editando ? texto : formatarDinheiro(value)}

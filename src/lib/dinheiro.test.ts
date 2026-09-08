@@ -16,3 +16,14 @@ test("parseia o que a pessoa digita", () => {
   expect(parsearDinheiro("")).toBeNull();
   expect(parsearDinheiro("abc")).toBeNull();
 });
+
+test("normaliza sinal U+2212 e ponto decimal", () => {
+  expect(parsearDinheiro("−R$ 10,00")).toBe(-10);
+  expect(parsearDinheiro("1234.56")).toBe(1234.56);
+});
+
+test("arredonda meio-para-longe-de-zero como o numeric do Postgres", () => {
+  expect(parsearDinheiro("-0,015")).toBe(-0.02);
+  expect(parsearDinheiro("2,675")).toBe(2.68);
+  expect(parsearDinheiro("1,005")).toBe(1.01);
+});

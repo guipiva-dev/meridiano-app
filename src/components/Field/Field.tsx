@@ -15,7 +15,8 @@ export interface FieldProps {
 
 export function Field({ label, required = false, helper, tooltip, error, children, className }: FieldProps) {
   const id = useId();
-  const helperId = helper ? `${id}-helper` : undefined;
+  const helperRenderizado = Boolean(helper) && !error;
+  const helperId = helperRenderizado ? `${id}-helper` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [helperId, errorId].filter(Boolean).join(" ") || undefined;
   return (
@@ -29,14 +30,14 @@ export function Field({ label, required = false, helper, tooltip, error, childre
         )}
         {tooltip && (
           <span className={s.tooltip} title={tooltip} aria-label={tooltip} role="img">
-            <CircleHelp size={16} />
+            <CircleHelp className={s.tooltipIcon} />
           </span>
         )}
       </label>
       <FieldContext.Provider value={{ id, describedBy, invalid: Boolean(error), required }}>
         {children}
       </FieldContext.Provider>
-      {helper && !error && (
+      {helperRenderizado && (
         <span id={helperId} className={s.helper}>
           {helper}
         </span>
