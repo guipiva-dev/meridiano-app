@@ -67,6 +67,11 @@
   --warning-soft:   var(--yellow-50);
   --chip-on-bg:     var(--navy-800);
   --chip-on-text:   var(--n-0);
+  --chip-off-border: var(--border);
+  --chip-off-text:  var(--n-500);
+  --result-normal:  var(--navy-800);     /* resultado: navy; verde só acima da meta; vermelho negativo */
+  --result-above:   var(--green-600);
+  --result-negative: var(--red-600);
   --focus-ring:     var(--blue-500);
 
   --sidebar-bg:          var(--navy-800);
@@ -114,6 +119,19 @@
   --input-border: var(--border-strong);
   --input-border-focus: var(--focus-ring);
   --input-radius: var(--radius-sm);
+  /* estados de campo */
+  --field-editable-bg: var(--surface);
+  --field-calc-bg: var(--calc);           /* preenchido por regra; editável */
+  --field-calc-border: var(--blue-100);
+  --field-readonly-bg: var(--surface-2);  /* texto em painel, sem borda */
+  --field-error-border: var(--danger);
+  --field-disabled-bg: var(--surface-2);
+  --field-disabled-text: var(--n-400);
+  /* feedback */
+  --dirty: var(--orange-700);             /* "alterações não salvas" */
+  --saved: var(--success);
+  --toast-bg: var(--navy-800);
+  --toast-link: var(--yellow-500);
 
   --table-header-bg: var(--surface-2);
   --table-row-hover: var(--blue-50);
@@ -127,6 +145,8 @@
 
   --sidebar-w: 220px;
   --sidebar-row-h: 42px;
+  --sidebar-gap: 10px;
+  --sidebar-pad-x: 16px;
   --content-max: 1400px;
   --topbar-h: 56px;
 }
