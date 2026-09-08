@@ -5,7 +5,6 @@
       "**",
       "!dist",
       "!node_modules",
-      "!node_modules.bak",
       "!playwright-report",
       "!test-results",
       "!package-lock.json",
