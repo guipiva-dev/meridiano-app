@@ -6,7 +6,9 @@ test("idle → dirty → saving → saved → idle", async () => {
   const salvar = vi.fn().mockResolvedValue(undefined);
   const { result } = renderHook(() => useSalvamento(salvar));
   expect(result.current.estado).toBe("idle");
-  act(() => result.current.marcarSujo());
+  act(() => {
+    result.current.marcarSujo();
+  });
   expect(result.current.estado).toBe("dirty");
   let ok = false;
   await act(async () => {
@@ -46,7 +48,9 @@ test("marcarSujo durante saving termina em dirty, não saved", async () => {
     promessa = result.current.executar({});
   });
   expect(result.current.estado).toBe("saving");
-  act(() => result.current.marcarSujo());
+  act(() => {
+    result.current.marcarSujo();
+  });
   await act(async () => {
     resolver();
     await promessa;

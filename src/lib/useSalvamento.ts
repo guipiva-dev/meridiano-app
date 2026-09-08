@@ -9,25 +9,32 @@ export function useSalvamento<T>(salvar: (dados: T) => Promise<unknown>) {
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const sujoDuranteSave = useRef(false);
 
-  useEffect(() => () => clearTimeout(timer.current), []);
-
-  const marcarSujo = useCallback(
-    () =>
-      setEstado((e) => {
-        if (e === "saving") {
-          sujoDuranteSave.current = true;
-          return e;
-        }
-        return "dirty";
-      }),
+  useEffect(
+    () => () => {
+      clearTimeout(timer.current);
+    },
     [],
   );
+
+  const marcarSujo = useCallback(() => {
+    setEstado((e) => {
+      if (e === "saving") {
+        sujoDuranteSave.current = true;
+        return e;
+      }
+      return "dirty";
+    });
+  }, []);
+
+  const iniciarSalvamento = useCallback(() => {
+    sujoDuranteSave.current = false;
+  }, []);
 
   const executar = useCallback(
     async (dados: T) => {
       setEstado("saving");
       setErro(null);
-      sujoDuranteSave.current = false;
+      iniciarSalvamento();
       try {
         await salvar(dados);
         setSalvoEm(new Date());
@@ -37,7 +44,9 @@ export function useSalvamento<T>(salvar: (dados: T) => Promise<unknown>) {
         }
         setEstado("saved");
         clearTimeout(timer.current);
-        timer.current = setTimeout(() => setEstado((e) => (e === "saved" ? "idle" : e)), 2000);
+        timer.current = setTimeout(() => {
+          setEstado((e) => (e === "saved" ? "idle" : e));
+        }, 2000);
         return true;
       } catch (e) {
         setErro(e);
@@ -45,7 +54,7 @@ export function useSalvamento<T>(salvar: (dados: T) => Promise<unknown>) {
         return false;
       }
     },
-    [salvar],
+    [salvar, iniciarSalvamento],
   );
 
   return { estado, erro, salvoEm, marcarSujo, executar };
