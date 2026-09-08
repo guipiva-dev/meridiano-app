@@ -1,6 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { type Combo, registrarAtalho } from "./atalhos";
 
 export function useAtalho(combo: Combo, handler: () => void) {
-  useEffect(() => registrarAtalho(combo, handler), [combo, handler]);
+  const ref = useRef(handler);
+  useEffect(() => {
+    ref.current = handler;
+  });
+  useEffect(
+    () =>
+      registrarAtalho(combo, () => {
+        ref.current();
+      }),
+    [combo],
+  );
 }
