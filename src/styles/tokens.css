@@ -1,24 +1,28 @@
-/* Meridiano — design tokens (fonte da verdade: docs/design-system.md no repo root)
-   Três camadas: primitivo → semântico → componente. Componentes usam só as duas últimas. */
+/* Meridiano — design tokens v3 (contrato). Fonte da verdade: docs/design-system.md no repo root.
+   Três camadas: primitivo → semântico → componente. Componentes usam SÓ semântico/componente.
+   Proibido em componente: hex, px de fonte, margin arbitrária, cor custom em botão. */
 
 :root {
-  /* ---------- Primitivos: marca ---------- */
+  /* ======================= PRIMITIVOS ======================= */
   --navy-900: #1b1740;
-  --navy-800: #29235c;   /* marca: sidebar, títulos, ink forte */
+  --navy-800: #29235c;   /* marca */
   --navy-700: #3b3478;
   --blue-700: #055c95;
-  --blue-600: #0672b9;   /* marca: ação primária */
-  --blue-500: #5396d1;   /* marca: informação, links, bordas de foco */
+  --blue-600: #0672b9;   /* marca */
+  --blue-500: #5396d1;   /* marca */
   --blue-100: #e3effa;
   --blue-50:  #f1f7fd;
-  --orange-700: #b8631f; /* laranja escurecido para texto (contraste AA) */
-  --orange-600: #e18334; /* marca: destaque, CTA de lançamento, item ativo */
+  --orange-700: #b8631f; /* laranja para texto (AA) */
+  --orange-600: #e18334; /* marca */
   --orange-100: #fbe7d5;
-  --yellow-500: #f9b233; /* marca: badges e ênfase sobre navy */
-  --yellow-100: #fbf297; /* marca: realce suave (linha selecionada, aviso) */
+  --yellow-500: #f9b233; /* marca */
   --yellow-50:  #fefbe4;
-
-  /* ---------- Primitivos: neutros (puxados para o navy) ---------- */
+  --green-700: #167a4c;
+  --green-600: #1f9d63;
+  --green-100: #dcf5e8;
+  --red-700:   #b73737;
+  --red-600:   #d64545;
+  --red-100:   #fbe2e2;
   --n-0:   #ffffff;
   --n-50:  #f5f6fa;
   --n-100: #eceef4;
@@ -29,124 +33,136 @@
   --n-700: #3a3d58;
   --n-900: #1e1b3a;
 
-  /* ---------- Primitivos: semântica de estado ---------- */
-  --green-600: #1f9d63;
-  --green-100: #dcf5e8;
-  --red-600:   #d64545;
-  --red-100:   #fbe2e2;
+  /* ======================= SEMÂNTICOS ======================= */
+  /* marca e ações — o componente recebe intenção, nunca cor */
+  --color-brand:                 var(--navy-800);
+  --color-action:                var(--blue-600);   /* Button primary: salvar, confirmar */
+  --color-action-hover:          var(--blue-700);
+  --color-action-business:       var(--orange-600); /* Button business: UMA por tela (Adicionar reserva, Nova viagem) */
+  --color-action-business-hover: var(--orange-700);
+  --color-selected:              var(--navy-800);   /* chip selecionado, item ativo */
 
-  /* ---------- Semânticos ---------- */
-  --bg:            var(--n-50);
-  --surface:       var(--n-0);
-  --surface-2:     var(--n-100);
-  --border:        var(--n-200);
-  --border-strong: var(--n-300);
-  --text:          var(--n-900);
-  --text-muted:    var(--n-500);
-  --text-inverse:  var(--n-0);
-  --heading:       var(--navy-800);
+  /* estados — separados da marca */
+  --color-success:       var(--green-600);
+  --color-success-text:  var(--green-700);
+  --color-success-soft:  var(--green-100);
+  --color-warning:       var(--yellow-500);   /* único uso do amarelo: atenção */
+  --color-warning-text:  var(--orange-700);
+  --color-warning-soft:  var(--yellow-50);
+  --color-danger:        var(--red-600);
+  --color-danger-text:   var(--red-700);
+  --color-danger-soft:   var(--red-100);
+  --color-info:          var(--blue-500);
+  --color-info-text:     var(--blue-700);
+  --color-info-soft:     var(--blue-50);
+  --color-neutral-text:  var(--n-500);
+  --color-neutral-soft:  var(--n-100);
 
-  --primary:        var(--blue-600);
-  --primary-hover:  var(--blue-700);
-  --primary-soft:   var(--blue-100);
-  --accent:         var(--orange-600);
-  --accent-hover:   var(--orange-700);
-  --accent-soft:    var(--orange-100);
-  --accent-text:    var(--orange-700);
-  --attention:      var(--yellow-500);   /* barra/badge de atenção — único uso do amarelo */
-  --attention-soft: var(--yellow-50);
-  --calc:           var(--blue-50);      /* campo preenchido por regra */
-  --selected:       var(--blue-50);      /* linha selecionada */
-  --info:           var(--blue-500);
-  --info-soft:      var(--blue-50);
-  --success:        var(--green-600);
-  --success-soft:   var(--green-100);
-  --danger:         var(--red-600);
-  --danger-soft:    var(--red-100);
-  --warning:        var(--orange-600);
-  --warning-soft:   var(--yellow-50);
-  --chip-on-bg:     var(--navy-800);
-  --chip-on-text:   var(--n-0);
-  --chip-off-border: var(--border);
-  --chip-off-text:  var(--n-500);
-  --result-normal:  var(--navy-800);     /* resultado: navy; verde só acima da meta; vermelho negativo */
-  --result-above:   var(--green-600);
-  --result-negative: var(--red-600);
-  --focus-ring:     var(--blue-500);
+  /* superfícies e bordas */
+  --color-bg-page:       var(--n-50);
+  --color-bg-surface:    var(--n-0);
+  --color-bg-subtle:     var(--n-100);
+  --color-bg-calc:       var(--blue-50);   /* campo preenchido por regra */
+  --color-bg-selected:   var(--blue-50);   /* linha selecionada */
+  --color-border:        var(--n-200);
+  --color-border-strong: var(--n-300);
+  --color-focus:         var(--blue-500);
 
-  --sidebar-bg:          var(--navy-800);
-  --sidebar-text:        #cfd0e6;
-  --sidebar-text-active: var(--n-0);
-  --sidebar-active:      var(--orange-600);
-  --sidebar-hover:       var(--navy-700);
+  /* texto */
+  --color-text-primary:   var(--n-900);
+  --color-text-secondary: var(--n-700);
+  --color-text-muted:     var(--n-500);
+  --color-text-inverse:   var(--n-0);
+  --color-text-heading:   var(--navy-800);
+  --color-text-link:      var(--blue-600);
 
-  /* ---------- Tipografia ---------- */
+  /* resultado financeiro: cor é estado, não decoração */
+  --color-result-normal:   var(--navy-800);
+  --color-result-above:    var(--green-600);  /* acima da meta */
+  --color-result-negative: var(--red-600);
+
+  /* feedback de salvamento */
+  --color-dirty: var(--orange-700);
+  --color-saved: var(--green-600);
+
+  /* ======================= TIPOGRAFIA (papéis, não tamanhos) ======================= */
   --font-ui:   "Manrope", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
-  --text-xs: 0.75rem;    /* 12 — apoio, eyebrows */
-  --text-sm: 0.8125rem;  /* 13 — rótulos de campo, célula secundária */
-  --text-md: 0.875rem;   /* 14 — corpo, célula principal, input */
-  --text-lg: 1.0625rem;  /* 17 — título de seção/bloco */
-  --text-xl: 1.5rem;     /* 24 — título de página */
-  --text-2xl: 1.75rem;   /* 28 — KPI */
-  --leading: 1.5;
+  --type-display:   800 1.75rem/1.1 var(--font-ui);     /* 28 — KPI */
+  --type-page:      800 1.5rem/1.2 var(--font-ui);      /* 24 — título de página */
+  --type-section:   700 1.125rem/1.3 var(--font-ui);    /* 18 — título de seção/bloco */
+  --type-component: 700 0.9375rem/1.3 var(--font-ui);   /* 15 — título de card/reserva */
+  --type-body:      400 0.875rem/1.5 var(--font-ui);    /* 14 */
+  --type-label:     600 0.8125rem/1.3 var(--font-ui);   /* 13 */
+  --type-helper:    400 0.75rem/1.4 var(--font-ui);     /* 12 */
+  --type-caption:   500 0.75rem/1.3 var(--font-ui);     /* 12 caixa alta, letter-spacing .05em */
+  --type-code:      400 0.75rem/1.4 var(--font-mono);   /* 12 — códigos, localizadores */
+  --tracking-caps: 0.05em;
+  /* dinheiro: --type-body/label + font-variant-numeric: tabular-nums; nunca mono */
 
-  /* ---------- Espaço, raio, sombra ---------- */
-  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
-  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
-  --radius-sm: 6px;     /* input, botão */
-  --radius:    8px;     /* card, menu */
-  --radius-pill: 999px; /* pill, chip */
-  --shadow-sm: 0 1px 2px rgba(41, 35, 92, 0.06);
-  --shadow-md: 0 4px 14px rgba(41, 35, 92, 0.10);
-  --shadow-lg: 0 12px 32px rgba(41, 35, 92, 0.16);
+  /* ======================= ESPAÇO, RAIO, ELEVAÇÃO ======================= */
+  --space-1: 4px;   /* dentro de chip/pill */
+  --space-2: 8px;   /* ícone ↔ texto; label ↔ input */
+  --space-3: 12px;  /* campos do mesmo grupo (mín.) */
+  --space-4: 16px;  /* campos do mesmo grupo; padding de célula */
+  --space-6: 24px;  /* grupos internos; padding de card */
+  --space-8: 32px;  /* blocos principais */
+  --space-12: 48px; /* seções grandes */
+  --radius-sm: 4px;
+  --radius-md: 6px;    /* input, botão */
+  --radius-lg: 8px;    /* card, menu, modal */
+  --radius-pill: 999px;/* badge, chip */
+  --shadow-float: 0 8px 24px rgba(41, 35, 92, 0.14); /* menu, popover, toast */
+  --shadow-modal: 0 16px 40px rgba(41, 35, 92, 0.18);
+  /* card e tabela: borda, não sombra */
 
-  /* ---------- Componentes ---------- */
-  --btn-h: 40px;
-  --btn-h-sm: 34px;
-  --btn-radius: var(--radius-sm);
-  --btn-primary-bg: var(--primary);
-  --btn-primary-bg-hover: var(--primary-hover);
-  --btn-primary-text: var(--text-inverse);
-  --btn-accent-bg: var(--accent);
-  --btn-accent-bg-hover: var(--accent-hover);
-  --btn-accent-text: var(--text-inverse);
-  --btn-ghost-text: var(--heading);
-  --btn-ghost-hover: var(--surface-2);
+  /* ======================= BREAKPOINTS (desktop-first) ======================= */
+  --bp-lg: 1024px;  /* abaixo: sidebar colapsa, grid reduz colunas */
+  --bp-xl: 1280px;  /* 1280–1439: compactar gaps, não controles */
+  --bp-2xl: 1440px; /* experiência ideal */
 
-  --input-h: 40px;
-  --input-bg: var(--surface);
-  --input-border: var(--border-strong);
-  --input-border-focus: var(--focus-ring);
-  --input-radius: var(--radius-sm);
-  /* estados de campo */
-  --field-editable-bg: var(--surface);
-  --field-calc-bg: var(--calc);           /* preenchido por regra; editável */
-  --field-calc-border: var(--blue-100);
-  --field-readonly-bg: var(--surface-2);  /* texto em painel, sem borda */
-  --field-error-border: var(--danger);
-  --field-disabled-bg: var(--surface-2);
-  --field-disabled-text: var(--n-400);
-  /* feedback */
-  --dirty: var(--orange-700);             /* "alterações não salvas" */
-  --saved: var(--success);
-  --toast-bg: var(--navy-800);
+  /* ======================= COMPONENTES ======================= */
+  --control-h: 40px;       /* input, select, botão, money */
+  --control-h-sm: 34px;
+  --control-radius: var(--radius-md);
+  --icon-inline: 16px;
+  --icon-nav: 18px;
+  --icon-button: 20px;
+
+  --field-editable-bg:     var(--color-bg-surface);
+  --field-calc-bg:         var(--color-bg-calc);      /* calculated: editável, com selo */
+  --field-calc-border:     var(--blue-100);
+  --field-readonly-bg:     var(--color-bg-subtle);    /* texto em painel, sem borda de input */
+  --field-error-border:    var(--color-danger);
+  --field-disabled-bg:     var(--color-bg-subtle);
+  --field-disabled-text:   var(--n-400);
+
+  --chip-on-bg:      var(--color-selected);
+  --chip-on-text:    var(--color-text-inverse);
+  --chip-off-border: var(--color-border);
+  --chip-off-text:   var(--color-text-muted);
+
+  --table-header-bg:    var(--color-bg-subtle);
+  --table-row-h:        52px;                 /* duas linhas: principal + secundária */
+  --table-row-hover:    var(--color-info-soft);
+  --table-row-selected: var(--color-bg-selected);
+
+  --card-bg:     var(--color-bg-surface);
+  --card-border: var(--color-border);
+  --card-radius: var(--radius-lg);
+  --card-pad:    var(--space-6);
+
+  --sidebar-w:      220px;
+  --sidebar-bg:     var(--navy-800);
+  --sidebar-text:   #d5d6ea;
+  --sidebar-active: var(--orange-600);
+  --sidebar-hover:  var(--navy-700);
+  --sidebar-row-h:  42px;
+  --sidebar-gap:    10px;
+  --sidebar-pad-x:  16px;
+  --topbar-h:       56px;
+  --content-max:    1400px;
+
+  --toast-bg:   var(--navy-800);
   --toast-link: var(--yellow-500);
-
-  --table-header-bg: var(--surface-2);
-  --table-row-hover: var(--blue-50);
-  --table-row-selected: var(--selected);
-  --table-row-h: 52px;
-  --table-border: var(--border);
-
-  --card-bg: var(--surface);
-  --card-border: var(--border);
-  --card-radius: var(--radius);
-
-  --sidebar-w: 220px;
-  --sidebar-row-h: 42px;
-  --sidebar-gap: 10px;
-  --sidebar-pad-x: 16px;
-  --content-max: 1400px;
-  --topbar-h: 56px;
 }
