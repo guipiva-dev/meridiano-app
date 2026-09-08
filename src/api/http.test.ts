@@ -1,4 +1,4 @@
-import { ConflictError, NetworkError, UnauthenticatedError, ValidationError } from "./errors";
+import { ApiError, ConflictError, NetworkError, UnauthenticatedError, ValidationError } from "./errors";
 import { api, mensagemDeErro } from "./http";
 
 function respostaProblem(status: number, body: object) {
@@ -55,4 +55,13 @@ test("falha de rede vira NetworkError", async () => {
   const e = await api.get("/x").catch((x: unknown) => x);
   expect(e).toBeInstanceOf(NetworkError);
   expect(mensagemDeErro(e)).toMatch(/Sem conexão/);
+});
+
+test("JSON malformado vira ApiError resposta_invalida", async () => {
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response("{", { status: 200, headers: { "content-type": "application/json" } }),
+  );
+  const e = await api.get("/x").catch((x: unknown) => x);
+  expect(e).toBeInstanceOf(ApiError);
+  expect((e as ApiError).codigo).toBe("resposta_invalida");
 });

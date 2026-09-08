@@ -1,4 +1,4 @@
-import { erroDeResposta, NetworkError } from "./errors";
+import { ApiError, erroDeResposta, NetworkError } from "./errors";
 
 export { mensagemDeErro } from "./errors";
 
@@ -21,7 +21,14 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   }
   if (resposta.status === 204) return undefined as T;
   const tipo = resposta.headers.get("content-type") ?? "";
-  const json = tipo.includes("json") ? ((await resposta.json()) as unknown) : null;
+  let json: unknown = null;
+  if (tipo.includes("json")) {
+    try {
+      json = await resposta.json();
+    } catch {
+      throw new ApiError(resposta.status, "resposta_invalida", "Resposta inválida do servidor");
+    }
+  }
   if (!resposta.ok) throw erroDeResposta(resposta.status, json as Parameters<typeof erroDeResposta>[1]);
   return json as T;
 }
