@@ -28,3 +28,25 @@ test("nfse falta_emitir é warning; emitido é success; nao_precisa é neutral",
   expect(apresentacaoStatus("nfse", "emitido")).toEqual({ texto: "Emitida", tone: "success" });
   expect(apresentacaoStatus("nfse", "nao_precisa")).toEqual({ texto: "Não precisa", tone: "neutral" });
 });
+
+test("crédito disponível é success, utilizado neutral, expirado danger", () => {
+  expect(apresentacaoStatus("credito", "disponivel")).toEqual({ texto: "Disponível", tone: "success" });
+  expect(apresentacaoStatus("credito", "utilizado")).toEqual({ texto: "Utilizado", tone: "neutral" });
+  expect(apresentacaoStatus("credito", "expirado")).toEqual({ texto: "Expirado", tone: "danger" });
+});
+
+test("prioridade urgente é danger", () => {
+  expect(apresentacaoStatus("prioridade", "normal")).toEqual({ texto: "Normal", tone: "neutral" });
+  expect(apresentacaoStatus("prioridade", "urgente")).toEqual({ texto: "Urgente", tone: "danger" });
+});
+
+test("desfecho de cancelamento: crédito é a única variante de sucesso", () => {
+  expect(apresentacaoStatus("desfecho", "sem_reembolso")).toEqual({ texto: "Sem reembolso", tone: "neutral" });
+  expect(apresentacaoStatus("desfecho", "reembolso")).toEqual({ texto: "Reembolso", tone: "info" });
+  expect(apresentacaoStatus("desfecho", "credito")).toEqual({ texto: "Crédito", tone: "success" });
+});
+
+test("nfse_tomador e anexo_tipo rotulam em português", () => {
+  expect(apresentacaoStatus("nfse_tomador", "operadora").texto).toBe("Operadora");
+  expect(apresentacaoStatus("anexo_tipo", "comprovante").texto).toBe("Comprovante");
+});

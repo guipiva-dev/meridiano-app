@@ -23,6 +23,15 @@ function dtoBase(overrides: Partial<ReservaDto> = {}): ReservaDto {
     ravOperadora: 20,
     valorCliente: 3200,
     taxaServico: 0,
+    comissaoMantida: false,
+    canceladaEm: null,
+    motivoCancelamento: null,
+    desfechoCancelamento: null,
+    nfseTomador: null,
+    nfseNumero: null,
+    nfseDataEmissao: null,
+    conciliacaoEncerrada: false,
+    situacaoComissao: "a_receber",
     ...overrides,
   };
 }
@@ -31,6 +40,22 @@ test("deDto → paraRequest preserva status 'cancelada' (não reescreve para emi
   const form = deDto(dtoBase({ status: "cancelada" }));
   expect(form.status).toBe("cancelada");
   expect(paraRequest(form).status).toBe("cancelada");
+});
+
+test("deDto preserva os campos de cancelamento do dto", () => {
+  const form = deDto(
+    dtoBase({
+      status: "cancelada",
+      comissaoMantida: true,
+      canceladaEm: "2026-05-01T10:00:00Z",
+      motivoCancelamento: "Cliente desistiu",
+      desfechoCancelamento: "credito",
+    }),
+  );
+  expect(form.comissaoMantida).toBe(true);
+  expect(form.canceladaEm).toBe("2026-05-01T10:00:00Z");
+  expect(form.motivoCancelamento).toBe("Cliente desistiu");
+  expect(form.desfechoCancelamento).toBe("credito");
 });
 
 test("paraRequest: null nos campos de dinheiro vira 0", () => {

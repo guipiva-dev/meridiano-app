@@ -57,7 +57,52 @@ const nfse: Mapa = {
   nao_precisa: { texto: "Não precisa", tone: "neutral" },
 };
 
-const mapas = { fase_viagem, comissao, reserva, repasse, despesa, pendencia, acesso, nfse } as const;
+const credito: Mapa = {
+  disponivel: { texto: "Disponível", tone: "success" },
+  utilizado: { texto: "Utilizado", tone: "neutral" },
+  expirado: { texto: "Expirado", tone: "danger" },
+};
+
+const prioridade: Mapa = {
+  normal: { texto: "Normal", tone: "neutral" },
+  urgente: { texto: "Urgente", tone: "danger" },
+};
+
+const desfecho: Mapa = {
+  sem_reembolso: { texto: "Sem reembolso", tone: "neutral" },
+  reembolso: { texto: "Reembolso", tone: "info" },
+  credito: { texto: "Crédito", tone: "success" },
+};
+
+const nfse_tomador: Mapa = {
+  cliente: { texto: "Cliente", tone: "neutral" },
+  operadora: { texto: "Operadora", tone: "neutral" },
+};
+
+const anexo_tipo: Mapa = {
+  voucher: { texto: "Voucher", tone: "neutral" },
+  comprovante: { texto: "Comprovante", tone: "neutral" },
+  documento: { texto: "Documento", tone: "neutral" },
+  contrato: { texto: "Contrato", tone: "neutral" },
+  extrato: { texto: "Extrato", tone: "neutral" },
+  outro: { texto: "Outro", tone: "neutral" },
+};
+
+const mapas = {
+  fase_viagem,
+  comissao,
+  reserva,
+  repasse,
+  despesa,
+  pendencia,
+  acesso,
+  nfse,
+  credito,
+  prioridade,
+  desfecho,
+  nfse_tomador,
+  anexo_tipo,
+} as const;
 export type EntidadeStatus = keyof typeof mapas;
 
 export function apresentacaoStatus(entidade: EntidadeStatus, valor: string): Apresentacao {

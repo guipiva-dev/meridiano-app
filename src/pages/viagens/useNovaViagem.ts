@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type UseFormReturn, useForm } from "react-hook-form";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { mensagemDeErro } from "@/api/errors";
 import {
   type AgenciaDto,
@@ -52,8 +52,11 @@ const SEM_FORNECEDORES: FornecedorDto[] = [];
 const SEM_VENDEDORES: VendedorDto[] = [];
 const DEBOUNCE_MS = 400;
 
-/** `anteriores` só serve para não recolher os cards que o usuário deixou abertos ao salvar. */
-function paraForm(dto: ViagemDto, anteriores: ReservaForm[]): ViagemForm {
+/**
+ * `anteriores` só serve para não recolher os cards que o usuário deixou abertos ao salvar.
+ * `abrirSomente` (carga inicial via `?reserva=<id>`) ignora `anteriores` e abre só aquele card.
+ */
+function paraForm(dto: ViagemDto, anteriores: ReservaForm[], abrirSomente?: string | null): ViagemForm {
   return {
     destino: dto.destino,
     tipo: dto.tipo,
@@ -66,6 +69,7 @@ function paraForm(dto: ViagemDto, anteriores: ReservaForm[]): ViagemForm {
     passageiros: dto.passageiros.map((p) => ({ clienteId: p.clienteId, nome: p.nome, titular: p.titular })),
     repasseValor: dto.repasse?.valor ?? null,
     reservas: dto.reservas.map((r, i) => {
+      if (abrirSomente) return { ...deDto(r), aberta: r.id === abrirSomente };
       const anterior = anteriores.find((a) => a.id === r.id) ?? anteriores[i];
       return { ...deDto(r), aberta: anterior?.aberta ?? false };
     }),
@@ -84,7 +88,8 @@ function paraViagemRequest(v: ViagemForm, versao: string | undefined): ViagemReq
     observacoes: v.observacoes.trim() || null,
     passageiros: v.passageiros.map((p) => ({ clienteId: p.clienteId, titular: p.titular })),
     repasseValor: v.repasseValor,
-    reservas: v.reservas.map(paraRequest),
+    // R2: reserva cancelada é imutável pelo PUT — omitida, não reenviada.
+    reservas: v.reservas.filter((r) => r.status !== "cancelada").map(paraRequest),
     versao,
   };
 }
@@ -113,6 +118,8 @@ export function useNovaViagem(id: string | undefined) {
   const qc = useQueryClient();
   const nav = useNavigate();
   const estadoRota: unknown = useLocation().state;
+  const [searchParams] = useSearchParams();
+  const reservaParam = searchParams.get("reserva");
   const form: UseFormReturn<ViagemForm> = useForm<ViagemForm>({ defaultValues: VAZIO });
   const { isDirty } = form.formState;
 
@@ -135,12 +142,15 @@ export function useNovaViagem(id: string | undefined) {
 
   // Toda resposta oficial (carga inicial, PUT, recarregar) reentra pelo cache e substitui o form.
   const aplicado = useRef<ViagemDto | null>(null);
+  const primeiraCarga = useRef(true);
   useEffect(() => {
     if (!dto || aplicado.current === dto) return;
     aplicado.current = dto;
-    form.reset(paraForm(dto, form.getValues("reservas")));
+    const abrirSomente = primeiraCarga.current ? reservaParam : null;
+    primeiraCarga.current = false;
+    form.reset(paraForm(dto, form.getValues("reservas"), abrirSomente));
     setViagem(dto);
-  }, [dto, form]);
+  }, [dto, form, reservaParam]);
 
   // Padrões de viagem nova: vendedor = você (se vende), agente = você.
   const padroes = useRef(false);
@@ -209,7 +219,7 @@ export function useNovaViagem(id: string | undefined) {
     adicionarReserva();
   }, [agencia, viagem, adicionarReserva]);
 
-  // Viagem semelhante: só na criação, ao ter titular; datas afinam a busca.
+  // Viagem semelhante: na criação e na edição (excluindo a própria viagem), ao ter titular; datas afinam a busca.
   const titular = passageiros.find((p) => p.titular);
   const titularId = titular?.clienteId ?? "";
   const [semelhante, setSemelhante] = useState<ViagemSemelhanteDto | null>(null);
@@ -217,13 +227,13 @@ export function useNovaViagem(id: string | undefined) {
   // um aviso que o usuário já respondeu com "Continuar criando nova".
   const [dispensadoPara, setDispensadoPara] = useState<string | null>(null);
   useEffect(() => {
-    if (id || !titularId) {
+    if (!titularId) {
       setSemelhante(null);
       return;
     }
     const t = setTimeout(() => {
       void viagensApi
-        .semelhantes(titularId, dataIda || null, dataVolta || null)
+        .semelhantes(titularId, dataIda || null, dataVolta || null, id)
         .then((lista) => {
           setSemelhante(lista[0] ?? null);
         })

@@ -1,8 +1,50 @@
 import { api } from "./http";
+import type {
+  CancelarReservaRequest,
+  CancelarViagemRequest,
+  CreditoDto,
+  FiltroViagens,
+  ListaViagensDto,
+  NfseRequest,
+  RemarcarRequest,
+  ReservaAlteracaoDto,
+} from "./viagensOperacoes";
+
+// Tipos de lista/operações/créditos/alterações moram em ./viagensOperacoes (arquivo dividido por
+// responsabilidade, ver CLAUDE.md "máx. ~350 linhas"); re-exportados aqui para o import continuar em "@/api/viagens".
+export type {
+  AbaViagens,
+  CancelarReservaItem,
+  CancelarReservaRequest,
+  CancelarViagemRequest,
+  ContadoresDto,
+  CreditoDto,
+  CreditoRequest,
+  FiltroViagens,
+  ListaViagemDto,
+  ListaViagensDto,
+  NfseRequest,
+  RemarcarRequest,
+  ReservaAlteracaoDto,
+} from "./viagensOperacoes";
 
 function qs(params: Record<string, string | null | undefined>): string {
   const p = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v !== null && v !== undefined) p.set(k, v);
+  return p.toString();
+}
+
+/** Query string de `GET /viagens`: repete a chave para array, omite undefined/""/[]. */
+export function qsLista(f: FiltroViagens): string {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(f)) {
+    if (v === undefined || v === null || v === "") continue;
+    if (Array.isArray(v)) {
+      for (const item of v) p.append(k, String(item));
+    } else {
+      p.append(k, String(v));
+    }
+  }
   return p.toString();
 }
 
@@ -11,6 +53,8 @@ export type StatusReserva = "pendente" | "emitida";
 export type RavClienteModo = "retido_agencia" | "via_operadora";
 export type FluxoPagamento = "cliente_paga_operadora" | "cliente_paga_agencia";
 export type NfseStatus = "falta_emitir" | "emitido" | "nao_precisa";
+export type SituacaoComissao = "nao_prevista" | "a_receber" | "parcial" | "atrasada" | "recebida" | "divergente";
+export type Desfecho = "sem_reembolso" | "reembolso" | "credito";
 
 export const TIPOS_SERVICO = [
   "aereo",
@@ -116,6 +160,17 @@ export interface ReservaDto {
   valorEsperadoOperadora?: number;
   receitaPrevista?: number;
   percentualComissao?: number | null;
+  comissaoMantida: boolean;
+  canceladaEm: string | null;
+  motivoCancelamento: string | null;
+  desfechoCancelamento: Desfecho | null;
+  nfseTomador: "cliente" | "operadora" | null;
+  nfseNumero: string | null;
+  nfseDataEmissao: string | null;
+  conciliacaoEncerrada: boolean;
+  situacaoComissao: SituacaoComissao;
+  valorReembolso?: number | null;
+  recebidoOperadora?: number;
 }
 
 export interface RepasseDto {
@@ -128,7 +183,9 @@ export interface ResumoViagemDto {
   vendaTotal: number;
   custoFornecedores: number;
   receitaPrevista: number;
+  receitaRecebida: number;
   repasseValor: number | null;
+  repasseStatus: string | null;
   despesasViagem: number;
   resultado: number;
 }
@@ -144,9 +201,12 @@ export interface ViagemDto {
   vendedorId: string;
   vendedorNome: string;
   agenteId: string | null;
+  agenteNome: string | null;
   ocasiao: string | null;
   observacoes: string | null;
   cancelada: boolean;
+  canceladaEm: string | null;
+  motivoCancelamento: string | null;
   faseOperacional: string;
   faseFinanceira: string;
   passageiros: PassageiroDto[];
@@ -200,8 +260,8 @@ export const viagensApi = {
   atualizar: (id: string, v: ViagemRequest) => api.put<ViagemDto>(`/viagens/${id}`, v),
   adicionarReserva: (id: string, reserva: ReservaRequest, versao: string) =>
     api.post<ViagemDto>(`/viagens/${id}/reservas`, { reserva, versao }),
-  semelhantes: (clienteId: string, dataIda: string | null, dataVolta: string | null) =>
-    api.get<ViagemSemelhanteDto[]>(`/viagens/semelhantes?${qs({ clienteId, dataIda, dataVolta })}`),
+  semelhantes: (clienteId: string, dataIda: string | null, dataVolta: string | null, excetoViagemId?: string) =>
+    api.get<ViagemSemelhanteDto[]>(`/viagens/semelhantes?${qs({ clienteId, dataIda, dataVolta, excetoViagemId })}`),
   reservaDuplicada: (fornecedorId: string, localizador: string) =>
     api.get<{ viagemId: string; codigo: string } | undefined>(
       `/reservas/duplicada?${qs({ fornecedorId, localizador })}`,
@@ -213,11 +273,26 @@ export const viagensApi = {
   criarFornecedor: (f: { nome: string; tipo: string }) => api.post<FornecedorDto>("/fornecedores", f),
   vendedores: () => api.get<VendedorDto[]>("/usuarios/vendedores"),
   agencia: () => api.get<AgenciaDto>("/agencia"),
+  listar: (f: FiltroViagens) => api.get<ListaViagensDto>(`/viagens?${qsLista(f)}`),
+  cancelarViagem: (id: string, r: CancelarViagemRequest) => api.post<ViagemDto>(`/viagens/${id}/cancelar`, r),
+  transferir: (id: string, agenteId: string, versao: string) =>
+    api.post<ViagemDto>(`/viagens/${id}/transferir`, { agenteId, versao }),
+  creditos: (id: string) => api.get<CreditoDto[]>(`/viagens/${id}/creditos`),
+  consumirCredito: (id: string, creditoId: string, reservaId: string, versao: string) =>
+    api.post<ViagemDto>(`/viagens/${id}/creditos/consumir`, { creditoId, reservaId, versao }),
+  cancelarReserva: (reservaId: string, r: CancelarReservaRequest) =>
+    api.post<ViagemDto>(`/reservas/${reservaId}/cancelar`, r),
+  remarcar: (reservaId: string, r: RemarcarRequest) => api.post<ViagemDto>(`/reservas/${reservaId}/remarcar`, r),
+  nfse: (reservaId: string, r: NfseRequest) => api.put<ViagemDto>(`/reservas/${reservaId}/nfse`, r),
+  alteracoes: (reservaId: string) => api.get<ReservaAlteracaoDto[]>(`/reservas/${reservaId}/alteracoes`),
 };
 
 export const chaves = {
   viagem: (id: string) => ["viagens", id] as const,
+  viagens: (f: FiltroViagens) => ["viagens", "lista", f] as const,
   fornecedores: ["fornecedores"] as const,
   vendedores: ["vendedores"] as const,
   agencia: ["agencia"] as const,
+  creditos: (id: string) => ["viagens", id, "creditos"] as const,
+  alteracoes: (reservaId: string) => ["reservas", reservaId, "alteracoes"] as const,
 };

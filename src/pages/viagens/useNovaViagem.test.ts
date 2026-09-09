@@ -72,6 +72,7 @@ interface Chamada {
 }
 const chamadas: Chamada[] = [];
 let respostaPost: { status: number; body: unknown } = { status: 201, body: null };
+let respostaGetViagem: () => unknown = () => viagemDto("7");
 
 function resposta(status: number, body: unknown) {
   return {
@@ -96,7 +97,7 @@ function instalarFetch() {
       return Promise.resolve(resposta(respostaPost.status, respostaPost.body));
     }
     if (metodo === "PUT") return Promise.resolve(resposta(200, viagemDto("8")));
-    if (metodo === "GET" && /\/viagens\/[^/?]+$/.test(url)) return Promise.resolve(resposta(200, viagemDto("7")));
+    if (metodo === "GET" && /\/viagens\/[^/?]+$/.test(url)) return Promise.resolve(resposta(200, respostaGetViagem()));
     return Promise.resolve(resposta(404, { codigo: "nao_encontrado", detail: "?" }));
   });
 }
@@ -110,13 +111,17 @@ const auth: AuthValue = {
   recarregar: () => Promise.resolve(),
 };
 
-function montar(id?: string) {
+function montar(id?: string, caminho = "/") {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const wrapper = ({ children }: { children: ReactNode }) =>
     createElement(
       QueryClientProvider,
       { client: qc },
-      createElement(AuthContext.Provider, { value: auth }, createElement(MemoryRouter, null, children)),
+      createElement(
+        AuthContext.Provider,
+        { value: auth },
+        createElement(MemoryRouter, { initialEntries: [caminho] }, children),
+      ),
     );
   return renderHook(() => useNovaViagem(id), { wrapper });
 }
@@ -125,6 +130,7 @@ beforeEach(() => {
   chamadas.length = 0;
   navegou.length = 0;
   respostaPost = { status: 201, body: null };
+  respostaGetViagem = () => viagemDto("7");
   instalarFetch();
 });
 
@@ -294,4 +300,50 @@ test("salvar não recolhe os cards que estavam abertos", async () => {
   expect(chamadas.some((c) => c.metodo === "PUT")).toBe(true);
   expect(result.current.viagem?.versao).toBe("8");
   expect(result.current.form.getValues("reservas")[0]?.aberta).toBe(true);
+});
+
+test("R2: reserva cancelada não é enviada no PUT, só a emitida", async () => {
+  const { result } = montar("v9");
+  await waitFor(() => {
+    expect(result.current.viagem).not.toBeNull();
+  });
+
+  act(() => {
+    const atuais = result.current.form.getValues("reservas");
+    result.current.form.setValue("reservas", [{ ...atuais[0]!, status: "cancelada" }]);
+  });
+  act(() => {
+    result.current.adicionarReserva();
+  });
+  act(() => {
+    result.current.atualizarReserva(1, { fornecedorId: "f1", status: "emitida", valorCliente: 500 });
+  });
+
+  await act(async () => {
+    await result.current.salvar();
+  });
+
+  const put = chamadas.find((c) => c.metodo === "PUT");
+  const corpo = put?.corpo as { reservas: { status: string }[] };
+  expect(corpo.reservas).toHaveLength(1);
+  expect(corpo.reservas[0]?.status).toBe("emitida");
+});
+
+test("?reserva=<id> abre só aquele card na carga inicial da edição", async () => {
+  respostaGetViagem = () => {
+    const base = viagemDto("7");
+    return {
+      ...base,
+      reservas: [base.reservas[0], { ...base.reservas[0], id: "r2", localizador: "ABCDEF" }],
+    };
+  };
+
+  const { result } = montar("v9", "/viagens/v9/editar?reserva=r2");
+  await waitFor(() => {
+    expect(result.current.viagem).not.toBeNull();
+  });
+
+  const reservas = result.current.form.getValues("reservas");
+  expect(reservas.find((r) => r.id === "r1")?.aberta).toBe(false);
+  expect(reservas.find((r) => r.id === "r2")?.aberta).toBe(true);
 });

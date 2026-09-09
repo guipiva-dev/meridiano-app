@@ -1,4 +1,5 @@
 import type {
+  Desfecho,
   FluxoPagamento,
   FormaPagamento,
   NfseStatus,
@@ -32,6 +33,11 @@ export interface ReservaForm {
   formasPagamento: FormaPagamento[];
   observacoes: string;
   aberta: boolean;
+  /** Campos de cancelamento (3.3): preenchidos só quando `status === "cancelada"`. */
+  comissaoMantida: boolean;
+  canceladaEm: string | null;
+  motivoCancelamento: string | null;
+  desfechoCancelamento: Desfecho | null;
 }
 
 export function reservaVazia(taxaServicoPadrao: number): ReservaForm {
@@ -54,6 +60,10 @@ export function reservaVazia(taxaServicoPadrao: number): ReservaForm {
     formasPagamento: [],
     observacoes: "",
     aberta: true,
+    comissaoMantida: false,
+    canceladaEm: null,
+    motivoCancelamento: null,
+    desfechoCancelamento: null,
   };
 }
 
@@ -103,6 +113,10 @@ export function deDto(r: ReservaDto): ReservaForm {
     formasPagamento: r.formasPagamento,
     observacoes: r.observacoes ?? "",
     aberta: false,
+    comissaoMantida: r.comissaoMantida,
+    canceladaEm: r.canceladaEm,
+    motivoCancelamento: r.motivoCancelamento,
+    desfechoCancelamento: r.desfechoCancelamento,
   };
 }
 
