@@ -4,7 +4,7 @@ import { mensagemDeErro } from "@/api/errors";
 import { Alert } from "@/components/display";
 import { EmptyState, Skeleton } from "@/components/feedback";
 import { cx } from "@/lib/cx";
-import { formatarDataHora } from "@/lib/datas";
+import { formatarCarimbo } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
 import s from "./Viagem.module.css";
 
@@ -44,7 +44,7 @@ export function TimelineTab({ viagemId }: { viagemId: string }) {
               <b className={s.linhaTitulo}>{e.titulo}</b>
               {e.subtitulo && <span className={s.linhaMeta}>{e.subtitulo}</span>}
               <span className={s.linhaMeta}>
-                {formatarDataHora(e.criadoEm)} · {e.usuarioNome ?? "sistema"}
+                {formatarCarimbo(e.criadoEm)} · {e.usuarioNome ?? "sistema"}
               </span>
               {e.motivo && <span className={s.linhaMeta}>Motivo: {e.motivo}</span>}
               {campos.length > 0 && (

@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import type { ViagemDto } from "@/api/viagens";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
+import { formatarCarimbo } from "@/lib/datas";
 import { VIAGEM } from "./fixtures";
 import { ViagemPage } from "./ViagemPage";
 
@@ -102,6 +103,8 @@ test("viagem cancelada esconde Editar e mostra o alerta", async () => {
     faseOperacional: "cancelada",
   };
   montar();
-  expect(await screen.findByText(/Viagem cancelada em 01\/03\/2026: Cliente desistiu/)).toBeInTheDocument();
+  // `cancelada_em` é timestamptz: o carimbo sai no fuso local.
+  const carimbo = formatarCarimbo("2026-03-01T10:00:00Z");
+  expect(await screen.findByText(`Viagem cancelada em ${carimbo}: Cliente desistiu`)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Editar" })).toBeNull();
 });

@@ -114,6 +114,20 @@ test("cancelada mostra o bloco Cancelamento e esconde as ações", () => {
   expect(screen.getByText(/Cliente desistiu/)).toBeInTheDocument();
   expect(screen.getByText("comissão mantida")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Cancelar reserva…" })).toBeNull();
+  // Comissão mantida não zera a receita: o preview tem que bater com o valor do servidor.
+  expect(screen.getByText("Receita da agência").parentElement).toHaveTextContent("R$ 520,00");
+});
+
+test("cancelada sem comissão mantida zera a receita no preview", () => {
+  montar({
+    reserva: reservaDto({
+      status: "cancelada",
+      canceladaEm: "2026-03-20T10:00:00Z",
+      comissaoMantida: false,
+      receitaPrevista: 0,
+    }),
+  });
+  expect(screen.getByText("Receita da agência").parentElement).toHaveTextContent("R$ 0,00");
 });
 
 test("sem verValores não mostra receita nem o resultado da reserva", () => {

@@ -6,7 +6,7 @@ import { Button, MoneyValue } from "@/components";
 import { Alert, StatusBadge } from "@/components/display";
 import { Skeleton } from "@/components/feedback";
 import { ListaServicos } from "@/components/servicos";
-import { formatarData } from "@/lib/datas";
+import { formatarCarimbo, formatarData } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
 import r from "./Reserva.module.css";
 import s from "./ReservaDetalhe.module.css";
@@ -133,7 +133,7 @@ export function ReservaDetalheCard({
             <div className={s.cancelamento}>
               <b>Cancelamento</b>
               <span className={s.cancelamentoLinha}>
-                {formatarData(reserva.canceladaEm)} · {reserva.motivoCancelamento ?? "sem motivo registrado"}
+                {formatarCarimbo(reserva.canceladaEm)} · {reserva.motivoCancelamento ?? "sem motivo registrado"}
               </span>
               <span className={s.cancelamentoLinha}>
                 {reserva.desfechoCancelamento && (

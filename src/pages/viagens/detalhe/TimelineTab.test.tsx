@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { EventoAuditoriaDto } from "@/api/auditoria";
+import { formatarCarimbo } from "@/lib/datas";
 import { TimelineTab } from "./TimelineTab";
 
 function resposta(status: number, body: unknown) {
@@ -23,7 +24,7 @@ const EVENTOS: EventoAuditoriaDto[] = [
     alteracoes: { valor_comissao: { de: 1000, para: 2000 }, status: { de: "pendente", para: "emitida" } },
     motivo: "Ajuste da operadora",
     usuarioNome: "Ana Paula",
-    criadoEm: "2026-03-14T09:30:00",
+    criadoEm: "2026-03-14T09:30:00+00:00",
   },
   {
     id: 1,
@@ -35,7 +36,7 @@ const EVENTOS: EventoAuditoriaDto[] = [
     alteracoes: {},
     motivo: null,
     usuarioNome: null,
-    criadoEm: "2026-02-10T08:00:00",
+    criadoEm: "2026-02-10T08:00:00+00:00",
   },
 ];
 
@@ -57,9 +58,10 @@ test("lista título, subtítulo, carimbo e usuário (sistema quando não há)", 
   montar();
   expect(await screen.findByText("Valores da reserva alterados")).toBeInTheDocument();
   expect(screen.getByText("CVC Operadora · K7X2PQ")).toBeInTheDocument();
-  expect(screen.getByText("14/03/2026 09:30 · Ana Paula")).toBeInTheDocument();
+  // `criado_em` é timestamptz: o carimbo sai no fuso local, não fatiado da string UTC.
+  expect(screen.getByText(`${formatarCarimbo("2026-03-14T09:30:00+00:00")} · Ana Paula`)).toBeInTheDocument();
   expect(screen.getByText("Motivo: Ajuste da operadora")).toBeInTheDocument();
-  expect(screen.getByText("10/02/2026 08:00 · sistema")).toBeInTheDocument();
+  expect(screen.getByText(`${formatarCarimbo("2026-02-10T08:00:00+00:00")} · sistema`)).toBeInTheDocument();
 });
 
 test("Ver detalhes mostra valor_comissao com os valores em reais", async () => {

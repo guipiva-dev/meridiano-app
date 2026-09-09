@@ -130,5 +130,6 @@ export function paraValoresReserva(r: ReservaForm): ValoresReserva {
     taxaServico: r.taxaServico ?? 0,
     viaOperadora: r.ravClienteModo === "via_operadora",
     cancelada: r.status === "cancelada",
+    comissaoMantida: r.comissaoMantida,
   };
 }

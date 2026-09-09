@@ -16,13 +16,13 @@ interface CancelarViagemModalProps {
   onRecarregar?: () => void;
 }
 
+// Só `motivo` é um campo único do modal. Os erros de desfecho vêm por reserva e a resposta não diz
+// qual — mandá-los para o mapa de campos os replicaria em TODAS as linhas, então vão para o bloco.
 const MAPA: Record<string, string> = {
   motivo_obrigatorio: "motivo",
-  desfecho_invalido: "desfecho",
-  valor_invalido: "valorReembolso",
-  credito_valor_invalido: "credito.valor",
-  credito_cliente_invalido: "credito.clienteId",
 };
+
+const SEM_ERROS: Record<string, string> = {};
 
 const DESFECHO_PADRAO: DesfechoValue = {
   desfecho: "sem_reembolso",
@@ -146,17 +146,17 @@ export function CancelarViagemModal({ open, viagem, onClose, onCancelada, onReca
         </Field>
         <div className={s.lista}>
           {ativos.map((r) => (
-            <div key={r.id} className={s.item}>
-              <span className={s.itemHeader}>{`${r.fornecedorNome} · ${r.localizador ?? "sem localizador"}`}</span>
+            <fieldset key={r.id} className={s.item}>
+              <legend className={s.itemHeader}>{`${r.fornecedorNome} · ${r.localizador ?? "—"}`}</legend>
               <DesfechoFields
                 value={desfechos[r.id] ?? DESFECHO_PADRAO}
                 onChange={(v) => {
                   setDesfechos((prev) => ({ ...prev, [r.id]: v }));
                 }}
-                erros={erros}
+                erros={SEM_ERROS}
                 passageiros={viagem.passageiros}
               />
-            </div>
+            </fieldset>
           ))}
         </div>
       </div>

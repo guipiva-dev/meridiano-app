@@ -18,6 +18,8 @@ export function RotasApp() {
       </Route>
       <Route path="/clientes" element={<EmConstrucao titulo="Clientes" />} />
       <Route path="/clientes/grupos" element={<EmConstrucao titulo="Grupos" />} />
+      {/* A busca global já linka para /clientes/:id; sem esta rota o resultado cai no 404. */}
+      <Route path="/clientes/:id" element={<EmConstrucao titulo="Cliente" />} />
       <Route path="/fornecedores" element={<EmConstrucao titulo="Fornecedores" />} />
       <Route element={<RotaProtegida permissao={["financeiro.movimentar", "financeiro.conciliar"]} />}>
         <Route path="/financeiro" element={<EmConstrucao titulo="Conciliação" />} />

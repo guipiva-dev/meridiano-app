@@ -99,6 +99,21 @@ test("aplicar(dto) atualiza o cache e a próxima leitura", async () => {
   });
 });
 
+test("aplicar invalida as queries de reserva (histórico e serviços)", async () => {
+  const { result, qc } = montar();
+  await waitFor(() => {
+    expect(result.current.viagem).toBeDefined();
+  });
+  const espiao = vi.spyOn(qc, "invalidateQueries");
+
+  act(() => {
+    result.current.aplicar({ ...VIAGEM, versao: "43" });
+  });
+
+  expect(espiao).toHaveBeenCalledWith({ queryKey: ["reservas"] });
+  espiao.mockRestore();
+});
+
 test("verValores segue os valores do DTO", async () => {
   const { result } = montar();
   await waitFor(() => {

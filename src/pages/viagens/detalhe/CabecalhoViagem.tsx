@@ -3,7 +3,7 @@ import type { ViagemDto } from "@/api/viagens";
 import { Button } from "@/components";
 import { Alert, Badge, StatusBadge } from "@/components/display";
 import { PageHeader } from "@/components/shell";
-import { formatarData, formatarPeriodo } from "@/lib/datas";
+import { formatarCarimbo, formatarPeriodo } from "@/lib/datas";
 import s from "./Viagem.module.css";
 
 const ROTULO_TIPO = { nacional: "Nacional", internacional: "Internacional" };
@@ -73,7 +73,8 @@ export function CabecalhoViagem({ viagem, pode, onTransferir, onCancelar }: Cabe
       />
       {viagem.cancelada && (
         <Alert tone="danger">
-          Viagem cancelada em {formatarData(viagem.canceladaEm)}: {viagem.motivoCancelamento ?? "sem motivo registrado"}
+          Viagem cancelada em {formatarCarimbo(viagem.canceladaEm)}:{" "}
+          {viagem.motivoCancelamento ?? "sem motivo registrado"}
         </Alert>
       )}
     </>

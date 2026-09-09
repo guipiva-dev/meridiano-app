@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ValidationError } from "@/api/errors";
 import type * as ViagensApi from "@/api/viagens";
 import type { CancelarViagemRequest, ReservaDto, ViagemDto } from "@/api/viagens";
 import { CancelarViagemModal } from "./CancelarViagemModal";
@@ -101,4 +102,28 @@ test("submit envia reservas com 2 itens", async () => {
     versao: "5",
   });
   expect(onCancelada).toHaveBeenCalledWith(v);
+});
+
+test("cada reserva é um grupo nomeado (fieldset/legend)", () => {
+  render(<CancelarViagemModal open viagem={viagem()} onClose={vi.fn()} onCancelada={vi.fn()} />);
+
+  expect(screen.getByRole("group", { name: /CVC/ })).toBeInTheDocument();
+  expect(screen.getByRole("group", { name: /Decolar/ })).toBeInTheDocument();
+});
+
+// O 422 do cancelamento em lote não diz de qual reserva veio: mandá-lo para um campo o
+// duplicaria em todas as linhas. Vai para o Alert do bloco.
+test("422 de desfecho aparece no bloco, não sob um campo", async () => {
+  const user = userEvent.setup();
+  cancelarViagem.mockRejectedValue(new ValidationError(422, "credito_valor_invalido", "Valor do crédito inválido"));
+  render(<CancelarViagemModal open viagem={viagem()} onClose={vi.fn()} onCancelada={vi.fn()} />);
+
+  await user.type(screen.getByLabelText(/Motivo/), "Cliente cancelou tudo");
+  await user.click(screen.getByRole("button", { name: "Cancelar viagem e 2 reservas" }));
+
+  const alerta = await screen.findByText("Valor do crédito inválido");
+  expect(alerta).toBeInTheDocument();
+  for (const campo of screen.getAllByLabelText(/Desfecho/)) {
+    expect(campo).not.toHaveAttribute("aria-invalid");
+  }
 });

@@ -63,6 +63,8 @@ export function useViagem(id: string) {
     void qc.invalidateQueries({ queryKey: chaveDasPendencias(id) });
     void qc.invalidateQueries({ queryKey: chavesAuditoria.daViagem(id) });
     void qc.invalidateQueries({ queryKey: chaves.creditos(id) });
+    // Histórico de alterações e serviços das reservas: chaves ["reservas", <id>, ...].
+    void qc.invalidateQueries({ queryKey: ["reservas"] });
   }
 
   async function recarregar() {
