@@ -8,6 +8,7 @@
   height: 100vh;
   position: sticky;
   top: 0;
+  overflow-y: auto;
 }
 .brand {
   font: var(--type-component);
@@ -63,15 +64,17 @@
 @media (max-width: 1024px) {
   .side {
     position: fixed;
-    left: -240px;
+    left: calc(-1 * var(--sidebar-w));
     top: 0;
     width: var(--sidebar-w);
     z-index: 40;
     transition: left 0.2s;
     box-shadow: var(--shadow-modal);
+    visibility: hidden;
   }
   .aberta {
     left: 0;
+    visibility: visible;
   }
   .label,
   .secaoTitulo,

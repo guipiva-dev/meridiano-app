@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { instalarAtalhos } from "@/lib/atalhos";
+import { useAtalho } from "@/lib/useAtalho";
 import s from "./AppShell.module.css";
 import { GlobalHeader } from "./GlobalHeader";
 import { Sidebar } from "./Sidebar";
@@ -13,17 +14,18 @@ export function AppShell() {
     setRotaAnterior(loc.pathname);
     setMenu(false);
   }
+  const fechar = () => {
+    setMenu(false);
+  };
   useEffect(instalarAtalhos, []);
+  useAtalho("escape", fechar, menu);
   return (
     <div className={s.shell}>
-      <Sidebar
-        aberta={menu}
-        onFechar={() => {
-          setMenu(false);
-        }}
-      />
+      {menu && <button type="button" className={s.backdrop} aria-label="Fechar menu" onClick={fechar} />}
+      <Sidebar aberta={menu} onFechar={fechar} />
       <div className={s.main}>
         <GlobalHeader
+          menuAberto={menu}
           onMenu={() => {
             setMenu((m) => !m);
           }}

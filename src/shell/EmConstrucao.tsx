@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/feedback";
 import { Page, PageHeader, Subnav } from "@/components/shell";
 import { subnavs } from "./navegacao";
 
-export function EmConstrucao({ titulo }: { titulo: string }) {
+export function EmConstrucao({ titulo, descricao }: { titulo: string; descricao?: string }) {
   const { pathname } = useLocation();
   const modulo = Object.keys(subnavs).find((k) => pathname.startsWith(k));
   const itens = modulo ? subnavs[modulo] : undefined;
@@ -16,7 +16,7 @@ export function EmConstrucao({ titulo }: { titulo: string }) {
         <EmptyState
           icon={<Construction size={32} />}
           title="Em construção"
-          description="Esta tela chega no próximo subplano da Fase 3."
+          description={descricao ?? "Esta tela chega no próximo subplano da Fase 3."}
         />
       </Page>
     </>

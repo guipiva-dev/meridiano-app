@@ -5,15 +5,23 @@ import { useAuth } from "@/auth/useAuth";
 import { Button, IconButton, Input } from "@/components";
 import { useAtalho } from "@/lib/useAtalho";
 import s from "./GlobalHeader.module.css";
+import { SIDEBAR_ID } from "./Sidebar";
 
-export function GlobalHeader({ onMenu }: { onMenu: () => void }) {
+export function GlobalHeader({ onMenu, menuAberto }: { onMenu: () => void; menuAberto: boolean }) {
   const { me, pode, sair } = useAuth();
   const nav = useNavigate();
   const busca = useRef<HTMLInputElement>(null);
   useAtalho("ctrl+k", () => busca.current?.focus());
   return (
     <header className={s.top}>
-      <IconButton label="Menu" icon={<Menu size={20} />} onClick={onMenu} className={s.menu} />
+      <IconButton
+        label="Menu"
+        icon={<Menu size={20} />}
+        onClick={onMenu}
+        className={s.menu}
+        aria-expanded={menuAberto}
+        aria-controls={SIDEBAR_ID}
+      />
       <div className={s.busca}>
         <Search size={16} aria-hidden className={s.buscaIcone} />
         <Input ref={busca} aria-label="Buscar" placeholder="Buscar cliente, viagem, localizador…" />

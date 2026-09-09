@@ -19,7 +19,15 @@ export function RotasApp() {
       <Route path="/relatorios" element={<EmConstrucao titulo="Relatórios" />} />
       <Route path="/equipe" element={<EmConstrucao titulo="Equipe" />} />
       <Route path="/auditoria" element={<EmConstrucao titulo="Auditoria" />} />
-      <Route path="*" element={<EmConstrucao titulo="Página não encontrada" />} />
+      <Route
+        path="*"
+        element={
+          <EmConstrucao
+            titulo="Página não encontrada"
+            descricao="Endereço não existe. Confira o link ou volte para Viagens."
+          />
+        }
+      />
     </Route>
   );
 }
