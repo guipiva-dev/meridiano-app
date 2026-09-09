@@ -1,0 +1,37 @@
+.host {
+  position: fixed;
+  bottom: var(--space-6);
+  right: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  z-index: 60;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 280px;
+  max-width: 420px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--toast-bg);
+  color: var(--color-text-inverse);
+  font: var(--type-body);
+  box-shadow: var(--shadow-float);
+}
+.error {
+  background: var(--color-danger);
+}
+.link {
+  background: none;
+  border: 0;
+  color: var(--toast-link);
+  font: var(--type-label);
+  cursor: pointer;
+  padding: 0;
+}
+.close {
+  color: inherit;
+  margin-left: auto;
+}
