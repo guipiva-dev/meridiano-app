@@ -40,21 +40,33 @@ export function FiltrosViagens({
   const painelId = useId();
   const [aberto, setAberto] = useState(ativos > 0);
   const [busca, setBusca] = useState(filtro.q ?? "");
-  const primeiraCarga = useRef(true);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  useEffect(() => {
-    if (primeiraCarga.current) {
-      primeiraCarga.current = false;
-      return;
-    }
-    const t = setTimeout(() => {
-      definir({ q: busca || undefined });
+  // Resincroniza a busca visível quando `q` muda por fora da digitação (Limpar, voltar/avançar do
+  // navegador): sem isso o campo continua mostrando texto que não bate mais com o filtro aplicado.
+  // Ajuste de estado durante a renderização com duas setState (não refs, não efeito) — padrão
+  // "Storing information from previous renders" do React; evita reagendar o debounce por uma
+  // mudança externa (ver react.dev/reference/react/useState#storing-information-from-previous-renders).
+  const [qAnterior, setQAnterior] = useState(filtro.q);
+  if (qAnterior !== filtro.q) {
+    setQAnterior(filtro.q);
+    setBusca(filtro.q ?? "");
+  }
+
+  useEffect(
+    () => () => {
+      clearTimeout(timerRef.current);
+    },
+    [],
+  );
+
+  function aoDigitar(valor: string) {
+    setBusca(valor);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      definir({ q: valor || undefined });
     }, DEBOUNCE_BUSCA_MS);
-    return () => {
-      clearTimeout(t);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- debounce: só reagir à digitação, `definir` muda a cada render
-  }, [busca]);
+  }
 
   function toggleFornecedor(id: string) {
     const atual = filtro.fornecedorId ?? [];
@@ -69,7 +81,7 @@ export function FiltrosViagens({
           placeholder="Cliente, destino, localizador…"
           value={busca}
           onChange={(e) => {
-            setBusca(e.target.value);
+            aoDigitar(e.target.value);
           }}
         />
         <Select
@@ -117,7 +129,7 @@ export function FiltrosViagens({
               definir({ tipo: (e.target.value || undefined) as Tipo | undefined });
             }}
           />
-          <div className={s.chips} aria-label="Fornecedor">
+          <div className={s.chips} role="group" aria-label="Fornecedor">
             {fornecedores.map((f) => (
               <Chip
                 key={f.id}

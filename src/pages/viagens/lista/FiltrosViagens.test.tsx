@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import type { FornecedorDto, VendedorDto } from "@/api/viagens";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { useState } from "react";
+import type { FiltroViagens, FornecedorDto, VendedorDto } from "@/api/viagens";
 import { FiltrosViagens } from "./FiltrosViagens";
 
 const FORNECEDORES: FornecedorDto[] = [
@@ -54,4 +55,73 @@ test('mostra "Limpar" só quando há filtro ativo', () => {
   expect(screen.queryByRole("button", { name: "Limpar" })).toBeNull();
   montar(1);
   expect(screen.getByRole("button", { name: "Limpar" })).toBeInTheDocument();
+});
+
+/** Envolve o componente com o mínimo do contrato do hook real (definir/limpar mudando `filtro`),
+ * para reproduzir a divergência entre o texto digitado e o `q` da URL depois de "Limpar". */
+function WrapperComEstado() {
+  const [filtro, setFiltro] = useState<FiltroViagens>({ aba: "todas", pagina: 1, tamanho: 25 });
+  return (
+    <FiltrosViagens
+      filtro={filtro}
+      idaPreset="90d"
+      definir={(patch) => {
+        setFiltro((f) => ({ ...f, ...patch }));
+      }}
+      limpar={() => {
+        setFiltro({ aba: "todas", pagina: 1, tamanho: 25 });
+      }}
+      ativos={0}
+      vendedores={VENDEDORES}
+      fornecedores={FORNECEDORES}
+    />
+  );
+}
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+test("Limpar reseta o campo de busca visível mesmo depois de digitar", () => {
+  vi.useFakeTimers();
+  render(<WrapperComEstado />);
+  const campo = screen.getByLabelText("Buscar viagens");
+
+  fireEvent.change(campo, { target: { value: "lis" } });
+  act(() => {
+    vi.advanceTimersByTime(300);
+  });
+  expect(campo).toHaveValue("lis");
+
+  fireEvent.click(screen.getByRole("button", { name: "Limpar" }));
+  expect(campo).toHaveValue("");
+});
+
+test("busca acompanha filtro.q quando ele muda por fora da digitação (voltar/avançar)", () => {
+  const { rerender } = render(
+    <FiltrosViagens
+      filtro={{ aba: "todas", pagina: 1, tamanho: 25, q: "lis" }}
+      idaPreset="90d"
+      definir={vi.fn()}
+      limpar={vi.fn()}
+      ativos={0}
+      vendedores={VENDEDORES}
+      fornecedores={FORNECEDORES}
+    />,
+  );
+  const campo = screen.getByLabelText("Buscar viagens");
+  expect(campo).toHaveValue("lis");
+
+  rerender(
+    <FiltrosViagens
+      filtro={{ aba: "todas", pagina: 1, tamanho: 25 }}
+      idaPreset="90d"
+      definir={vi.fn()}
+      limpar={vi.fn()}
+      ativos={0}
+      vendedores={VENDEDORES}
+      fornecedores={FORNECEDORES}
+    />,
+  );
+  expect(campo).toHaveValue("");
 });
