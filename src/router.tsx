@@ -4,6 +4,7 @@ import { DefinirSenhaPage } from "@/pages/acesso/DefinirSenhaPage";
 import { EsqueciSenhaPage } from "@/pages/acesso/EsqueciSenhaPage";
 import { LoginPage } from "@/pages/acesso/LoginPage";
 import { RedefinirSenhaPage } from "@/pages/acesso/RedefinirSenhaPage";
+import { StyleguidePage } from "@/pages/styleguide/StyleguidePage";
 import { RotasApp } from "@/shell/rotasModulos";
 
 const router = createBrowserRouter(
@@ -13,6 +14,7 @@ const router = createBrowserRouter(
       <Route path="/definir-senha" element={<DefinirSenhaPage />} />
       <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
       <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
+      {import.meta.env.DEV && <Route path="/styleguide" element={<StyleguidePage />} />}
       <Route element={<RequireAuth />}>{RotasApp()}</Route>
     </>,
   ),
