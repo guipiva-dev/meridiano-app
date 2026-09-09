@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { NetworkError } from "@/api/errors";
 import type { ClienteBuscaDto } from "@/api/viagens";
 import { PassageirosField } from "./PassageirosField";
 
@@ -39,6 +40,68 @@ test("Enter na primeira opção adiciona como titular quando é a primeira pesso
   fireEvent.keyDown(input, { key: "ArrowDown" });
   fireEvent.keyDown(input, { key: "Enter" });
 
+  expect(onChange).toHaveBeenCalledWith([{ clienteId: "1", nome: "Carlos Mendes", titular: true }]);
+  vi.useRealTimers();
+});
+
+test("buscar rejeitando com NetworkError mostra 'Sem conexão'", async () => {
+  vi.useFakeTimers();
+  const buscar = vi.fn().mockRejectedValue(new NetworkError());
+  render(<PassageirosField value={[]} onChange={vi.fn()} buscar={buscar} onNovaPessoa={vi.fn()} erro={undefined} />);
+
+  const input = screen.getByLabelText("Passageiros");
+  fireEvent.change(input, { target: { value: "men" } });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(250);
+  });
+
+  expect(screen.getByText(/Sem conexão/)).toBeInTheDocument();
+  expect(screen.queryByRole("listbox")).toBeNull();
+  vi.useRealTimers();
+});
+
+test("selecionar dentro da janela do debounce cancela a busca pendente (lista não reabre)", async () => {
+  vi.useFakeTimers();
+  const buscar = vi.fn().mockResolvedValue([cliente("1", "Carlos Mendes")]);
+  const onChange = vi.fn();
+  render(<PassageirosField value={[]} onChange={onChange} buscar={buscar} onNovaPessoa={vi.fn()} erro={undefined} />);
+
+  const input = screen.getByLabelText("Passageiros");
+  fireEvent.change(input, { target: { value: "car" } });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(250);
+  });
+  expect(screen.getAllByRole("option")).toHaveLength(1);
+
+  // usuário digita mais mas escolhe a opção já visível antes do novo debounce disparar
+  fireEvent.change(input, { target: { value: "carl" } });
+  fireEvent.mouseDown(screen.getByRole("option"));
+  expect(screen.queryByRole("listbox")).toBeNull();
+
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(250);
+  });
+
+  expect(buscar).toHaveBeenCalledTimes(1);
+  expect(screen.queryByRole("listbox")).toBeNull();
+  expect(onChange).toHaveBeenCalledWith([{ clienteId: "1", nome: "Carlos Mendes", titular: true }]);
+  vi.useRealTimers();
+});
+
+test("Enter sem seta destacada adiciona a primeira opção e nunca envia o formulário", async () => {
+  vi.useFakeTimers();
+  const buscar = vi.fn().mockResolvedValue([cliente("1", "Carlos Mendes"), cliente("2", "Mentor Silva")]);
+  const onChange = vi.fn();
+  render(<PassageirosField value={[]} onChange={onChange} buscar={buscar} onNovaPessoa={vi.fn()} erro={undefined} />);
+
+  const input = screen.getByLabelText("Passageiros");
+  fireEvent.change(input, { target: { value: "men" } });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(250);
+  });
+  const evento = fireEvent.keyDown(input, { key: "Enter" });
+
+  expect(evento).toBe(false); // preventDefault() foi chamado
   expect(onChange).toHaveBeenCalledWith([{ clienteId: "1", nome: "Carlos Mendes", titular: true }]);
   vi.useRealTimers();
 });

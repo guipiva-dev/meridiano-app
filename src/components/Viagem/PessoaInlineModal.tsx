@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import { ConflictError, mensagemDeErro, ValidationError } from "@/api/errors";
 import type { ClienteBuscaDto } from "@/api/viagens";
 import { Button, Field, Input } from "@/components";
@@ -45,7 +45,8 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
     onClose();
   }
 
-  async function enviar() {
+  async function enviar(e?: SubmitEvent<HTMLFormElement>) {
+    e?.preventDefault();
     setErroBloco(undefined);
     if (!nome.trim()) {
       setErroNome("Nome é obrigatório");
@@ -99,7 +100,13 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
         </>
       }
     >
-      <div className={s.modalGrid}>
+      <form
+        className={s.modalGrid}
+        noValidate
+        onSubmit={(e) => {
+          void enviar(e);
+        }}
+      >
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
         <Field label="Nome" required error={erroNome}>
           <Input
@@ -134,7 +141,7 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
             }}
           />
         </Field>
-      </div>
+      </form>
     </Modal>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import { ConflictError, mensagemDeErro, ValidationError } from "@/api/errors";
 import type { FornecedorDto } from "@/api/viagens";
 import { Button, Field, Input, Select } from "@/components";
@@ -33,6 +33,7 @@ export function FornecedorInlineModal({ open, onClose, onCriado, criar }: Fornec
   const [nome, setNome] = useState("");
   const [tipo, setTipo] = useState<string>(TIPOS[0]?.value ?? "operadora");
   const [erroNome, setErroNome] = useState<string>();
+  const [erroTipo, setErroTipo] = useState<string>();
   const [erroBloco, setErroBloco] = useState<string>();
   const [salvando, setSalvando] = useState(false);
 
@@ -40,6 +41,7 @@ export function FornecedorInlineModal({ open, onClose, onCriado, criar }: Fornec
     setNome("");
     setTipo(TIPOS[0]?.value ?? "operadora");
     setErroNome(undefined);
+    setErroTipo(undefined);
     setErroBloco(undefined);
     setSalvando(false);
   }
@@ -48,22 +50,30 @@ export function FornecedorInlineModal({ open, onClose, onCriado, criar }: Fornec
     onClose();
   }
 
-  async function enviar() {
+  async function enviar(e?: SubmitEvent<HTMLFormElement>) {
+    e?.preventDefault();
     setErroBloco(undefined);
     if (!nome.trim()) {
       setErroNome("Nome é obrigatório");
       return;
     }
     setErroNome(undefined);
+    setErroTipo(undefined);
     setSalvando(true);
     try {
       const criado = await criar({ nome: nome.trim(), tipo });
       onCriado(criado);
       fechar();
     } catch (erroCriar) {
-      if (erroCriar instanceof ValidationError) setErroNome(erroCriar.detalhe);
-      else if (erroCriar instanceof ConflictError) setErroBloco(erroCriar.detalhe);
-      else setErroBloco(mensagemDeErro(erroCriar));
+      if (erroCriar instanceof ValidationError && erroCriar.codigo === "nome_obrigatorio") {
+        setErroNome(erroCriar.detalhe);
+      } else if (erroCriar instanceof ValidationError && erroCriar.codigo === "tipo_invalido") {
+        setErroTipo(erroCriar.detalhe);
+      } else if (erroCriar instanceof ConflictError) {
+        setErroBloco(erroCriar.detalhe);
+      } else {
+        setErroBloco(mensagemDeErro(erroCriar));
+      }
       setSalvando(false);
     }
   }
@@ -90,7 +100,13 @@ export function FornecedorInlineModal({ open, onClose, onCriado, criar }: Fornec
         </>
       }
     >
-      <div className={s.modalGrid}>
+      <form
+        className={s.modalGrid}
+        noValidate
+        onSubmit={(e) => {
+          void enviar(e);
+        }}
+      >
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
         <Field label="Nome" required error={erroNome}>
           <Input
@@ -100,7 +116,7 @@ export function FornecedorInlineModal({ open, onClose, onCriado, criar }: Fornec
             }}
           />
         </Field>
-        <Field label="Tipo">
+        <Field label="Tipo" error={erroTipo}>
           <Select
             options={TIPOS}
             value={tipo}
@@ -109,7 +125,7 @@ export function FornecedorInlineModal({ open, onClose, onCriado, criar }: Fornec
             }}
           />
         </Field>
-      </div>
+      </form>
     </Modal>
   );
 }

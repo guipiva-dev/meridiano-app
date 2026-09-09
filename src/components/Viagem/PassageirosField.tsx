@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
+import { mensagemDeErro } from "@/api/errors";
 import type { ClienteBuscaDto } from "@/api/viagens";
 import { Button, Field, IconButton, Input } from "@/components";
 import { Chip } from "@/components/display";
@@ -27,6 +28,7 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
   const [opcoes, setOpcoes] = useState<ClienteBuscaDto[]>([]);
   const [aberto, setAberto] = useState(false);
   const [ativo, setAtivo] = useState(-1);
+  const [erroBusca, setErroBusca] = useState<string>();
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const listboxId = useId();
 
@@ -39,6 +41,7 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
   function mudarQuery(q: string) {
     setQuery(q);
     setAtivo(-1);
+    setErroBusca(undefined);
     clearTimeout(timer.current);
     if (!q.trim()) {
       setOpcoes([]);
@@ -46,14 +49,22 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
       return;
     }
     timer.current = setTimeout(() => {
-      void buscar(q).then((r) => {
-        setOpcoes(r);
-        setAberto(true);
-      });
+      void buscar(q)
+        .then((r) => {
+          setOpcoes(r);
+          setAberto(true);
+          setAtivo(0);
+        })
+        .catch((erroBuscar: unknown) => {
+          setOpcoes([]);
+          setAberto(false);
+          setErroBusca(mensagemDeErro(erroBuscar));
+        });
     }, DEBOUNCE_MS);
   }
 
   function adicionar(c: ClienteBuscaDto) {
+    clearTimeout(timer.current);
     if (value.some((p) => p.clienteId === c.id)) return;
     onChange([...value, { clienteId: c.id, nome: c.nome, titular: value.length === 0 }]);
     setQuery("");
@@ -85,9 +96,9 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
       e.preventDefault();
       setAtivo((i) => (i <= 0 ? opcoes.length - 1 : i - 1));
     } else if (e.key === "Enter") {
-      if (!aberto || ativo < 0) return;
+      if (!aberto) return;
       e.preventDefault();
-      const c = opcoes[ativo];
+      const c = opcoes[ativo >= 0 ? ativo : 0];
       if (c) adicionar(c);
     } else if (e.key === "Escape") {
       setAberto(false);
@@ -95,7 +106,7 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
   }
 
   return (
-    <Field label="Passageiros" error={erro}>
+    <Field label="Passageiros" tooltip="O titular (contorno laranja) é o contato da viagem" error={erro ?? erroBusca}>
       <div className={s.passageiros}>
         <div className={s.chips}>
           {value.map((p) => (
@@ -124,7 +135,7 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
           <Input
             role="combobox"
             aria-expanded={aberto}
-            aria-controls={listboxId}
+            aria-controls={aberto ? listboxId : undefined}
             aria-activedescendant={ativo >= 0 ? `${listboxId}-${ativo}` : undefined}
             autoComplete="off"
             placeholder="Buscar pessoa…"

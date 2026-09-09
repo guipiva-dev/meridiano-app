@@ -90,17 +90,10 @@
   align-self: stretch;
   background: var(--color-border);
 }
-.result b,
-.result span {
-  font: var(--type-section);
-}
 .addReserva {
   margin-left: auto;
 }
 @media (max-width: 1366px) {
-  .summaryStrip {
-    flex-wrap: wrap;
-  }
   .addReserva {
     margin-left: 0;
     width: 100%;

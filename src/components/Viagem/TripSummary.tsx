@@ -73,7 +73,8 @@ export function TripSummary({ reservas, repasseValor, despesas, onAdicionarReser
         <small>Despesas da viagem</small>
         <MoneyValue value={despesas} />
       </div>
-      <div className={`${s.item} ${s.result}`}>
+      <span className={s.sep} aria-hidden />
+      <div className={s.item}>
         <small>
           Resultado da viagem{" "}
           <Tooltip text="Receita das reservas − comissão da vendedora − despesas vinculadas">

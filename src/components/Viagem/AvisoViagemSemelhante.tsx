@@ -12,17 +12,26 @@ interface AvisoViagemSemelhanteProps {
   onContinuar: () => void;
 }
 
-function ddmm(iso: string | null): string | null {
-  if (!iso) return null;
-  const [, m, d] = iso.split("-");
-  return m && d ? `${d}/${m}` : null;
+interface DataIso {
+  ano: string;
+  mes: string;
+  dia: string;
+}
+
+function parseIso(iso: string): DataIso | null {
+  const [ano, mes, dia] = iso.split("-");
+  return ano && mes && dia ? { ano, mes, dia } : null;
 }
 
 function periodo(dataIda: string | null, dataVolta: string | null): string | null {
-  const ida = ddmm(dataIda);
-  const volta = ddmm(dataVolta);
-  if (ida && volta) return `${ida}–${volta}`;
-  return ida ?? volta;
+  const ida = dataIda ? parseIso(dataIda) : null;
+  const volta = dataVolta ? parseIso(dataVolta) : null;
+  if (ida && volta) {
+    if (ida.ano === volta.ano && ida.mes === volta.mes) return `${ida.dia}–${volta.dia}/${ida.mes}`;
+    return `${ida.dia}/${ida.mes}–${volta.dia}/${volta.mes}`;
+  }
+  const unico = ida ?? volta;
+  return unico ? `${unico.dia}/${unico.mes}` : null;
 }
 
 export function AvisoViagemSemelhante({
