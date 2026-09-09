@@ -1,6 +1,9 @@
 .wrap {
   position: relative;
   display: inline-flex;
+}
+.trigger {
+  display: inline-flex;
   background: none;
   border: none;
   padding: 0;
@@ -26,7 +29,7 @@
   z-index: 20;
 }
 .wrap:hover .bubble,
-.wrap:focus-visible .bubble {
+.trigger:focus-visible ~ .bubble {
   visibility: visible;
   opacity: 1;
 }
