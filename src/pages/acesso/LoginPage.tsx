@@ -2,6 +2,7 @@ import { type SubmitEvent, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { UnauthenticatedError } from "@/api/errors";
 import { mensagemDeErro } from "@/api/http";
+import { destinoSeguro } from "@/auth/destinoSeguro";
 import { useAuth } from "@/auth/useAuth";
 import { Button, Field, Input } from "@/components";
 import { Alert } from "@/components/display";
@@ -23,7 +24,7 @@ export function LoginPage() {
     setEnviando(true);
     try {
       await entrar(email.trim(), senha);
-      await nav(params.get("voltar") ?? "/", { replace: true });
+      await nav(destinoSeguro(params.get("voltar")), { replace: true });
     } catch (ex) {
       setErro(ex instanceof UnauthenticatedError ? "E-mail ou senha incorretos." : mensagemDeErro(ex));
     } finally {

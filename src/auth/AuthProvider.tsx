@@ -37,7 +37,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
   const me = data ?? null;
 
-  useEffect(() => registrarNaoAutenticado(() => qc.setQueryData(CHAVE_ME, null)), [qc]);
+  useEffect(
+    () =>
+      registrarNaoAutenticado(() => {
+        // nulo primeiro (o observer ainda montado reage e RequireAuth já redireciona),
+        // clear() depois: descarta qualquer outra consulta em cache (dados do usuário anterior).
+        qc.setQueryData(CHAVE_ME, null);
+        qc.clear();
+      }),
+    [qc],
+  );
 
   const recarregar = useCallback(async () => {
     await qc.invalidateQueries({ queryKey: CHAVE_ME });
@@ -45,12 +54,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const entrar = useCallback(
     async (email: string, senha: string) => {
       await api.post("/auth/login", { email, senha });
+      qc.clear(); // descarta cache de uma sessão anterior antes de buscar os dados do novo usuário
       await recarregar();
     },
-    [recarregar],
+    [recarregar, qc],
   );
   const sair = useCallback(async () => {
     await api.post("/auth/logout");
+    // mesma ordem do handler de 401: `me` nulo primeiro (observer ainda montado reage e
+    // RequireAuth redireciona sozinho — AuthProvider fica acima do RouterProvider em App.tsx
+    // e não tem useNavigate próprio), clear() depois.
     qc.setQueryData(CHAVE_ME, null);
     qc.clear();
   }, [qc]);

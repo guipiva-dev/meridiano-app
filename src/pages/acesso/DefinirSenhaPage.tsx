@@ -22,6 +22,7 @@ function TokenPage({ subtitle, title, submitLabel }: { subtitle: string; title: 
   const nav = useNavigate();
   const { entrar } = useAuth();
   const [erro, setErro] = useState<string | null>(null);
+  const [senhaDefinida, setSenhaDefinida] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const info = useQuery({
     queryKey: ["auth", "token", token],
@@ -36,6 +37,7 @@ function TokenPage({ subtitle, title, submitLabel }: { subtitle: string; title: 
     setErro(null);
     try {
       await api.post("/auth/definir-senha", { token, senha });
+      setSenhaDefinida(true);
       await entrar(info.data.email, senha);
       await nav("/", { replace: true });
     } catch (e) {
@@ -61,9 +63,19 @@ function TokenPage({ subtitle, title, submitLabel }: { subtitle: string; title: 
               <Input readOnly value={info.data.nome} />
             </Field>
             <Field label="E-mail">
-              <Input readOnly value={info.data.email} />
+              <Input readOnly autoComplete="username" value={info.data.email} />
             </Field>
-            {erro && <Alert tone="danger">{erro}</Alert>}
+            {erro && (
+              <Alert tone="danger">
+                {erro}
+                {senhaDefinida && (
+                  <>
+                    {" "}
+                    <Link to="/login">Ir para o login</Link>
+                  </>
+                )}
+              </Alert>
+            )}
             <SenhaForm
               email={info.data.email}
               submitLabel={submitLabel}
