@@ -1,0 +1,88 @@
+.painel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.topo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.ajuda {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+}
+.mostrarConcluidas {
+  margin-left: auto;
+}
+.lista {
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+}
+.linha {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--card-border);
+}
+.linha:last-child {
+  border-bottom: 0;
+}
+.check {
+  width: var(--icon-inline);
+  height: var(--icon-inline);
+  flex: none;
+}
+.texto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.titulo {
+  font: var(--type-component);
+  color: var(--color-text-heading);
+}
+.concluido {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+.meta {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+}
+.resp::before {
+  content: " · ";
+}
+.acoes {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.modalGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* Contrato §4.5: abaixo de 1366 o responsável cai para a 2ª linha da descrição. */
+@media (max-width: 1366px) {
+  .resp {
+    display: block;
+  }
+  .resp::before {
+    content: "";
+  }
+}

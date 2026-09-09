@@ -1,5 +1,6 @@
 export { BookingFields } from "./Reserva/BookingFields";
 export { FinancialFields } from "./Reserva/FinancialFields";
+export { ReservaDetalheCard } from "./Reserva/ReservaDetalheCard";
 export { ReservationCard } from "./Reserva/ReservationCard";
 export { ResultSummary } from "./Reserva/ResultSummary";
 export { ServiceChips } from "./Reserva/ServiceChips";

@@ -1,0 +1,72 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin: 0;
+}
+@media (max-width: 1280px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.rotulo {
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.valor {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-body);
+  color: var(--color-text-primary);
+}
+.mono {
+  font: var(--type-code);
+}
+.cancelamento {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+.cancelamentoLinha {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-body);
+}
+.historico {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.evento {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font: var(--type-body);
+  color: var(--color-text-primary);
+}
+.eventoMeta {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+}
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  border-top: 1px solid var(--card-border);
+  padding-top: var(--space-4);
+}

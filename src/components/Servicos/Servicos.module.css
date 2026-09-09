@@ -1,0 +1,42 @@
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.linha {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.texto {
+  font: var(--type-body);
+  color: var(--color-text-primary);
+}
+.mono {
+  font: var(--type-code);
+}
+.acoes {
+  margin-left: auto;
+}
+.vazio {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+}
+.modalGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.dupla {
+  display: flex;
+  gap: var(--space-4);
+}
+.dupla > * {
+  flex: 1;
+}
+.textarea {
+  composes: control from "../Input/Input.module.css";
+  min-height: calc(var(--control-h) * 2);
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+}
