@@ -38,6 +38,10 @@
   align-items: center;
   gap: var(--space-1);
 }
+.salvo {
+  composes: dirty;
+  color: var(--color-success-text);
+}
 .section {
   display: flex;
   flex-direction: column;

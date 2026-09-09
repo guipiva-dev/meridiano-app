@@ -30,14 +30,14 @@ const auth: AuthValue = {
   recarregar: () => Promise.resolve(),
 };
 
-function montar() {
+function montar(entrada = "/viagens/nova") {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createMemoryRouter(
     [
       { path: "/viagens/nova", element: <NovaViagemPage /> },
       { path: "/viagens/:id/editar", element: <NovaViagemPage /> },
     ],
-    { initialEntries: ["/viagens/nova"] },
+    { initialEntries: [entrada] },
   );
   render(
     <QueryClientProvider client={qc}>
@@ -55,6 +55,9 @@ beforeEach(() => {
     if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
     if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, VENDEDORES));
     if (url.includes("/agencia")) return Promise.resolve(resposta(200, AGENCIA));
+    if (/\/viagens\/[^/?]+$/.test(url)) {
+      return Promise.resolve(resposta(500, { codigo: "erro", detail: "Falha ao carregar a viagem" }));
+    }
     return Promise.resolve(resposta(200, null));
   });
 });
@@ -90,4 +93,11 @@ test("Ctrl+S sem passageiros mostra erro no campo Passageiros e não chama a API
     expect(screen.getByText("Adicione ao menos um passageiro")).toBeInTheDocument();
   });
   expect(urls.some((u) => u.startsWith("POST"))).toBe(false);
+});
+
+test("falha ao carregar a viagem mostra o erro no topo e sai do esqueleto", async () => {
+  montar("/viagens/v9/editar");
+  expect(await screen.findByText("Falha ao carregar a viagem")).toBeInTheDocument();
+  expect(screen.queryByLabelText("Carregando")).toBeNull();
+  expect(screen.getByRole("heading", { name: /Nova viagem/ })).toBeInTheDocument();
 });

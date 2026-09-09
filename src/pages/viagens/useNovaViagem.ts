@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type UseFormReturn, useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router";
+import { mensagemDeErro } from "@/api/errors";
 import {
   type AgenciaDto,
   chaves,
@@ -51,7 +52,8 @@ const SEM_FORNECEDORES: FornecedorDto[] = [];
 const SEM_VENDEDORES: VendedorDto[] = [];
 const DEBOUNCE_MS = 400;
 
-function paraForm(dto: ViagemDto): ViagemForm {
+/** `anteriores` só serve para não recolher os cards que o usuário deixou abertos ao salvar. */
+function paraForm(dto: ViagemDto, anteriores: ReservaForm[]): ViagemForm {
   return {
     destino: dto.destino,
     tipo: dto.tipo,
@@ -63,7 +65,10 @@ function paraForm(dto: ViagemDto): ViagemForm {
     observacoes: dto.observacoes ?? "",
     passageiros: dto.passageiros.map((p) => ({ clienteId: p.clienteId, nome: p.nome, titular: p.titular })),
     repasseValor: dto.repasse?.valor ?? null,
-    reservas: dto.reservas.map(deDto),
+    reservas: dto.reservas.map((r, i) => {
+      const anterior = anteriores.find((a) => a.id === r.id) ?? anteriores[i];
+      return { ...deDto(r), aberta: anterior?.aberta ?? false };
+    }),
   };
 }
 
@@ -133,7 +138,7 @@ export function useNovaViagem(id: string | undefined) {
   useEffect(() => {
     if (!dto || aplicado.current === dto) return;
     aplicado.current = dto;
-    form.reset(paraForm(dto));
+    form.reset(paraForm(dto, form.getValues("reservas")));
     setViagem(dto);
   }, [dto, form]);
 
@@ -208,13 +213,14 @@ export function useNovaViagem(id: string | undefined) {
   const titular = passageiros.find((p) => p.titular);
   const titularId = titular?.clienteId ?? "";
   const [semelhante, setSemelhante] = useState<ViagemSemelhanteDto | null>(null);
-  const [dispensado, setDispensado] = useState(false);
+  // Guarda o titular dispensado, não um booleano: mudar as datas não ressuscita
+  // um aviso que o usuário já respondeu com "Continuar criando nova".
+  const [dispensadoPara, setDispensadoPara] = useState<string | null>(null);
   useEffect(() => {
     if (id || !titularId) {
       setSemelhante(null);
       return;
     }
-    setDispensado(false);
     const t = setTimeout(() => {
       void viagensApi
         .semelhantes(titularId, dataIda || null, dataVolta || null)
@@ -267,7 +273,7 @@ export function useNovaViagem(id: string | undefined) {
   );
 
   const salvamento = useSalvamento<ViagemForm>(enviar);
-  const { marcarSujo, executar } = salvamento;
+  const { marcarSujo, executar, limpar } = salvamento;
 
   useEffect(() => {
     if (isDirty) marcarSujo();
@@ -281,16 +287,20 @@ export function useNovaViagem(id: string | undefined) {
     return executar(dados);
   }, [form, executar]);
 
+  // Recarregar (botão do 409) troca o form pela versão do servidor: o erro exibido morre junto.
   const recarregar = useCallback(async () => {
     if (!id) return;
     await qc.refetchQueries({ queryKey: chaves.viagem(id) });
-  }, [id, qc]);
+    setLocais({});
+    limpar();
+  }, [id, qc, limpar]);
 
   const daApi = useMemo(
     () => errosDeApi(salvamento.estado === "error" ? salvamento.erro : null),
     [salvamento.estado, salvamento.erro],
   );
   const erros = { ...locais, ...daApi.campos };
+  const erroCarga = viagemQ.isError ? mensagemDeErro(viagemQ.error) : null;
 
   const receitaPrevista = somarReservas(reservas).receitaPrevista;
   const repasseSugerido =
@@ -300,16 +310,16 @@ export function useNovaViagem(id: string | undefined) {
 
   return {
     form,
-    carregando: Boolean(id) && viagem === null,
+    carregando: Boolean(id) && viagem === null && erroCarga === null,
     viagem,
     fornecedores,
     vendedores,
     agencia,
     me,
     vendedorSelecionado,
-    semelhante: dispensado ? null : semelhante,
+    semelhante: dispensadoPara === titularId ? null : semelhante,
     dispensarSemelhante: () => {
-      setDispensado(true);
+      setDispensadoPara(titularId);
     },
     duplicadas,
     repasseSugerido,
@@ -321,7 +331,7 @@ export function useNovaViagem(id: string | undefined) {
     salvar,
     recarregar,
     erros,
-    erroBloco: daApi.bloco,
+    erroBloco: erroCarga ?? daApi.bloco,
     conflito: daApi.conflito,
   };
 }

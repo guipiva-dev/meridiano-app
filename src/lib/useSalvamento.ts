@@ -17,6 +17,13 @@ export function useSalvamento<T>(salvar: (dados: T) => Promise<unknown>) {
     [],
   );
 
+  /** Descarta o erro exibido (ex.: depois de recarregar a versão do servidor num 409). */
+  const limpar = useCallback(() => {
+    clearTimeout(timer.current);
+    setEstado("idle");
+    setErro(null);
+  }, []);
+
   const marcarSujo = useCallback(() => {
     setEstado((e) => {
       if (e === "saving") {
@@ -66,5 +73,5 @@ export function useSalvamento<T>(salvar: (dados: T) => Promise<unknown>) {
     [salvar, iniciarSalvamento],
   );
 
-  return { estado, erro, salvoEm, marcarSujo, executar };
+  return { estado, erro, salvoEm, marcarSujo, limpar, executar };
 }

@@ -3,46 +3,16 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { chaves, type FornecedorDto, viagensApi } from "@/api/viagens";
 import { useAuth } from "@/auth/useAuth";
-import { Button, MoneyValue } from "@/components";
+import { Button } from "@/components";
 import { Alert, Badge, StatusBadge } from "@/components/display";
 import { Skeleton } from "@/components/feedback";
-import { type ReservaForm, ReservationCard } from "@/components/reserva";
+import { ReservationCard } from "@/components/reserva";
 import { Page, PageHeader, Section } from "@/components/shell";
-import {
-  AvisoViagemSemelhante,
-  FornecedorInlineModal,
-  PessoaInlineModal,
-  somarReservas,
-  TripSummary,
-} from "@/components/viagem";
+import { AvisoViagemSemelhante, FornecedorInlineModal, PessoaInlineModal, TripSummary } from "@/components/viagem";
 import { useAtalho } from "@/lib/useAtalho";
 import { DadosViagemSection } from "./DadosViagemSection";
 import s from "./NovaViagem.module.css";
 import { useNovaViagem } from "./useNovaViagem";
-
-/** Faixa de totais sem repasse nem resultado, para quem não tem `viagem.ver_resultado`. */
-function ResumoBasico({ reservas, onAdicionarReserva }: { reservas: ReservaForm[]; onAdicionarReserva: () => void }) {
-  const { vendaTotal, custo, receitaPrevista } = somarReservas(reservas);
-  return (
-    <div className={s.resumo}>
-      <div className={s.resumoItem}>
-        <small>Venda total</small>
-        <MoneyValue value={vendaTotal} />
-      </div>
-      <div className={s.resumoItem}>
-        <small>Custo dos fornecedores</small>
-        <MoneyValue value={custo} />
-      </div>
-      <div className={s.resumoItem}>
-        <small>Receita das reservas</small>
-        <MoneyValue value={receitaPrevista} />
-      </div>
-      <Button variant="business" className={s.resumoAcao} onClick={onAdicionarReserva}>
-        + Adicionar reserva
-      </Button>
-    </div>
-  );
-}
 
 export function NovaViagemPage() {
   const { id } = useParams();
@@ -61,6 +31,11 @@ export function NovaViagemPage() {
   const verResultado = pode("viagem.ver_resultado");
   const dirty = v.salvamento.estado === "dirty" || v.salvamento.estado === "error";
   const semelhante = v.semelhante;
+
+  const vendedorNome = v.vendedorSelecionado?.nome ?? v.viagem?.vendedorNome;
+  const partes: string[] = [];
+  if (titular) partes.push(`Titular: ${titular.nome}`);
+  if (vendedorNome) partes.push(`Vendedor(a): ${vendedorNome}`);
 
   useAtalho("ctrl+s", () => {
     void v.salvar();
@@ -86,9 +61,11 @@ export function NovaViagemPage() {
     <Page dirty={dirty} titulo={v.viagem?.codigo ?? "Nova viagem"} onSalvarESair={v.salvar}>
       <PageHeader
         title="Nova viagem"
+        subtitle={partes.length > 0 ? partes.join(" · ") : undefined}
         meta={v.viagem ? <Badge tone="neutral">{v.viagem.codigo}</Badge> : undefined}
         status={<StatusBadge entidade="fase_viagem" valor={v.viagem?.faseOperacional ?? "sem_reserva"} />}
         dirty={dirty}
+        salvoEm={v.salvamento.salvoEm}
         actions={
           <>
             <Button
@@ -187,16 +164,13 @@ export function NovaViagemPage() {
         );
       })}
 
-      {verResultado ? (
-        <TripSummary
-          reservas={reservas}
-          repasseValor={repasseValor}
-          despesas={v.viagem?.resumo?.despesasViagem ?? 0}
-          onAdicionarReserva={v.adicionarReserva}
-        />
-      ) : (
-        <ResumoBasico reservas={reservas} onAdicionarReserva={v.adicionarReserva} />
-      )}
+      <TripSummary
+        reservas={reservas}
+        repasseValor={repasseValor}
+        despesas={v.viagem?.resumo?.despesasViagem ?? 0}
+        onAdicionarReserva={v.adicionarReserva}
+        mostrarResultado={verResultado}
+      />
 
       <div className={s.rodape}>
         <span>

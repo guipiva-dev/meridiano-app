@@ -24,6 +24,47 @@ const FORNECEDORES = [
 const VENDEDORES = [{ id: "u1", nome: "Ana", perfil: "vendedor_externo", geraRepasse: true, percentualPadrao: 20 }];
 const AGENCIA = { nome: "Viva", taxaServicoPadrao: 0 };
 
+function viagemDto(versao: string) {
+  return {
+    id: "v9",
+    codigo: "VG-2026-0042",
+    versao,
+    destino: "Lisboa",
+    tipo: "internacional",
+    dataIda: "2026-04-18",
+    dataVolta: null,
+    vendedorId: "u1",
+    vendedorNome: "Ana",
+    agenteId: "u1",
+    ocasiao: null,
+    observacoes: null,
+    cancelada: false,
+    faseOperacional: "em_emissao",
+    faseFinanceira: "a_receber",
+    passageiros: [{ clienteId: "c1", nome: "Carlos", titular: true }],
+    reservas: [
+      {
+        id: "r1",
+        versao: "3",
+        fornecedorId: "f1",
+        fornecedorNome: "CVC",
+        localizador: "K7X2PQ",
+        dataCompra: "2026-03-14",
+        status: "pendente",
+        tiposServico: [],
+        formasPagamento: [],
+        ravClienteModo: "retido_agencia",
+        fluxoPagamento: "cliente_paga_operadora",
+        nfseStatus: "nao_precisa",
+        observacoes: null,
+        dataPrevistaComissao: null,
+        valorTotal: 3000,
+        valorCliente: 3200,
+      },
+    ],
+  };
+}
+
 interface Chamada {
   url: string;
   metodo: string;
@@ -54,6 +95,8 @@ function instalarFetch() {
     if (metodo === "POST" && url.endsWith("/viagens")) {
       return Promise.resolve(resposta(respostaPost.status, respostaPost.body));
     }
+    if (metodo === "PUT") return Promise.resolve(resposta(200, viagemDto("8")));
+    if (metodo === "GET" && /\/viagens\/[^/?]+$/.test(url)) return Promise.resolve(resposta(200, viagemDto("7")));
     return Promise.resolve(resposta(404, { codigo: "nao_encontrado", detail: "?" }));
   });
 }
@@ -67,7 +110,7 @@ const auth: AuthValue = {
   recarregar: () => Promise.resolve(),
 };
 
-function montar() {
+function montar(id?: string) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const wrapper = ({ children }: { children: ReactNode }) =>
     createElement(
@@ -75,7 +118,7 @@ function montar() {
       { client: qc },
       createElement(AuthContext.Provider, { value: auth }, createElement(MemoryRouter, null, children)),
     );
-  return renderHook(() => useNovaViagem(undefined), { wrapper });
+  return renderHook(() => useNovaViagem(id), { wrapper });
 }
 
 beforeEach(() => {
@@ -230,4 +273,25 @@ test("salvar sem passageiros nem destino falha localmente, sem chamar a API", as
   expect(chamadas.some((c) => c.metodo === "POST")).toBe(false);
   expect(result.current.erros.passageiros).toBeTruthy();
   expect(result.current.erros.destino).toBeTruthy();
+});
+
+test("salvar não recolhe os cards que estavam abertos", async () => {
+  const { result } = montar("v9");
+  await waitFor(() => {
+    expect(result.current.viagem).not.toBeNull();
+  });
+  expect(result.current.form.getValues("reservas")[0]?.aberta).toBe(false);
+
+  act(() => {
+    result.current.alternarReserva(0);
+  });
+  expect(result.current.form.getValues("reservas")[0]?.aberta).toBe(true);
+
+  await act(async () => {
+    await result.current.salvar();
+  });
+
+  expect(chamadas.some((c) => c.metodo === "PUT")).toBe(true);
+  expect(result.current.viagem?.versao).toBe("8");
+  expect(result.current.form.getValues("reservas")[0]?.aberta).toBe(true);
 });

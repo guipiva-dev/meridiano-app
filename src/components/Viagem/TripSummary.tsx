@@ -47,9 +47,17 @@ interface TripSummaryProps {
   repasseValor: number | null;
   despesas: number;
   onAdicionarReserva: () => void;
+  /** Sem `viagem.ver_resultado` (agente): só venda, custo e receita das reservas. */
+  mostrarResultado?: boolean;
 }
 
-export function TripSummary({ reservas, repasseValor, despesas, onAdicionarReserva }: TripSummaryProps) {
+export function TripSummary({
+  reservas,
+  repasseValor,
+  despesas,
+  onAdicionarReserva,
+  mostrarResultado = true,
+}: TripSummaryProps) {
   const { vendaTotal, custo, receitaPrevista } = somarReservas(reservas);
   const resultado = arredondar2(receitaPrevista - (repasseValor ?? 0) - despesas);
   return (
@@ -64,25 +72,34 @@ export function TripSummary({ reservas, repasseValor, despesas, onAdicionarReser
         <MoneyValue value={custo} />
       </div>
       <span className={s.sep} aria-hidden />
-      <div className={s.item}>
-        <small>Comissão da vendedora</small>
-        <MoneyValue value={repasseValor} />
-      </div>
-      <span className={s.sep} aria-hidden />
-      <div className={s.item}>
-        <small>Despesas da viagem</small>
-        <MoneyValue value={despesas} />
-      </div>
-      <span className={s.sep} aria-hidden />
-      <div className={s.item}>
-        <small>
-          Resultado da viagem{" "}
-          <Tooltip text="Receita das reservas − comissão da vendedora − despesas vinculadas">
-            <CircleHelp size={16} aria-hidden />
-          </Tooltip>
-        </small>
-        <MoneyValue value={resultado} emphasis="result" />
-      </div>
+      {mostrarResultado ? (
+        <>
+          <div className={s.item}>
+            <small>Comissão da vendedora</small>
+            <MoneyValue value={repasseValor} />
+          </div>
+          <span className={s.sep} aria-hidden />
+          <div className={s.item}>
+            <small>Despesas da viagem</small>
+            <MoneyValue value={despesas} />
+          </div>
+          <span className={s.sep} aria-hidden />
+          <div className={s.item}>
+            <small>
+              Resultado da viagem{" "}
+              <Tooltip text="Receita das reservas − comissão da vendedora − despesas vinculadas">
+                <CircleHelp size={16} aria-hidden />
+              </Tooltip>
+            </small>
+            <MoneyValue value={resultado} emphasis="result" />
+          </div>
+        </>
+      ) : (
+        <div className={s.item}>
+          <small>Receita das reservas</small>
+          <MoneyValue value={receitaPrevista} />
+        </div>
+      )}
       <Button variant="business" className={s.addReserva} onClick={onAdicionarReserva}>
         + Adicionar reserva
       </Button>

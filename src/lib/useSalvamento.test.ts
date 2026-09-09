@@ -89,3 +89,17 @@ test("chamada sobreposta a executar é ignorada enquanto a primeira está em voo
     await primeira;
   });
 });
+
+test("limpar volta de error para idle e zera o erro", async () => {
+  const salvar = vi.fn().mockRejectedValue(new Error("x"));
+  const { result } = renderHook(() => useSalvamento(salvar));
+  await act(async () => {
+    await result.current.executar({});
+  });
+  expect(result.current.estado).toBe("error");
+  act(() => {
+    result.current.limpar();
+  });
+  expect(result.current.estado).toBe("idle");
+  expect(result.current.erro).toBeNull();
+});
