@@ -7,6 +7,7 @@ import { type ReservaForm, ReservationCard, reservaVazia } from "@/components/re
 import { PageHeader, Section, Tabs } from "@/components/shell";
 import { TripSummary } from "@/components/viagem";
 import type { EntidadeStatus, Tone } from "@/dominio/status";
+import { SecoesDados } from "./SecoesDados";
 import s from "./StyleguidePage.module.css";
 
 const VARIANTES: ButtonVariant[] = ["business", "primary", "secondary", "tertiary", "danger"];
@@ -297,6 +298,8 @@ export function StyleguidePage() {
           />
         </Section>
       </div>
+
+      <SecoesDados />
 
       <div data-testid="sg-skeleton-empty">
         <Section title="Skeleton e empty state" description="Carregamento e ausência de dados">

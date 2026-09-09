@@ -42,5 +42,22 @@ Import sempre pelo barrel, nunca pelo arquivo do componente:
 ## E2E (Playwright)
 
 - `npx playwright test e2e/styleguide.spec.ts` — regressão visual da `/styleguide` contra baseline `e2e/styleguide.spec.ts-snapshots/` (win32 local + linux, este último é o que roda no CI). Requer `npx playwright install` uma vez.
-- `e2e/login.spec.ts` — fluxo de login real; **não roda no CI** (precisa da API de pé + seed, `backend/scripts/seed-dev.sql` ainda por criar).
+- `e2e/login.spec.ts`, `e2e/nova-viagem.spec.ts`, `e2e/viagens.spec.ts` — fluxos reais; **não rodam no CI** (precisam da API de pé + seed: ver `backend/scripts/dev.md`).
 - CI (`.github/workflows/ci.yml`, job `e2e`) roda só `styleguide.spec.ts` contra Chromium headless.
+
+### Regerar as baselines
+
+- win32: `npx playwright test e2e/styleguide.spec.ts --update-snapshots`.
+- linux: rodar o mesmo spec dentro do container do Playwright, contra o Vite do host.
+  O Vite bloqueia Host desconhecido (`host.docker.internal` volta 403), então o container
+  acessa pelo IP de rede da máquina, e o `.bin/playwright` do `node_modules` é um shim de
+  Windows — chame o `cli.js` direto:
+
+  ```
+  npm run dev -- --host 0.0.0.0                        # deixa rodando; anote o IP "Network"
+  # playwright.linux.config.ts = cópia do playwright.config.ts sem `webServer`
+  # e com use.baseURL = "http://<IP-da-rede>:5173"
+  docker run --rm -v "<repo>\frontend:/work" -w //work mcr.microsoft.com/playwright:v1.63.0-noble \
+    node node_modules/@playwright/test/cli.js test --config=playwright.linux.config.ts \
+    e2e/styleguide.spec.ts --update-snapshots
+  ```
