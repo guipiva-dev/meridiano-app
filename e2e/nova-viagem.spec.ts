@@ -48,9 +48,9 @@ test("lança viagem com 4 reservas só pelo teclado e mede o tempo", async ({ pa
 
   await reserva(page, 1, "CVC", "K7X2PQ", "10000", "10500");
   // Sugerido: CVC tem percentual_comissao_padrao = 10 no seed -> 10 % de 10.000 = 1.000.
-  await expect(
-    page.getByRole("region", { name: "Reserva 1" }).getByLabel("Comissão", { exact: true }),
-  ).toHaveValue("R$ 1.000,00");
+  await expect(page.getByRole("region", { name: "Reserva 1" }).getByLabel("Comissão", { exact: true })).toHaveValue(
+    "R$ 1.000,00",
+  );
 
   await reserva(page, 2, "Decolar", "DCL-88213", "3000", "3200");
   await reserva(page, 3, "Azul Viagens", "AZ-90213", "2500", "2500");
