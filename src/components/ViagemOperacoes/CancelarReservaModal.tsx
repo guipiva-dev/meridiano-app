@@ -1,4 +1,4 @@
-import { type ChangeEvent, type SubmitEvent, useState } from "react";
+import { type ChangeEvent, useState } from "react";
 import type { CancelarReservaRequest, ReservaDto, ViagemDto } from "@/api/viagens";
 import { viagensApi } from "@/api/viagens";
 import { Button, Field, useField } from "@/components";
@@ -14,6 +14,7 @@ interface CancelarReservaModalProps {
   viagem: ViagemDto;
   onClose: () => void;
   onCancelada: (v: ViagemDto) => void;
+  onRecarregar?: () => void;
 }
 
 const MAPA: Record<string, string> = {
@@ -48,7 +49,14 @@ function Motivo({ value, onChange }: { value: string; onChange: (v: string) => v
   );
 }
 
-export function CancelarReservaModal({ open, reserva, viagem, onClose, onCancelada }: CancelarReservaModalProps) {
+export function CancelarReservaModal({
+  open,
+  reserva,
+  viagem,
+  onClose,
+  onCancelada,
+  onRecarregar,
+}: CancelarReservaModalProps) {
   const [motivo, setMotivo] = useState("");
   const [desfecho, setDesfecho] = useState<DesfechoValue>(DESFECHO_PADRAO);
   const [erroMotivoLocal, setErroMotivoLocal] = useState<string>();
@@ -65,8 +73,7 @@ export function CancelarReservaModal({ open, reserva, viagem, onClose, onCancela
     onClose();
   }
 
-  async function enviarForm(e?: SubmitEvent<HTMLFormElement>) {
-    e?.preventDefault();
+  async function enviarForm() {
     if (!motivo.trim()) {
       setErroMotivoLocal("Motivo é obrigatório");
       return;
@@ -118,15 +125,20 @@ export function CancelarReservaModal({ open, reserva, viagem, onClose, onCancela
         </>
       }
     >
-      <form
-        className={s.grid}
-        noValidate
-        onSubmit={(e) => {
-          void enviarForm(e);
-        }}
-      >
+      <div className={s.grid}>
         {conflito && (
-          <Alert tone="danger">Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.</Alert>
+          <Alert
+            tone="danger"
+            action={
+              onRecarregar ? (
+                <Button variant="secondary" onClick={onRecarregar}>
+                  Recarregar
+                </Button>
+              ) : undefined
+            }
+          >
+            Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.
+          </Alert>
         )}
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
         <p className={s.impacto}>Zera comissão prevista (salvo comissão mantida) e reavalia o repasse.</p>
@@ -134,7 +146,7 @@ export function CancelarReservaModal({ open, reserva, viagem, onClose, onCancela
           <Motivo value={motivo} onChange={setMotivo} />
         </Field>
         <DesfechoFields value={desfecho} onChange={setDesfecho} erros={erros} passageiros={viagem.passageiros} />
-      </form>
+      </div>
     </Modal>
   );
 }

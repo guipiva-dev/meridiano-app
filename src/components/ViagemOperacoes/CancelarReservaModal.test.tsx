@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ConflictError } from "@/api/errors";
 import type * as ViagensApi from "@/api/viagens";
 import type { CancelarReservaRequest, ReservaDto, ViagemDto } from "@/api/viagens";
 import { CancelarReservaModal } from "./CancelarReservaModal";
@@ -123,4 +124,30 @@ test("submit com desfecho crédito chama cancelarReserva e onCancelada", async (
     versao: "5",
   });
   expect(onCancelada).toHaveBeenCalledWith(dtoRetornado);
+});
+
+test("409 mostra Alert com botão Recarregar que chama onRecarregar", async () => {
+  const user = userEvent.setup();
+  const r = reserva();
+  const v = viagem(r);
+  cancelarReserva.mockRejectedValue(new ConflictError(409, "conflito", "Alguém alterou"));
+  const onRecarregar = vi.fn();
+  render(
+    <CancelarReservaModal
+      open
+      reserva={r}
+      viagem={v}
+      onClose={vi.fn()}
+      onCancelada={vi.fn()}
+      onRecarregar={onRecarregar}
+    />,
+  );
+
+  await user.type(screen.getByLabelText(/Motivo/), "Cliente desistiu");
+  await user.click(screen.getByRole("button", { name: "Cancelar reserva" }));
+
+  const botaoRecarregar = await screen.findByRole("button", { name: "Recarregar" });
+  await user.click(botaoRecarregar);
+
+  expect(onRecarregar).toHaveBeenCalledTimes(1);
 });

@@ -13,6 +13,7 @@ interface NfseModalProps {
   viagem: ViagemDto;
   onClose: () => void;
   onSalva: (v: ViagemDto) => void;
+  onRecarregar?: () => void;
 }
 
 const MAPA: Record<string, string> = {
@@ -30,7 +31,7 @@ const OPCOES_TOMADOR = [
   { value: "operadora", label: "Operadora" },
 ];
 
-export function NfseModal({ open, reserva, viagem, onClose, onSalva }: NfseModalProps) {
+export function NfseModal({ open, reserva, viagem, onClose, onSalva, onRecarregar }: NfseModalProps) {
   const [status, setStatus] = useState(reserva.nfseStatus);
   const [tomador, setTomador] = useState<"cliente" | "operadora" | "">(reserva.nfseTomador ?? "");
   const [numero, setNumero] = useState(reserva.nfseNumero ?? "");
@@ -90,7 +91,18 @@ export function NfseModal({ open, reserva, viagem, onClose, onSalva }: NfseModal
     >
       <div className={s.grid}>
         {conflito && (
-          <Alert tone="danger">Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.</Alert>
+          <Alert
+            tone="danger"
+            action={
+              onRecarregar ? (
+                <Button variant="secondary" onClick={onRecarregar}>
+                  Recarregar
+                </Button>
+              ) : undefined
+            }
+          >
+            Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.
+          </Alert>
         )}
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
         <Field label="Status" error={erros.status}>

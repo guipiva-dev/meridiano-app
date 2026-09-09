@@ -13,6 +13,7 @@ interface TransferirModalProps {
   vendedores: VendedorDto[];
   onClose: () => void;
   onTransferida: (v: ViagemDto) => void;
+  onRecarregar?: () => void;
 }
 
 interface TransferirReq {
@@ -25,7 +26,14 @@ const MAPA: Record<string, string> = {
   usuario_inativo: "agenteId",
 };
 
-export function TransferirModal({ open, viagem, vendedores, onClose, onTransferida }: TransferirModalProps) {
+export function TransferirModal({
+  open,
+  viagem,
+  vendedores,
+  onClose,
+  onTransferida,
+  onRecarregar,
+}: TransferirModalProps) {
   const [agenteId, setAgenteId] = useState("");
   const [erroAgenteLocal, setErroAgenteLocal] = useState<string>();
   const { salvando, erros, erroBloco, conflito, enviar, limpar } = useOperacao<TransferirReq>(
@@ -80,7 +88,18 @@ export function TransferirModal({ open, viagem, vendedores, onClose, onTransferi
     >
       <div className={s.grid}>
         {conflito && (
-          <Alert tone="danger">Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.</Alert>
+          <Alert
+            tone="danger"
+            action={
+              onRecarregar ? (
+                <Button variant="secondary" onClick={onRecarregar}>
+                  Recarregar
+                </Button>
+              ) : undefined
+            }
+          >
+            Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.
+          </Alert>
         )}
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
         <Field label="Novo agente" required error={erroAgenteLocal ?? erros.agenteId}>

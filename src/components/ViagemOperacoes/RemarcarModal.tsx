@@ -1,4 +1,4 @@
-import { type ChangeEvent, type SubmitEvent, useState } from "react";
+import { type ChangeEvent, useState } from "react";
 import type { RemarcarRequest, ReservaDto, ViagemDto } from "@/api/viagens";
 import { viagensApi } from "@/api/viagens";
 import { Button, DateInput, Field, MoneyInput, useField } from "@/components";
@@ -15,6 +15,7 @@ interface RemarcarModalProps {
   viagem: ViagemDto;
   onClose: () => void;
   onRemarcada: (v: ViagemDto) => void;
+  onRecarregar?: () => void;
 }
 
 const MAPA: Record<string, string> = {
@@ -40,7 +41,7 @@ function Descricao({ value, onChange }: { value: string; onChange: (v: string) =
   );
 }
 
-export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada }: RemarcarModalProps) {
+export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada, onRecarregar }: RemarcarModalProps) {
   const [dataAlteracao, setDataAlteracao] = useState(hojeIso());
   const [descricao, setDescricao] = useState("");
   const [valorNovo, setValorNovo] = useState<number | null>(null);
@@ -67,8 +68,7 @@ export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada }: R
     onClose();
   }
 
-  async function enviarForm(e?: SubmitEvent<HTMLFormElement>) {
-    e?.preventDefault();
+  async function enviarForm() {
     if (!descricao.trim()) {
       setErroDescricaoLocal("Descrição é obrigatória");
       return;
@@ -115,15 +115,20 @@ export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada }: R
         </>
       }
     >
-      <form
-        className={s.grid}
-        noValidate
-        onSubmit={(e) => {
-          void enviarForm(e);
-        }}
-      >
+      <div className={s.grid}>
         {conflito && (
-          <Alert tone="danger">Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.</Alert>
+          <Alert
+            tone="danger"
+            action={
+              onRecarregar ? (
+                <Button variant="secondary" onClick={onRecarregar}>
+                  Recarregar
+                </Button>
+              ) : undefined
+            }
+          >
+            Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.
+          </Alert>
         )}
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
         <Field label="Data da alteração" required>
@@ -166,7 +171,7 @@ export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada }: R
             </Field>
           </div>
         </details>
-      </form>
+      </div>
     </Modal>
   );
 }

@@ -15,6 +15,7 @@ interface UsarCreditoModalProps {
   creditos: CreditoDto[];
   onClose: () => void;
   onUsado: (v: ViagemDto) => void;
+  onRecarregar?: () => void;
 }
 
 interface ConsumirReq {
@@ -23,7 +24,7 @@ interface ConsumirReq {
   versao: string;
 }
 
-export function UsarCreditoModal({ open, viagem, creditos, onClose, onUsado }: UsarCreditoModalProps) {
+export function UsarCreditoModal({ open, viagem, creditos, onClose, onUsado, onRecarregar }: UsarCreditoModalProps) {
   const [creditoId, setCreditoId] = useState("");
   const [reservaId, setReservaId] = useState("");
   const [erroLocal, setErroLocal] = useState<string>();
@@ -88,7 +89,18 @@ export function UsarCreditoModal({ open, viagem, creditos, onClose, onUsado }: U
     >
       <div className={s.grid}>
         {conflito && (
-          <Alert tone="danger">Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.</Alert>
+          <Alert
+            tone="danger"
+            action={
+              onRecarregar ? (
+                <Button variant="secondary" onClick={onRecarregar}>
+                  Recarregar
+                </Button>
+              ) : undefined
+            }
+          >
+            Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.
+          </Alert>
         )}
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
         {erroLocal && <Alert tone="danger">{erroLocal}</Alert>}

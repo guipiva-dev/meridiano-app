@@ -1,4 +1,4 @@
-import { type ChangeEvent, type SubmitEvent, useState } from "react";
+import { type ChangeEvent, useState } from "react";
 import type { CancelarReservaItem, CancelarViagemRequest, ViagemDto } from "@/api/viagens";
 import { viagensApi } from "@/api/viagens";
 import { Button, Field, useField } from "@/components";
@@ -13,6 +13,7 @@ interface CancelarViagemModalProps {
   viagem: ViagemDto;
   onClose: () => void;
   onCancelada: (v: ViagemDto) => void;
+  onRecarregar?: () => void;
 }
 
 const MAPA: Record<string, string> = {
@@ -47,7 +48,7 @@ function Motivo({ value, onChange }: { value: string; onChange: (v: string) => v
   );
 }
 
-export function CancelarViagemModal({ open, viagem, onClose, onCancelada }: CancelarViagemModalProps) {
+export function CancelarViagemModal({ open, viagem, onClose, onCancelada, onRecarregar }: CancelarViagemModalProps) {
   const [motivo, setMotivo] = useState("");
   const [desfechos, setDesfechos] = useState<Record<string, DesfechoValue>>({});
   const [erroMotivoLocal, setErroMotivoLocal] = useState<string>();
@@ -66,8 +67,7 @@ export function CancelarViagemModal({ open, viagem, onClose, onCancelada }: Canc
     onClose();
   }
 
-  async function enviarForm(e?: SubmitEvent<HTMLFormElement>) {
-    e?.preventDefault();
+  async function enviarForm() {
     if (!motivo.trim()) {
       setErroMotivoLocal("Motivo é obrigatório");
       return;
@@ -93,6 +93,14 @@ export function CancelarViagemModal({ open, viagem, onClose, onCancelada }: Canc
     }
   }
 
+  const n = ativos.length;
+  const rotuloReservas = n === 1 ? "reserva" : "reservas";
+  const rotuloBotao = n === 0 ? "Cancelar viagem" : `Cancelar viagem e ${n} ${rotuloReservas}`;
+  const textoImpacto =
+    n === 0
+      ? "Não há reservas ativas; cancela as pendências automáticas."
+      : `Cancela ${n} ${rotuloReservas} ativas e as pendências automáticas.`;
+
   return (
     <Modal
       open={open}
@@ -111,23 +119,28 @@ export function CancelarViagemModal({ open, viagem, onClose, onCancelada }: Canc
               void enviarForm();
             }}
           >
-            {`Cancelar viagem e ${ativos.length} reservas`}
+            {rotuloBotao}
           </Button>
         </>
       }
     >
-      <form
-        className={s.grid}
-        noValidate
-        onSubmit={(e) => {
-          void enviarForm(e);
-        }}
-      >
+      <div className={s.grid}>
         {conflito && (
-          <Alert tone="danger">Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.</Alert>
+          <Alert
+            tone="danger"
+            action={
+              onRecarregar ? (
+                <Button variant="secondary" onClick={onRecarregar}>
+                  Recarregar
+                </Button>
+              ) : undefined
+            }
+          >
+            Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.
+          </Alert>
         )}
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
-        <p className={s.impacto}>{`Cancela ${ativos.length} reservas ativas e as pendências automáticas.`}</p>
+        <p className={s.impacto}>{textoImpacto}</p>
         <Field label="Motivo" required error={erroMotivoLocal ?? erros.motivo}>
           <Motivo value={motivo} onChange={setMotivo} />
         </Field>
@@ -146,7 +159,7 @@ export function CancelarViagemModal({ open, viagem, onClose, onCancelada }: Canc
             </div>
           ))}
         </div>
-      </form>
+      </div>
     </Modal>
   );
 }
