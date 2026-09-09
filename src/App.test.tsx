@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { App } from "./App";
 
-test("renderiza o nome do produto", () => {
+test("sem sessão cai no login", async () => {
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 401 }));
+  window.history.pushState({}, "", "/");
   render(<App />);
-  expect(screen.getByRole("heading", { name: "Meridiano" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Entrar" })).toBeInTheDocument();
 });
