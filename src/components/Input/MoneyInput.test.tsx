@@ -58,6 +58,17 @@ test("emite onChange a cada tecla, sem esperar o blur", async () => {
   expect(screen.getByRole("status")).toHaveTextContent("1500");
 });
 
+test("clamp de allowNegative aplica durante a digitação: -5 vira 5, nunca fica negativo intermediário", async () => {
+  const user = userEvent.setup();
+  render(<Harness />);
+  const input = screen.getByLabelText("Valor");
+  await user.click(input);
+  await user.type(input, "-5");
+  expect(screen.getByRole("status")).toHaveTextContent("5");
+  await user.type(input, "0");
+  expect(screen.getByRole("status")).toHaveTextContent("50");
+});
+
 test("aceita colar valor formatado com sinal U+2212", async () => {
   const user = userEvent.setup();
   render(<Harness allowNegative />);

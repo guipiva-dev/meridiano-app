@@ -37,7 +37,8 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function
   function mudar(e: ChangeEvent<HTMLInputElement>) {
     const t = e.target.value;
     setTexto(t);
-    const n = parsearDinheiro(t);
+    let n = parsearDinheiro(t);
+    if (n !== null && !allowNegative && n < 0) n = Math.abs(n);
     if (n !== ultimoEmitido.current) {
       ultimoEmitido.current = n;
       onChange(n);

@@ -22,3 +22,9 @@ test("repasse a_pagar é Liberado", () => {
 test("valor desconhecido não quebra", () => {
   expect(apresentacaoStatus("reserva", "xyz")).toEqual({ texto: "xyz", tone: "neutral" });
 });
+
+test("nfse falta_emitir é warning; emitido é success; nao_precisa é neutral", () => {
+  expect(apresentacaoStatus("nfse", "falta_emitir")).toEqual({ texto: "Falta emitir", tone: "warning" });
+  expect(apresentacaoStatus("nfse", "emitido")).toEqual({ texto: "Emitida", tone: "success" });
+  expect(apresentacaoStatus("nfse", "nao_precisa")).toEqual({ texto: "Não precisa", tone: "neutral" });
+});

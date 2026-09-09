@@ -51,7 +51,13 @@ const acesso: Mapa = {
   inativo: { texto: "Inativo", tone: "neutral" },
 };
 
-const mapas = { fase_viagem, comissao, reserva, repasse, despesa, pendencia, acesso } as const;
+const nfse: Mapa = {
+  falta_emitir: { texto: "Falta emitir", tone: "warning" },
+  emitido: { texto: "Emitida", tone: "success" },
+  nao_precisa: { texto: "Não precisa", tone: "neutral" },
+};
+
+const mapas = { fase_viagem, comissao, reserva, repasse, despesa, pendencia, acesso, nfse } as const;
 export type EntidadeStatus = keyof typeof mapas;
 
 export function apresentacaoStatus(entidade: EntidadeStatus, valor: string): Apresentacao {
