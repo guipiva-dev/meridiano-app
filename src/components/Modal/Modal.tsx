@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { IconButton } from "@/components";
 import { instalarAtalhos } from "@/lib/atalhos";
@@ -21,17 +21,26 @@ const FOCAVEIS =
 
 export function Modal({ open, title, onClose, size = "md", footer, children }: ModalProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const titleId = useId();
   useEffect(instalarAtalhos, []);
-  useAtalho("escape", open ? onClose : () => undefined);
+  useAtalho("escape", onClose, open);
 
   useEffect(() => {
     if (!open) return;
     const anterior = document.activeElement as HTMLElement | null;
     const el = ref.current;
-    const focaveis = el?.querySelectorAll<HTMLElement>(FOCAVEIS);
-    (focaveis?.[0] ?? el)?.focus();
+    if (el && !el.contains(document.activeElement)) {
+      const primeiro = el.querySelectorAll<HTMLElement>(FOCAVEIS)[0];
+      (primeiro ?? el).focus();
+    }
     function prender(e: KeyboardEvent) {
-      if (e.key !== "Tab" || !focaveis?.length) return;
+      if (e.key !== "Tab") return;
+      const focaveis = el?.querySelectorAll<HTMLElement>(FOCAVEIS);
+      if (!focaveis?.length) {
+        e.preventDefault();
+        el?.focus();
+        return;
+      }
       const primeiro = focaveis[0];
       const ultimo = focaveis[focaveis.length - 1];
       if (!primeiro || !ultimo) return;
@@ -63,12 +72,12 @@ export function Modal({ open, title, onClose, size = "md", footer, children }: M
         ref={ref}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-title"
+        aria-labelledby={titleId}
         tabIndex={-1}
         className={cx(s.modal, size === "lg" && s.lg)}
       >
         <header className={s.header}>
-          <h2 id="modal-title" className={s.title}>
+          <h2 id={titleId} className={s.title}>
             {title}
           </h2>
           <IconButton label="Fechar" icon={<X size={20} />} onClick={onClose} />

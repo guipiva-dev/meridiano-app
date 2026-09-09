@@ -29,3 +29,24 @@ test("registro por combo não se repete a cada render; o mais novo continua venc
   expect(b).toHaveBeenCalled();
   expect(a).not.toHaveBeenCalled();
 });
+
+test("ativo=false não registra o atalho; ligar ativo passa a registrar", () => {
+  const handler = vi.fn();
+  const { rerender } = renderHook(
+    ({ ativo }: { ativo: boolean }) => {
+      useAtalho("escape", handler, ativo);
+    },
+    { initialProps: { ativo: false } },
+  );
+
+  const desligado = new KeyboardEvent("keydown", { key: "Escape", cancelable: true });
+  tratarTecla(desligado);
+  expect(desligado.defaultPrevented).toBe(false);
+  expect(handler).not.toHaveBeenCalled();
+
+  rerender({ ativo: true });
+  const ligado = new KeyboardEvent("keydown", { key: "Escape", cancelable: true });
+  tratarTecla(ligado);
+  expect(ligado.defaultPrevented).toBe(true);
+  expect(handler).toHaveBeenCalled();
+});

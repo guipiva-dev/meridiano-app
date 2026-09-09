@@ -17,6 +17,7 @@ test("toast.success aparece e some", () => {
 });
 
 test("toast.undo chama desfazer", () => {
+  vi.useFakeTimers();
   const desfazer = vi.fn();
   render(<ToastHost />);
   act(() => {
@@ -24,4 +25,5 @@ test("toast.undo chama desfazer", () => {
   });
   screen.getByRole("button", { name: "Desfazer" }).click();
   expect(desfazer).toHaveBeenCalled();
+  vi.useRealTimers();
 });
