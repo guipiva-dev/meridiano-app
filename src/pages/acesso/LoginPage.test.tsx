@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, MemoryRouter, RouterProvider } from "react-router";
 import { queryClient } from "@/api/queryClient";
 import { AuthProvider } from "@/auth/AuthProvider";
+import { RequireAuth } from "@/auth/RequireAuth";
 import { LoginPage } from "./LoginPage";
 
 function montar() {
@@ -39,8 +40,13 @@ function montarComRouter(caminhoInicial: string) {
   const router = createMemoryRouter(
     [
       { path: "/login", element: <LoginPage /> },
-      { path: "/", element: <p>Home</p> },
-      { path: "/viagens/1", element: <p>Viagem 1</p> },
+      {
+        element: <RequireAuth />,
+        children: [
+          { path: "/", element: <p>Home</p> },
+          { path: "/viagens/1", element: <p>Viagem 1</p> },
+        ],
+      },
     ],
     { initialEntries: [caminhoInicial] },
   );
@@ -98,4 +104,27 @@ test("voltar=/viagens/1 (caminho interno) cai em /viagens/1 após login", async 
   await waitFor(() => {
     expect(screen.getByText("Viagem 1")).toBeInTheDocument();
   });
+});
+
+test("login autenticado entra numa rota protegida por RequireAuth sem cair de volta no login", async () => {
+  mockFetchFluxoLogin();
+  const router = createMemoryRouter(
+    [
+      { path: "/login", element: <LoginPage /> },
+      { element: <RequireAuth />, children: [{ path: "/viagens", element: <p>Viagens</p> }] },
+    ],
+    { initialEntries: ["/login?voltar=%2Fviagens"] },
+  );
+  render(
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </QueryClientProvider>,
+  );
+  await logar();
+  await waitFor(() => {
+    expect(screen.getByText("Viagens")).toBeInTheDocument();
+  });
+  expect(router.state.location.pathname).toBe("/viagens");
 });

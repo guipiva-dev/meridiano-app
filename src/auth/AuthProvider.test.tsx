@@ -98,7 +98,13 @@ test("401 no meio da sessão limpa o cache e redireciona para /login?voltar=", a
   await waitFor(() => {
     expect(screen.getByText("Entrar:/")).toBeInTheDocument();
   });
-  // nenhum dado do usuário anterior sobrevive; só a consulta de `me` permanece, e nula
+  // nenhuma consulta fora de "auth" sobrevive; a de `me` continua viva (nula) — não é removida,
+  // só assim o observer montado em AuthProvider consegue refletir a mudança sem precisar de refetch
+  const chaves = queryClient
+    .getQueryCache()
+    .getAll()
+    .map((q) => q.queryKey[0]);
+  expect(chaves.every((c) => c === "auth")).toBe(true);
   expect(queryClient.getQueryData(["outraConsulta"])).toBeUndefined();
   expect(queryClient.getQueryData(CHAVE_ME)).toBeNull();
 });

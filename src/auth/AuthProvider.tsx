@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext, type ReactNode, useCallback, useEffect, useMemo } from "react";
 import { UnauthenticatedError } from "@/api/errors";
 import { api } from "@/api/http";
@@ -26,6 +26,15 @@ async function buscarMe(): Promise<Me | null> {
   }
 }
 
+/** Descarta toda consulta e mutação de outro usuário (nada de `queryKey[0] === "auth"`
+ * sobrevive), mas preserva o objeto da consulta de `me`: removê-lo também derrubaria a
+ * inscrição do observer já montado em `AuthProvider`, e nem `invalidateQueries` nem
+ * `refetchQueries` encontrariam mais nada para atualizar. */
+function limparCacheExcetoAuth(qc: QueryClient) {
+  qc.removeQueries({ predicate: (q) => q.queryKey[0] !== "auth" });
+  qc.getMutationCache().clear();
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const { data, isPending } = useQuery({
@@ -40,32 +49,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(
     () =>
       registrarNaoAutenticado(() => {
-        // nulo primeiro (o observer ainda montado reage e RequireAuth já redireciona),
-        // clear() depois: descarta qualquer outra consulta em cache (dados do usuário anterior).
+        // nulo primeiro: o observer da consulta de `me`, ainda montado, reage e RequireAuth
+        // já redireciona sozinho. Só então descarta o resto (dados do usuário anterior) —
+        // preservando o objeto da consulta de `me` em si (ver limparCacheExcetoAuth).
         qc.setQueryData(CHAVE_ME, null);
-        qc.clear();
+        limparCacheExcetoAuth(qc);
       }),
     [qc],
   );
 
   const recarregar = useCallback(async () => {
-    await qc.invalidateQueries({ queryKey: CHAVE_ME });
+    // refetch de verdade (não invalidateQueries): precisa resolver só depois que `me` está
+    // atualizado no cache, para quem aguarda `recarregar()`/`entrar()` (ex.: LoginPage navega
+    // em seguida) já ver a sessão nova.
+    await qc.refetchQueries({ queryKey: CHAVE_ME, exact: true });
   }, [qc]);
   const entrar = useCallback(
     async (email: string, senha: string) => {
       await api.post("/auth/login", { email, senha });
-      qc.clear(); // descarta cache de uma sessão anterior antes de buscar os dados do novo usuário
+      // descarta cache de uma sessão anterior antes de buscar os dados do novo usuário, mas
+      // preserva a consulta de `me` (ver limparCacheExcetoAuth) para o refetch abaixo encontrá-la.
+      limparCacheExcetoAuth(qc);
       await recarregar();
     },
     [recarregar, qc],
   );
   const sair = useCallback(async () => {
-    await api.post("/auth/logout");
-    // mesma ordem do handler de 401: `me` nulo primeiro (observer ainda montado reage e
-    // RequireAuth redireciona sozinho — AuthProvider fica acima do RouterProvider em App.tsx
-    // e não tem useNavigate próprio), clear() depois.
-    qc.setQueryData(CHAVE_ME, null);
-    qc.clear();
+    try {
+      await api.post("/auth/logout");
+    } finally {
+      // mesmo se o logout no servidor falhar (5xx/offline), a sessão local não pode sobreviver:
+      // `me` nulo primeiro (RequireAuth redireciona sozinho), limpa o resto depois.
+      qc.setQueryData(CHAVE_ME, null);
+      limparCacheExcetoAuth(qc);
+    }
   }, [qc]);
 
   const value = useMemo<AuthValue>(
