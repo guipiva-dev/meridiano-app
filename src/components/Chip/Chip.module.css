@@ -1,0 +1,21 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: var(--control-h-sm);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--chip-off-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--chip-off-text);
+  font: var(--type-label);
+  cursor: pointer;
+}
+.chip:hover {
+  background: var(--color-bg-subtle);
+}
+.on {
+  background: var(--chip-on-bg);
+  color: var(--chip-on-text);
+  border-color: var(--chip-on-bg);
+}
