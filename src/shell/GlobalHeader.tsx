@@ -3,9 +3,10 @@ import { useRef } from "react";
 import { useNavigate } from "react-router";
 import { mensagemDeErro } from "@/api/http";
 import { useAuth } from "@/auth/useAuth";
-import { Button, IconButton, Input } from "@/components";
+import { Button, IconButton } from "@/components";
 import { toast } from "@/components/feedback";
 import { useAtalho } from "@/lib/useAtalho";
+import { BuscaGlobal } from "./BuscaGlobal";
 import s from "./GlobalHeader.module.css";
 import { SIDEBAR_ID } from "./Sidebar";
 
@@ -26,7 +27,7 @@ export function GlobalHeader({ onMenu, menuAberto }: { onMenu: () => void; menuA
       />
       <div className={s.busca}>
         <Search size={16} aria-hidden className={s.buscaIcone} />
-        <Input ref={busca} aria-label="Buscar" placeholder="Buscar cliente, viagem, localizador…" />
+        <BuscaGlobal ref={busca} />
         <kbd className={s.kbd}>Ctrl K</kbd>
       </div>
       {pode("viagem.criar") && (
