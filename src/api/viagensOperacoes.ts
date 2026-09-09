@@ -103,7 +103,8 @@ export interface CreditoDto {
   clienteNome: string;
   fornecedorId: string;
   fornecedorNome: string;
-  valor: number;
+  /** Ausente quando o chamador não tem `reserva.ver_valores` (vendedor externo). */
+  valor?: number;
   validade: string | null;
   status: "disponivel" | "utilizado" | "expirado";
   reservaOrigemId: string | null;
@@ -115,9 +116,10 @@ export interface ReservaAlteracaoDto {
   id: string;
   dataAlteracao: string;
   descricao: string;
-  valorAnterior: number | null;
-  valorNovo: number | null;
-  multaCliente: number;
+  /** Ausentes quando o chamador não tem `reserva.ver_valores` (vendedor externo). */
+  valorAnterior?: number | null;
+  valorNovo?: number | null;
+  multaCliente?: number;
   usuarioNome: string | null;
   criadoEm: string;
 }

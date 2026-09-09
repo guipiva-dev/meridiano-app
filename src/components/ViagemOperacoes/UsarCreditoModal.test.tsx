@@ -111,3 +111,23 @@ test("escolher crédito CVC filtra reservas para CVC e envia consumirCredito", a
   expect(consumirCredito).toHaveBeenCalledWith("v1", "cred1", "r1", "5");
   expect(onUsado).toHaveBeenCalledWith(v);
 });
+
+test("crédito sem valor (vendedor externo) aparece na lista e pode ser selecionado", async () => {
+  const user = userEvent.setup();
+  const v = viagem();
+  const semValor = credito("cred1", "f-cvc", "CVC");
+  delete semValor.valor;
+  consumirCredito.mockResolvedValue(v);
+  const onUsado = vi.fn();
+  render(<UsarCreditoModal open viagem={v} creditos={[semValor]} onClose={vi.fn()} onUsado={onUsado} />);
+
+  const opcao = screen.getByLabelText(/CVC · — · sem validade/);
+  await user.click(opcao);
+
+  const select = screen.getByLabelText(/Aplicar na reserva/);
+  await user.selectOptions(select, "r1");
+  await user.click(screen.getByRole("button", { name: "Usar crédito" }));
+
+  expect(consumirCredito).toHaveBeenCalledWith("v1", "cred1", "r1", "5");
+  expect(onUsado).toHaveBeenCalledWith(v);
+});

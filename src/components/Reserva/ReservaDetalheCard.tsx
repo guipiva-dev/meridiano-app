@@ -53,12 +53,14 @@ function Historico({ reservaId }: { reservaId: string }) {
           <span>
             {formatarData(a.dataAlteracao)} · {a.descricao}
           </span>
-          {a.valorNovo !== null && (
+          {a.valorNovo !== null && a.valorNovo !== undefined && (
             <span className={s.eventoMeta}>
               {formatarDinheiro(a.valorAnterior)} → {formatarDinheiro(a.valorNovo)}
             </span>
           )}
-          {a.multaCliente > 0 && <span className={s.eventoMeta}>multa {formatarDinheiro(a.multaCliente)}</span>}
+          {a.multaCliente !== undefined && a.multaCliente > 0 && (
+            <span className={s.eventoMeta}>multa {formatarDinheiro(a.multaCliente)}</span>
+          )}
         </div>
       ))}
     </div>

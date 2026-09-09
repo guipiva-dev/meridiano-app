@@ -108,9 +108,9 @@ export function UsarCreditoModal({ open, viagem, creditos, onClose, onUsado, onR
           {disponiveis.map((c) => (
             <div key={c.id} className={s.creditoLinha}>
               <Radio
-                label={`${c.clienteNome} · ${c.fornecedorNome} · ${formatarDinheiro(c.valor)} · ${
-                  c.validade ? formatarData(c.validade) : "sem validade"
-                }`}
+                label={`${c.clienteNome} · ${c.fornecedorNome} · ${
+                  c.valor !== undefined ? formatarDinheiro(c.valor) : "—"
+                } · ${c.validade ? formatarData(c.validade) : "sem validade"}`}
                 name="credito"
                 value={c.id}
                 checked={creditoId === c.id}

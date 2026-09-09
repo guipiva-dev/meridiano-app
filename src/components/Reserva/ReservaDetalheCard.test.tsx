@@ -121,3 +121,22 @@ test("sem verValores não mostra receita nem o resultado da reserva", () => {
   expect(screen.queryByText(/receita/)).toBeNull();
   expect(screen.queryByText("Receita da agência")).toBeNull();
 });
+
+test("histórico sem valores (vendedor externo) mostra a descrição sem R$", async () => {
+  vi.stubGlobal("fetch", () =>
+    Promise.resolve(
+      resposta(200, [
+        {
+          id: "a1",
+          dataAlteracao: "2026-03-10T00:00:00Z",
+          descricao: "Remarcação de datas",
+          usuarioNome: "Ana",
+          criadoEm: "2026-03-10T00:00:00Z",
+        },
+      ]),
+    ),
+  );
+  montar({ verValores: false });
+  expect(await screen.findByText(/Remarcação de datas/)).toBeInTheDocument();
+  expect(screen.queryByText(/R\$/)).toBeNull();
+});

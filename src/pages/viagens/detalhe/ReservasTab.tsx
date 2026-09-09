@@ -21,6 +21,8 @@ export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaA
   const nav = useNavigate();
   const [abertas, setAbertas] = useState<string[]>(reservaAberta ? [reservaAberta] : []);
   const disponiveis = creditos.filter((c) => c.status === "disponivel");
+  const disponiveisComValor = disponiveis.filter((c) => c.valor !== undefined);
+  const totalCreditos = disponiveisComValor.reduce((total, c) => total + (c.valor ?? 0), 0);
 
   // Ordem de leitura: ativas primeiro, canceladas no fim; o índice mostrado é o da viagem.
   const ordenadas = viagem.reservas
@@ -52,8 +54,8 @@ export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaA
             )
           }
         >
-          Crédito disponível: {disponiveis.length} ·{" "}
-          {formatarDinheiro(disponiveis.reduce((total, c) => total + c.valor, 0))}
+          Crédito disponível: {disponiveis.length}
+          {disponiveisComValor.length > 0 && <> · {formatarDinheiro(totalCreditos)}</>}
         </Alert>
       )}
 

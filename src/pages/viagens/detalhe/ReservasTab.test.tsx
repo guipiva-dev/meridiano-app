@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { useState } from "react";
 import { MemoryRouter } from "react-router";
 import type { CreditoDto } from "@/api/viagens";
@@ -87,6 +87,15 @@ test("crédito disponível mostra o alerta com Usar crédito…", () => {
 test("sem crédito disponível não mostra o alerta", () => {
   montar();
   expect(screen.queryByRole("button", { name: "Usar crédito…" })).toBeNull();
+});
+
+test("crédito sem valor (vendedor externo) mostra só a contagem", () => {
+  const semValor = { ...CREDITO };
+  delete semValor.valor;
+  montar([semValor]);
+  const alerta = screen.getByRole("status");
+  expect(within(alerta).getByText("Crédito disponível: 1")).toBeInTheDocument();
+  expect(within(alerta).queryByText(/R\$/)).toBeNull();
 });
 
 test("Cancelar reserva… no card 1 abre o modal daquela reserva", () => {
