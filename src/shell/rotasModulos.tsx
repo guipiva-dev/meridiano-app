@@ -1,4 +1,5 @@
 import { Navigate, Route } from "react-router";
+import { ViagemPage } from "@/pages/viagens/detalhe/ViagemPage";
 import { ViagensPage } from "@/pages/viagens/lista/ViagensPage";
 import { NovaViagemPage } from "@/pages/viagens/NovaViagemPage";
 import { AppShell } from "./AppShell";
@@ -12,7 +13,7 @@ export function RotasApp() {
       <Route element={<RotaProtegida permissao={["viagem.ver", "viagem.ver_proprias"]} />}>
         <Route path="/viagens" element={<ViagensPage />} />
         <Route path="/viagens/nova" element={<NovaViagemPage />} />
-        <Route path="/viagens/:id" element={<EmConstrucao titulo="Viagem" />} />
+        <Route path="/viagens/:id" element={<ViagemPage />} />
         <Route path="/viagens/:id/editar" element={<NovaViagemPage />} />
       </Route>
       <Route path="/clientes" element={<EmConstrucao titulo="Clientes" />} />

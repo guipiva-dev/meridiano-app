@@ -1,0 +1,169 @@
+.codigo {
+  font: var(--type-code);
+}
+
+.resumo,
+.reservas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/* Blocos de leitura (Reservas, Passageiros, Próximas pendências, Comissões a receber) */
+.bloco {
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+}
+.blocoTopo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--card-border);
+}
+.blocoTitulo {
+  font: var(--type-section);
+  color: var(--color-text-heading);
+  margin: 0;
+}
+.blocoMeta {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+}
+.vazio {
+  margin: 0;
+  padding: var(--space-4) var(--space-6);
+  font: var(--type-body);
+  color: var(--color-text-muted);
+}
+
+.linha,
+.linhaClicavel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-6);
+  border-bottom: 1px solid var(--card-border);
+}
+.linha:last-child,
+.linhaClicavel:last-child {
+  border-bottom: 0;
+}
+.linhaClicavel {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  cursor: pointer;
+}
+.linhaClicavel:hover {
+  background: var(--table-row-hover);
+}
+.numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--icon-button);
+  height: var(--icon-button);
+  border-radius: var(--radius-pill);
+  background: var(--color-selected);
+  color: var(--color-text-inverse);
+  font: var(--type-helper);
+}
+.linhaTexto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  flex: 1;
+}
+.linhaTitulo {
+  font: var(--type-component);
+  color: var(--color-text-heading);
+}
+.linhaMeta {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+}
+.linhaValor {
+  margin-left: auto;
+}
+
+/* Timeline (auditoria da viagem) */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.evento {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+.bolinha {
+  flex: none;
+  width: var(--space-2);
+  height: var(--space-2);
+  margin-top: var(--space-2);
+  border-radius: var(--radius-pill);
+}
+.normal {
+  background: var(--color-info);
+}
+.money {
+  background: var(--color-success);
+}
+.warn {
+  background: var(--color-danger);
+}
+.detalhes {
+  font: var(--type-helper);
+  color: var(--color-text-secondary);
+}
+.detalhes summary {
+  cursor: pointer;
+  color: var(--color-text-link);
+}
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-2);
+}
+.tabela th,
+.tabela td {
+  text-align: left;
+  padding: var(--space-1) var(--space-3) var(--space-1) 0;
+  font: var(--type-helper);
+  vertical-align: top;
+}
+.tabela thead th {
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+}
+
+@media (max-width: 1024px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+}
