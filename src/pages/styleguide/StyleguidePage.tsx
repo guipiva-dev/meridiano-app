@@ -1,8 +1,11 @@
 import { useState } from "react";
+import type { FornecedorDto } from "@/api/viagens";
 import { Button, type ButtonVariant, DateInput, Field, Input, MoneyInput, MoneyValue, Select } from "@/components";
 import { Alert, Badge, Chip, StatusBadge } from "@/components/display";
 import { ConfirmModal, EmptyState, Modal, Skeleton, toast } from "@/components/feedback";
+import { type ReservaForm, ReservationCard, reservaVazia } from "@/components/reserva";
 import { PageHeader, Section, Tabs } from "@/components/shell";
+import { TripSummary } from "@/components/viagem";
 import type { EntidadeStatus, Tone } from "@/dominio/status";
 import s from "./StyleguidePage.module.css";
 
@@ -22,6 +25,31 @@ const TABS_EXEMPLO = [
   { id: "detalhes", label: "Detalhes" },
   { id: "historico", label: "Histórico" },
 ];
+const FORNECEDORES_EXEMPLO: FornecedorDto[] = [
+  { id: "f1", nome: "CVC", tipo: "operadora", percentualComissaoPadrao: 10, prazoComissaoDias: null, ativo: true },
+  { id: "f2", nome: "Decolar", tipo: "operadora", percentualComissaoPadrao: null, prazoComissaoDias: 45, ativo: true },
+];
+const RESERVA_ABERTA: ReservaForm = {
+  ...reservaVazia(0),
+  fornecedorId: "f1",
+  localizador: "K7X2PQ",
+  tiposServico: ["aereo", "hospedagem"],
+  valorTotal: 10000,
+  valorComissao: 1000,
+  valorCliente: 10500,
+  aberta: true,
+};
+const RESERVA_FECHADA: ReservaForm = {
+  ...RESERVA_ABERTA,
+  fornecedorId: "f2",
+  localizador: "DCL-88213",
+  status: "emitida",
+  tiposServico: ["hospedagem"],
+  valorTotal: 3000,
+  valorComissao: 0,
+  valorCliente: 3200,
+  aberta: false,
+};
 
 export function StyleguidePage() {
   const [dinheiro, setDinheiro] = useState<number | null>(1600);
@@ -232,6 +260,40 @@ export function StyleguidePage() {
             status={<StatusBadge entidade="fase_viagem" valor="em_viagem" />}
             dirty
             actions={<Button variant="primary">Salvar</Button>}
+          />
+        </Section>
+      </div>
+
+      <div data-testid="sg-reserva">
+        <Section title="Reserva" description="Card de reserva aberto e fechado, resumo da viagem">
+          <ReservationCard
+            indice={1}
+            value={RESERVA_ABERTA}
+            onChange={() => undefined}
+            onToggle={() => undefined}
+            onRemover={() => undefined}
+            fornecedores={FORNECEDORES_EXEMPLO}
+            onNovoFornecedor={() => undefined}
+            erros={{}}
+            avisoDuplicada={null}
+          />
+          <ReservationCard
+            indice={2}
+            value={RESERVA_FECHADA}
+            onChange={() => undefined}
+            onToggle={() => undefined}
+            onRemover={() => undefined}
+            fornecedores={FORNECEDORES_EXEMPLO}
+            onNovoFornecedor={() => undefined}
+            erros={{}}
+            avisoDuplicada={null}
+          />
+          <TripSummary
+            reservas={[RESERVA_ABERTA, RESERVA_FECHADA]}
+            repasseValor={500}
+            despesas={200}
+            onAdicionarReserva={() => undefined}
+            mostrarResultado
           />
         </Section>
       </div>

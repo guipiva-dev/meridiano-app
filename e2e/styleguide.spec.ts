@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const secoes = ["botoes", "campos", "dinheiro", "chips-badges", "alertas", "tabs", "page-header"];
+const secoes = ["botoes", "campos", "dinheiro", "chips-badges", "alertas", "tabs", "page-header", "reserva"];
 
 for (const sec of secoes) {
   test(`styleguide ${sec}`, async ({ page }) => {
