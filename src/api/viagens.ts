@@ -54,7 +54,8 @@ export interface ReservaRequest {
   fornecedorId: string;
   localizador: string | null;
   dataCompra: string;
-  status: StatusReserva;
+  /** "cancelada" nunca é escolhido na tela, mas é reenviado tal e qual no save. */
+  status: StatusReserva | "cancelada";
   tiposServico: TipoServico[];
   valorTotal: number;
   valorTaxas: number;

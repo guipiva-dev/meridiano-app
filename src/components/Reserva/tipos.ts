@@ -65,9 +65,7 @@ export function paraRequest(r: ReservaForm): ReservaRequest {
     fornecedorId: r.fornecedorId,
     localizador: localizador === "" ? null : localizador,
     dataCompra: r.dataCompra,
-    // `ReservaRequest.status` ainda é só StatusReserva (T5); o backend valida e aceita
-    // "cancelada" também — a tela nunca deve reescrever esse valor no save.
-    status: r.status as ReservaRequest["status"],
+    status: r.status,
     tiposServico: r.tiposServico,
     valorTotal: r.valorTotal ?? 0,
     valorTaxas: r.valorTaxas ?? 0,

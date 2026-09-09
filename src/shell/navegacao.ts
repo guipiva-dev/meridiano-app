@@ -66,6 +66,10 @@ export const subnavs: Record<string, { label: string; path: string }[]> = {
     { label: "Despesas", path: "/financeiro/despesas" },
     { label: "Fechamento", path: "/financeiro/fechamento" },
   ],
+  "/viagens": [
+    { label: "Viagens", path: "/viagens" },
+    { label: "Nova viagem", path: "/viagens/nova" },
+  ],
   "/clientes": [
     { label: "Pessoas", path: "/clientes" },
     { label: "Grupos", path: "/clientes/grupos" },

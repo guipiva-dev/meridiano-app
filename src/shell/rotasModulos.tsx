@@ -1,4 +1,5 @@
 import { Navigate, Route } from "react-router";
+import { NovaViagemPage } from "@/pages/viagens/NovaViagemPage";
 import { AppShell } from "./AppShell";
 import { EmConstrucao } from "./EmConstrucao";
 
@@ -7,7 +8,9 @@ export function RotasApp() {
     <Route element={<AppShell />}>
       <Route index element={<Navigate to="/viagens" replace />} />
       <Route path="/viagens" element={<EmConstrucao titulo="Viagens" />} />
-      <Route path="/viagens/nova" element={<EmConstrucao titulo="Nova viagem" />} />
+      <Route path="/viagens/nova" element={<NovaViagemPage />} />
+      <Route path="/viagens/:id" element={<EmConstrucao titulo="Viagem" />} />
+      <Route path="/viagens/:id/editar" element={<NovaViagemPage />} />
       <Route path="/clientes" element={<EmConstrucao titulo="Clientes" />} />
       <Route path="/clientes/grupos" element={<EmConstrucao titulo="Grupos" />} />
       <Route path="/fornecedores" element={<EmConstrucao titulo="Fornecedores" />} />
