@@ -9,16 +9,14 @@ export function EmConstrucao({ titulo, descricao }: { titulo: string; descricao?
   const modulo = Object.keys(subnavs).find((k) => pathname.startsWith(k));
   const itens = modulo ? subnavs[modulo] : undefined;
   return (
-    <>
+    <Page>
+      <PageHeader title={titulo} />
       {itens && <Subnav items={itens} />}
-      <Page>
-        <PageHeader title={titulo} />
-        <EmptyState
-          icon={<Construction size={32} />}
-          title="Em construção"
-          description={descricao ?? "Esta tela chega no próximo subplano da Fase 3."}
-        />
-      </Page>
-    </>
+      <EmptyState
+        icon={<Construction size={32} />}
+        title="Em construção"
+        description={descricao ?? "Esta tela chega no próximo subplano da Fase 3."}
+      />
+    </Page>
   );
 }

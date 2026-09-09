@@ -104,103 +104,101 @@ export function ViagensPage() {
   }, [mostrarValores]);
 
   return (
-    <>
+    <Page>
+      <PageHeader
+        title="Viagens"
+        subtitle={`${contadores.todas} viagens · ${contadores.emEmissao} em emissão · ${contadores.comissaoAtrasada} com comissão atrasada`}
+        actions={
+          pode("viagem.criar") && (
+            <Button
+              variant="business"
+              icon={<Plus size={20} />}
+              onClick={() => {
+                void nav("/viagens/nova");
+              }}
+            >
+              + Nova viagem
+            </Button>
+          )
+        }
+      />
       <Subnav items={subnavs["/viagens"] ?? []} />
-      <Page>
-        <PageHeader
-          title="Viagens"
-          subtitle={`${contadores.todas} viagens · ${contadores.emEmissao} em emissão · ${contadores.comissaoAtrasada} com comissão atrasada`}
-          actions={
-            pode("viagem.criar") && (
-              <Button
-                variant="business"
-                icon={<Plus size={20} />}
-                onClick={() => {
-                  void nav("/viagens/nova");
-                }}
-              >
-                + Nova viagem
-              </Button>
-            )
-          }
-        />
 
-        <Tabs
-          tabs={TABS.map((t) => ({ id: t.id, label: t.label, count: contadores[CAMPO_CONTADOR[t.id]] }))}
-          active={filtro.aba ?? "todas"}
-          onChange={(id) => {
-            definir({ aba: id as AbaViagens });
-          }}
-        >
-          <Tabs.Panel id={filtro.aba ?? "todas"} active={filtro.aba ?? "todas"}>
-            <FiltrosViagens
-              filtro={filtro}
-              idaPreset={idaPreset}
-              definir={definir}
-              limpar={limpar}
-              ativos={ativos}
-              vendedores={vendedoresQ.data ?? []}
-              fornecedores={fornecedoresQ.data ?? []}
+      <Tabs
+        tabs={TABS.map((t) => ({ id: t.id, label: t.label, count: contadores[CAMPO_CONTADOR[t.id]] }))}
+        active={filtro.aba ?? "todas"}
+        onChange={(id) => {
+          definir({ aba: id as AbaViagens });
+        }}
+      >
+        <Tabs.Panel id={filtro.aba ?? "todas"} active={filtro.aba ?? "todas"}>
+          <FiltrosViagens
+            filtro={filtro}
+            idaPreset={idaPreset}
+            definir={definir}
+            limpar={limpar}
+            ativos={ativos}
+            vendedores={vendedoresQ.data ?? []}
+            fornecedores={fornecedoresQ.data ?? []}
+          />
+
+          {listaQ.isError ? (
+            <Alert
+              tone="danger"
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    void listaQ.refetch();
+                  }}
+                >
+                  Tentar de novo
+                </Button>
+              }
+            >
+              {mensagemDeErro(listaQ.error)}
+            </Alert>
+          ) : (
+            <DataTable
+              legenda="Viagens"
+              colunas={colunas}
+              linhas={itens}
+              chave={(l) => l.id}
+              carregando={listaQ.isLoading}
+              onLinha={(l) => {
+                void nav(`/viagens/${l.id}`);
+              }}
+              rotuloLinha={(l) => `${l.titular} · ${l.destino} · ${l.codigo}`}
+              ordenacao={{ campo: filtro.ordem ?? "ida", direcao: filtro.direcao ?? "desc" }}
+              onOrdenar={(o) => {
+                definir({ ordem: o.campo as FiltroViagens["ordem"], direcao: o.direcao });
+              }}
+              vazio={
+                <EmptyState
+                  title="Nenhuma viagem por aqui"
+                  description="Nada bate com os filtros. Limpe os filtros ou lance a primeira viagem."
+                  action={
+                    <Button variant="secondary" onClick={limpar}>
+                      Limpar filtros
+                    </Button>
+                  }
+                />
+              }
+              rodape={
+                <Paginacao
+                  pagina={filtro.pagina ?? 1}
+                  tamanho={filtro.tamanho ?? 25}
+                  total={listaQ.data?.total ?? 0}
+                  onPagina={(p) => {
+                    definir({ pagina: p });
+                  }}
+                />
+              }
             />
-
-            {listaQ.isError ? (
-              <Alert
-                tone="danger"
-                action={
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      void listaQ.refetch();
-                    }}
-                  >
-                    Tentar de novo
-                  </Button>
-                }
-              >
-                {mensagemDeErro(listaQ.error)}
-              </Alert>
-            ) : (
-              <DataTable
-                legenda="Viagens"
-                colunas={colunas}
-                linhas={itens}
-                chave={(l) => l.id}
-                carregando={listaQ.isLoading}
-                onLinha={(l) => {
-                  void nav(`/viagens/${l.id}`);
-                }}
-                rotuloLinha={(l) => `${l.titular} · ${l.destino} · ${l.codigo}`}
-                ordenacao={{ campo: filtro.ordem ?? "ida", direcao: filtro.direcao ?? "desc" }}
-                onOrdenar={(o) => {
-                  definir({ ordem: o.campo as FiltroViagens["ordem"], direcao: o.direcao });
-                }}
-                vazio={
-                  <EmptyState
-                    title="Nenhuma viagem por aqui"
-                    description="Nada bate com os filtros. Limpe os filtros ou lance a primeira viagem."
-                    action={
-                      <Button variant="secondary" onClick={limpar}>
-                        Limpar filtros
-                      </Button>
-                    }
-                  />
-                }
-                rodape={
-                  <Paginacao
-                    pagina={filtro.pagina ?? 1}
-                    tamanho={filtro.tamanho ?? 25}
-                    total={listaQ.data?.total ?? 0}
-                    onPagina={(p) => {
-                      definir({ pagina: p });
-                    }}
-                  />
-                }
-              />
-            )}
-          </Tabs.Panel>
-        </Tabs>
-      </Page>
-    </>
+          )}
+        </Tabs.Panel>
+      </Tabs>
+    </Page>
   );
 }

@@ -13,7 +13,7 @@ export type ModalViagem =
 /** Estado da página de detalhe: dados, permissões, tab (na URL) e modal aberto. */
 export function useViagem(id: string) {
   const qc = useQueryClient();
-  const { me, pode } = useAuth();
+  const { pode } = useAuth();
   const [params, setParams] = useSearchParams();
   const [modal, setModal] = useState<ModalViagem | null>(null);
 
@@ -74,7 +74,6 @@ export function useViagem(id: string) {
     carregando: viagemQ.isPending,
     erro: viagemQ.isError ? viagemQ.error : undefined,
     recarregar,
-    me,
     pode,
     verValores: viagem?.reservas[0]?.valorTotal !== undefined || pode("reserva.ver_valores"),
     vendedores: vendedoresQ.data ?? [],

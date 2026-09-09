@@ -70,72 +70,71 @@ export function ViagemPage() {
   const tab = tabs.some((t) => t.id === v.tab) ? v.tab : "resumo";
 
   return (
-    <>
+    <Page>
+      <CabecalhoViagem
+        viagem={viagem}
+        pode={v.pode}
+        onTransferir={() => {
+          v.abrir({ tipo: "transferir" });
+        }}
+        onCancelar={() => {
+          v.abrir({ tipo: "cancelarViagem" });
+        }}
+      />
       <Subnav items={subnavs["/viagens"] ?? []} />
-      <Page>
-        <CabecalhoViagem
-          viagem={viagem}
-          pode={v.pode}
-          onTransferir={() => {
-            v.abrir({ tipo: "transferir" });
-          }}
-          onCancelar={() => {
-            v.abrir({ tipo: "cancelarViagem" });
-          }}
-        />
 
-        <Tabs tabs={tabs} active={tab} onChange={v.setTab}>
-          <Tabs.Panel id="resumo" active={tab}>
-            <ResumoTab
-              viagem={viagem}
-              verValores={v.verValores}
-              onAbrirReserva={v.abrirReserva}
-              onVerPendencias={() => {
-                v.setTab("pendencias");
-              }}
-            />
-          </Tabs.Panel>
-          <Tabs.Panel id="reservas" active={tab}>
-            <ReservasTab
-              viagem={viagem}
-              creditos={v.creditos}
-              verValores={v.verValores}
-              podeEditar={podeEditar}
-              reservaAberta={v.reservaAberta}
-              abrir={v.abrir}
-            />
-          </Tabs.Panel>
-          <Tabs.Panel id="financeiro" active={tab}>
-            <FinanceiroTab viagem={viagem} />
-          </Tabs.Panel>
-          <Tabs.Panel id="pendencias" active={tab}>
-            <ListaPendencias
-              viagemId={viagem.id}
-              passageiros={viagem.passageiros}
-              vendedores={v.vendedores}
-              podeEditar={podeEditar && !viagem.cancelada}
-            />
-          </Tabs.Panel>
-          <Tabs.Panel id="documentos" active={tab}>
-            <DocumentosTab viagem={viagem} podeEnviar={v.pode("anexo.enviar")} />
-          </Tabs.Panel>
-          <Tabs.Panel id="timeline" active={tab}>
-            <TimelineTab viagemId={viagem.id} />
-          </Tabs.Panel>
-        </Tabs>
+      <Tabs tabs={tabs} active={tab} onChange={v.setTab}>
+        <Tabs.Panel id="resumo" active={tab}>
+          <ResumoTab
+            viagem={viagem}
+            verValores={v.verValores}
+            pendencias={pendenciasQ.data ?? []}
+            onAbrirReserva={v.abrirReserva}
+            onVerPendencias={() => {
+              v.setTab("pendencias");
+            }}
+          />
+        </Tabs.Panel>
+        <Tabs.Panel id="reservas" active={tab}>
+          <ReservasTab
+            viagem={viagem}
+            creditos={v.creditos}
+            verValores={v.verValores}
+            podeEditar={podeEditar}
+            reservaAberta={v.reservaAberta}
+            abrir={v.abrir}
+          />
+        </Tabs.Panel>
+        <Tabs.Panel id="financeiro" active={tab}>
+          <FinanceiroTab viagem={viagem} />
+        </Tabs.Panel>
+        <Tabs.Panel id="pendencias" active={tab}>
+          <ListaPendencias
+            viagemId={viagem.id}
+            passageiros={viagem.passageiros}
+            vendedores={v.vendedores}
+            podeEditar={podeEditar && !viagem.cancelada}
+          />
+        </Tabs.Panel>
+        <Tabs.Panel id="documentos" active={tab}>
+          <DocumentosTab viagem={viagem} podeEnviar={v.pode("anexo.enviar")} />
+        </Tabs.Panel>
+        <Tabs.Panel id="timeline" active={tab}>
+          <TimelineTab viagemId={viagem.id} />
+        </Tabs.Panel>
+      </Tabs>
 
-        <ModaisViagem
-          modal={v.modal}
-          viagem={viagem}
-          vendedores={v.vendedores}
-          creditos={v.creditos}
-          aplicar={v.aplicar}
-          recarregar={() => {
-            void v.recarregar();
-          }}
-          fechar={v.fechar}
-        />
-      </Page>
-    </>
+      <ModaisViagem
+        modal={v.modal}
+        viagem={viagem}
+        vendedores={v.vendedores}
+        creditos={v.creditos}
+        aplicar={v.aplicar}
+        recarregar={() => {
+          void v.recarregar();
+        }}
+        fechar={v.fechar}
+      />
+    </Page>
   );
 }

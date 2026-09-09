@@ -1,6 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { chavesPendencias, pendenciasApi } from "@/api/pendencias";
+import type { PendenciaDto } from "@/api/pendencias";
 import { type ReservaDto, ROTULO_SERVICO, type ViagemDto } from "@/api/viagens";
 import { Button, MoneyValue } from "@/components";
 import { Badge, StatusBadge } from "@/components/display";
@@ -61,17 +60,15 @@ function faixaDaViagem(
 interface ResumoTabProps {
   viagem: ViagemDto;
   verValores: boolean;
+  pendencias: PendenciaDto[];
   onAbrirReserva: (reservaId: string) => void;
   onVerPendencias: () => void;
 }
 
-export function ResumoTab({ viagem, verValores, onAbrirReserva, onVerPendencias }: ResumoTabProps) {
+export function ResumoTab({ viagem, verValores, pendencias, onAbrirReserva, onVerPendencias }: ResumoTabProps) {
   const faixa = faixaDaViagem(viagem, verValores);
-  const pendenciasQ = useQuery({
-    queryKey: chavesPendencias.daViagem(viagem.id, false),
-    queryFn: () => pendenciasApi.daViagem(viagem.id, false),
-  });
-  const proximas = [...(pendenciasQ.data ?? [])]
+  const reservasAtivas = viagem.reservas.filter((r) => r.status !== "cancelada").length;
+  const proximas = [...pendencias]
     .filter((p) => p.status === "aberta")
     .sort((a, b) => a.dataPrevista.localeCompare(b.dataPrevista))
     .slice(0, 2);
@@ -81,7 +78,7 @@ export function ResumoTab({ viagem, verValores, onAbrirReserva, onVerPendencias 
       {faixa && <FaixaResumo itens={faixa.itens} extra={faixa.extra} />}
 
       <div className={s.split}>
-        <Bloco titulo="Reservas" meta={`${viagem.reservas.length} · clique para abrir`}>
+        <Bloco titulo="Reservas" meta={`${reservasAtivas} · clique para abrir`}>
           {viagem.reservas.length === 0 && (
             <EmptyState title="Nenhuma reserva" description="Adicione a primeira reserva pela edição da viagem." />
           )}
