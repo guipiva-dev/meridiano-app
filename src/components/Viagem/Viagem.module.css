@@ -1,0 +1,125 @@
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* PassageirosField */
+.passageiros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.passChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.titular {
+  outline: 2px solid var(--color-action-business);
+  outline-offset: 1px;
+}
+.buscaWrap {
+  position: relative;
+  min-width: 200px;
+  flex: 1 1 200px;
+}
+.listbox {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-1) 0;
+  list-style: none;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-float);
+}
+.option {
+  padding: var(--space-2) var(--space-3);
+  font: var(--type-body);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+.optionAtivo {
+  background: var(--color-bg-selected);
+}
+.optionMeta {
+  color: var(--color-text-muted);
+}
+
+/* TripSummary */
+.summaryStrip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.item small {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--color-border);
+}
+.result b,
+.result span {
+  font: var(--type-section);
+}
+.addReserva {
+  margin-left: auto;
+}
+@media (max-width: 1366px) {
+  .summaryStrip {
+    flex-wrap: wrap;
+  }
+  .addReserva {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* AvisoViagemSemelhante */
+.avisoAcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.mono {
+  font: var(--type-code);
+}
+
+/* Modais inline (pessoa / fornecedor) */
+.modalGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
