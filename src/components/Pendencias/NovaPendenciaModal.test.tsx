@@ -73,6 +73,21 @@ test("selecionar 2 passageiros muda o botão e envia clienteIds com 2", async ()
   });
 });
 
+test("Enter no formulário salva: o botão é o submit do form (que é o do modal)", async () => {
+  montar();
+  const form = document.querySelector("form");
+  const botao = screen.getByRole("button", { name: "Criar 1 pendência" });
+  expect(botao).toHaveAttribute("type", "submit");
+  expect(botao.getAttribute("form")).toBe(form?.id);
+
+  fireEvent.change(screen.getByLabelText(/O que precisa ser feito/), { target: { value: "Enviar voucher" } });
+  fireEvent.submit(form!);
+
+  await waitFor(() => {
+    expect(chamadas.some((c) => c.method === "POST")).toBe(true);
+  });
+});
+
 test("sem título mostra erro local e não chama a API", async () => {
   montar();
 

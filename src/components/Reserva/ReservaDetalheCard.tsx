@@ -4,6 +4,7 @@ import { mensagemDeErro } from "@/api/http";
 import { chaves, type ReservaDto, ROTULO_FORMA, ROTULO_SERVICO, viagensApi } from "@/api/viagens";
 import { Button, MoneyValue } from "@/components";
 import { Alert, StatusBadge } from "@/components/display";
+import { Skeleton } from "@/components/feedback";
 import { ListaServicos } from "@/components/servicos";
 import { formatarData } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
@@ -41,8 +42,9 @@ function Leitura({ rotulo, children }: { rotulo: string; children: ReactNode }) 
 
 function Historico({ reservaId }: { reservaId: string }) {
   const q = useQuery({ queryKey: chaves.alteracoes(reservaId), queryFn: () => viagensApi.alteracoes(reservaId) });
+  if (q.isPending) return <Skeleton lines={2} />;
   if (q.isError) return <Alert tone="danger">{mensagemDeErro(q.error)}</Alert>;
-  const itens = q.data ?? [];
+  const itens = q.data;
   if (itens.length === 0) return <span className={s.eventoMeta}>Sem alterações registradas.</span>;
   return (
     <div className={s.historico}>

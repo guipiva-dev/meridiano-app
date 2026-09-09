@@ -94,6 +94,12 @@ test("aberto mostra o resultado da reserva e as ações", () => {
   expect(screen.getByRole("button", { name: "Cancelar reserva…" })).toBeInTheDocument();
 });
 
+test("histórico não afirma 'sem alterações' antes de a query resolver", async () => {
+  montar();
+  expect(screen.queryByText("Sem alterações registradas.")).toBeNull();
+  expect(await screen.findByText("Sem alterações registradas.")).toBeInTheDocument();
+});
+
 test("cancelada mostra o bloco Cancelamento e esconde as ações", () => {
   montar({
     reserva: reservaDto({

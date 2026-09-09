@@ -1,5 +1,6 @@
-import { type SubmitEvent, useState } from "react";
-import { ValidationError } from "@/api/errors";
+import { useQueryClient } from "@tanstack/react-query";
+import { type SubmitEvent, useId, useState } from "react";
+import { ConflictError, ValidationError } from "@/api/errors";
 import { mensagemDeErro } from "@/api/http";
 import { type PendenciaDto, type Prioridade, pendenciasApi } from "@/api/pendencias";
 import type { PassageiroDto, VendedorDto } from "@/api/viagens";
@@ -7,6 +8,7 @@ import { Button, DateInput, Field, Input, Select } from "@/components";
 import { Alert, Chip } from "@/components/display";
 import { Modal } from "@/components/feedback";
 import { hojeIso } from "@/lib/datas";
+import { chaveDasPendencias } from "./chave";
 import s from "./Pendencias.module.css";
 
 interface NovaPendenciaModalProps {
@@ -34,6 +36,8 @@ export function NovaPendenciaModal({
   onClose,
   onSalva,
 }: NovaPendenciaModalProps) {
+  const qc = useQueryClient();
+  const idForm = useId();
   // O chamador monta o modal só quando abre, então o estado inicial já é o "reset".
   const [titulo, setTitulo] = useState(pendencia?.titulo ?? "");
   const [dataPrevista, setDataPrevista] = useState(() => pendencia?.dataPrevista ?? hojeIso());
@@ -74,6 +78,9 @@ export function NovaPendenciaModal({
     } catch (erro) {
       if (erro instanceof ValidationError && erro.codigo === "titulo_obrigatorio") setErroTitulo(erro.detalhe);
       else setErroBloco(mensagemDeErro(erro));
+      // 409: a `versao` em mãos morreu. Recarrega a lista atrás do modal para o próximo clique
+      // usar a versão nova, senão o usuário fica preso em 409 para sempre.
+      if (erro instanceof ConflictError) void qc.invalidateQueries({ queryKey: chaveDasPendencias(viagemId) });
       setSalvando(false);
     }
   }
@@ -91,19 +98,14 @@ export function NovaPendenciaModal({
           <Button variant="tertiary" onClick={onClose}>
             Voltar
           </Button>
-          <Button
-            variant="primary"
-            loading={salvando}
-            onClick={() => {
-              void enviar();
-            }}
-          >
+          <Button variant="primary" type="submit" form={idForm} loading={salvando}>
             {rotulo}
           </Button>
         </>
       }
     >
       <form
+        id={idForm}
         className={s.modalGrid}
         noValidate
         onSubmit={(e) => {

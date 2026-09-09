@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type SubmitEvent, useId, useState } from "react";
 import { anexosApi, enviarArquivo, type NovoAnexoRequest, type TipoAnexo } from "@/api/anexos";
 import { mensagemDeErro } from "@/api/http";
 import type { ReservaDto } from "@/api/viagens";
@@ -31,6 +31,7 @@ function descartePadrao(): string {
 }
 
 export function AnexarModal({ open, viagemId, reservas, onClose, onEnviado }: AnexarModalProps) {
+  const idForm = useId();
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [tipo, setTipo] = useState<TipoAnexo>("voucher");
   const [reservaId, setReservaId] = useState("");
@@ -40,7 +41,8 @@ export function AnexarModal({ open, viagemId, reservas, onClose, onEnviado }: An
   const [erroBloco, setErroBloco] = useState<string>();
   const [enviando, setEnviando] = useState(false);
 
-  async function enviar() {
+  async function enviar(e?: SubmitEvent<HTMLFormElement>) {
+    e?.preventDefault();
     setErroBloco(undefined);
     if (!arquivo) {
       setErroArquivo("Escolha um arquivo");
@@ -92,19 +94,20 @@ export function AnexarModal({ open, viagemId, reservas, onClose, onEnviado }: An
           <Button variant="tertiary" onClick={onClose}>
             Voltar
           </Button>
-          <Button
-            variant="primary"
-            loading={enviando}
-            onClick={() => {
-              void enviar();
-            }}
-          >
+          <Button variant="primary" type="submit" form={idForm} loading={enviando}>
             Anexar
           </Button>
         </>
       }
     >
-      <div className={s.modalGrid}>
+      <form
+        id={idForm}
+        className={s.modalGrid}
+        noValidate
+        onSubmit={(e) => {
+          void enviar(e);
+        }}
+      >
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
         <Field label="Arquivo" required error={erroArquivo} helper="Até 25 MB.">
           <Input
@@ -152,7 +155,7 @@ export function AnexarModal({ open, viagemId, reservas, onClose, onEnviado }: An
             />
           </Field>
         )}
-      </div>
+      </form>
     </Modal>
   );
 }

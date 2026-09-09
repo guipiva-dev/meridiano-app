@@ -1,7 +1,8 @@
-import { type SubmitEvent, useState } from "react";
-import { ValidationError } from "@/api/errors";
+import { useQueryClient } from "@tanstack/react-query";
+import { type SubmitEvent, useId, useState } from "react";
+import { ConflictError, ValidationError } from "@/api/errors";
 import { mensagemDeErro } from "@/api/http";
-import { type ServicoDto, servicosApi } from "@/api/servicos";
+import { chavesServicos, type ServicoDto, servicosApi } from "@/api/servicos";
 import { ROTULO_SERVICO, TIPOS_SERVICO, type TipoServico } from "@/api/viagens";
 import { Button, Field, Input, Select, useField } from "@/components";
 import { Alert } from "@/components/display";
@@ -40,6 +41,8 @@ const paraInput = (iso: string | null | undefined) => (iso ? iso.slice(0, 16) : 
 const paraApi = (valor: string) => (valor === "" ? null : valor);
 
 export function ServicoModal({ open, reservaId, servico, onClose, onSalvo }: ServicoModalProps) {
+  const qc = useQueryClient();
+  const idForm = useId();
   // O chamador monta o modal só quando abre, então o estado inicial já é o "reset".
   const [tipo, setTipo] = useState<TipoServico>(servico?.tipo ?? "aereo");
   const [titulo, setTitulo] = useState(servico?.titulo ?? "");
@@ -85,6 +88,11 @@ export function ServicoModal({ open, reservaId, servico, onClose, onSalvo }: Ser
           : undefined;
       if (campo && erro instanceof ValidationError) setErros({ [campo]: erro.detalhe });
       else setErroBloco(mensagemDeErro(erro));
+      // 409: a `versao` em mãos morreu. Recarrega a lista atrás do modal para o próximo clique
+      // usar a versão nova, senão o usuário fica preso em 409 para sempre.
+      if (erro instanceof ConflictError) {
+        void qc.invalidateQueries({ queryKey: chavesServicos.daReserva(reservaId) });
+      }
       setSalvando(false);
     }
   }
@@ -99,19 +107,14 @@ export function ServicoModal({ open, reservaId, servico, onClose, onSalvo }: Ser
           <Button variant="tertiary" onClick={onClose}>
             Voltar
           </Button>
-          <Button
-            variant="primary"
-            loading={salvando}
-            onClick={() => {
-              void enviar();
-            }}
-          >
+          <Button variant="primary" type="submit" form={idForm} loading={salvando}>
             {servico ? "Salvar" : "Adicionar"}
           </Button>
         </>
       }
     >
       <form
+        id={idForm}
         className={s.modalGrid}
         noValidate
         onSubmit={(e) => {

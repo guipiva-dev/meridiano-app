@@ -7,6 +7,7 @@ import { Button, Checkbox } from "@/components";
 import { Alert } from "@/components/display";
 import { ConfirmModal, EmptyState, Skeleton, toast } from "@/components/feedback";
 import { AdiarModal } from "./AdiarModal";
+import { chaveDasPendencias } from "./chave";
 import { LinhaPendencia } from "./LinhaPendencia";
 import { NovaPendenciaModal } from "./NovaPendenciaModal";
 import s from "./Pendencias.module.css";
@@ -18,8 +19,7 @@ interface ListaPendenciasProps {
   podeEditar: boolean;
 }
 
-const AJUDA =
-  "Toda pendência tem data. Aparece aqui, na Agenda e na aba Pendências de cada passageiro. A linha inteira abre o contexto.";
+const AJUDA = "Toda pendência tem data. Aparece aqui, na Agenda e na aba Pendências de cada passageiro.";
 
 export function ListaPendencias({ viagemId, passageiros, vendedores, podeEditar }: ListaPendenciasProps) {
   const qc = useQueryClient();
@@ -36,7 +36,7 @@ export function ListaPendencias({ viagemId, passageiros, vendedores, podeEditar 
   });
 
   function invalidar() {
-    void qc.invalidateQueries({ queryKey: ["viagens", viagemId, "pendencias"] });
+    void qc.invalidateQueries({ queryKey: chaveDasPendencias(viagemId) });
   }
   function falhou(e: unknown) {
     toast.error(mensagemDeErro(e));
