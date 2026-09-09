@@ -1,0 +1,59 @@
+.top {
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-6);
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+.menu {
+  display: none;
+}
+.busca {
+  position: relative;
+  flex: 1;
+  max-width: 460px;
+  display: flex;
+  align-items: center;
+}
+.busca input {
+  padding-left: var(--space-8);
+  padding-right: var(--space-12);
+}
+.buscaIcone {
+  position: absolute;
+  left: var(--space-3);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+.kbd {
+  position: absolute;
+  right: var(--space-3);
+  font: var(--type-code);
+  color: var(--color-text-muted);
+  background: var(--color-bg-subtle);
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+}
+.user {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.nome {
+  font: var(--type-label);
+  color: var(--color-text-secondary);
+}
+@media (max-width: 1024px) {
+  .menu {
+    display: inline-flex;
+  }
+  .nome {
+    display: none;
+  }
+}
