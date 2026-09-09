@@ -5,9 +5,10 @@ import s from "./Reserva.module.css";
 interface ServiceChipsProps {
   value: TipoServico[];
   onChange: (v: TipoServico[]) => void;
+  disabled?: boolean;
 }
 
-export function ServiceChips({ value, onChange }: ServiceChipsProps) {
+export function ServiceChips({ value, onChange, disabled = false }: ServiceChipsProps) {
   function alternar(tipo: TipoServico) {
     onChange(value.includes(tipo) ? value.filter((t) => t !== tipo) : [...value, tipo]);
   }
@@ -17,6 +18,7 @@ export function ServiceChips({ value, onChange }: ServiceChipsProps) {
         <Chip
           key={tipo}
           selected={value.includes(tipo)}
+          disabled={disabled}
           onClick={() => {
             alternar(tipo);
           }}

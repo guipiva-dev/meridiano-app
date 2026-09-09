@@ -1,7 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { useId } from "react";
 import { type FornecedorDto, ROTULO_SERVICO } from "@/api/viagens";
-import { Button, IconButton, MoneyValue } from "@/components";
+import { Button, MoneyValue } from "@/components";
 import { Alert, StatusBadge } from "@/components/display";
 import { calcularReserva } from "@/dominio/calculoReserva";
 import { formatarDinheiro } from "@/lib/dinheiro";
@@ -39,6 +39,7 @@ export function ReservationCard({
   const resultado = calcularReserva(paraValoresReserva(value));
   const servicos = value.tiposServico.map((t) => ROTULO_SERVICO[t]).join(" · ");
   const percentualSugerido = fornecedor?.percentualComissaoPadrao ?? null;
+  const cancelada = value.status === "cancelada";
 
   // <section> com nome acessível (aria-labelledby) já tem role="region" implícito (WAI-ARIA);
   // explícito seria redundante para o jsx-a11y, mas getByRole("region", { name }) funciona igual.
@@ -56,7 +57,6 @@ export function ReservationCard({
           <MoneyValue value={value.valorCliente} />
           <small className={s.receitaSmall}>receita {formatarDinheiro(resultado.receitaPrevista)}</small>
         </span>
-        <IconButton label="Remover reserva" icon={<Trash2 />} onClick={onRemover} />
         <Button variant="tertiary" size="sm" aria-expanded={value.aberta} onClick={onToggle}>
           {value.aberta ? "Recolher" : "Expandir"}
         </Button>
@@ -72,16 +72,30 @@ export function ReservationCard({
               fornecedores={fornecedores}
               onNovoFornecedor={onNovoFornecedor}
               erros={erros}
+              readOnly={cancelada}
             />
           </div>
           <div className={s.group}>
             <div className={s.eyebrow}>Financeiro</div>
-            <FinancialFields value={value} onChange={onChange} percentualSugerido={percentualSugerido} erros={erros} />
+            <FinancialFields
+              value={value}
+              onChange={onChange}
+              percentualSugerido={percentualSugerido}
+              erros={erros}
+              readOnly={cancelada}
+            />
           </div>
           <div className={s.group}>
             <div className={s.eyebrow}>Resultado desta reserva</div>
             <ResultSummary value={value} />
           </div>
+          {!cancelada && (
+            <div className={s.footer}>
+              <Button variant="tertiary" size="sm" icon={<Trash2 size={16} />} onClick={onRemover}>
+                Remover reserva
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </section>

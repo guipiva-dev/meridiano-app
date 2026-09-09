@@ -61,3 +61,21 @@ test("aberta mostra o ResultSummary com receita R$ 520,00 (3000/300/20/3200 via_
   expect(receita).not.toBeNull();
   expect(within(receita as HTMLElement).getByText("R$ 520,00")).toBeInTheDocument();
 });
+
+test("'Remover reserva' fica no rodapé do corpo aberto, não no header", () => {
+  render(<ReservationCard {...base({ value: reservaPreenchida(true) })} />);
+  const region = screen.getByRole("region", { name: "Reserva 1" });
+  const header = region.querySelector("header");
+  expect(header).not.toBeNull();
+  expect(within(header!).queryByRole("button", { name: /Remover reserva/ })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Remover reserva/ })).toBeInTheDocument();
+});
+
+test("reserva cancelada: sem 'Remover reserva' e campos somente leitura", () => {
+  const cancelada: ReservaForm = { ...reservaPreenchida(true), status: "cancelada" };
+  render(<ReservationCard {...base({ value: cancelada })} />);
+  expect(screen.getByRole("region", { name: "Reserva 1" })).toHaveTextContent("Cancelada");
+  expect(screen.queryByRole("button", { name: /Remover reserva/ })).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Total da reserva")).toHaveAttribute("readonly");
+  expect(screen.getByLabelText("Fornecedor")).toBeDisabled();
+});

@@ -17,7 +17,7 @@ export interface ReservaForm {
   fornecedorId: string;
   localizador: string;
   dataCompra: string;
-  status: StatusReserva;
+  status: StatusReserva | "cancelada";
   nfseStatus: NfseStatus;
   tiposServico: TipoServico[];
   valorTotal: number | null;
@@ -38,7 +38,7 @@ export function reservaVazia(taxaServicoPadrao: number): ReservaForm {
   return {
     fornecedorId: "",
     localizador: "",
-    dataCompra: new Date().toISOString().slice(0, 10),
+    dataCompra: new Date().toLocaleDateString("en-CA"),
     status: "pendente",
     nfseStatus: "nao_precisa",
     tiposServico: [],
@@ -58,12 +58,16 @@ export function reservaVazia(taxaServicoPadrao: number): ReservaForm {
 }
 
 export function paraRequest(r: ReservaForm): ReservaRequest {
+  const localizador = r.localizador.trim();
+  const observacoes = r.observacoes.trim();
   return {
     id: r.id,
     fornecedorId: r.fornecedorId,
-    localizador: r.localizador.trim() === "" ? null : r.localizador,
+    localizador: localizador === "" ? null : localizador,
     dataCompra: r.dataCompra,
-    status: r.status,
+    // `ReservaRequest.status` ainda é só StatusReserva (T5); o backend valida e aceita
+    // "cancelada" também — a tela nunca deve reescrever esse valor no save.
+    status: r.status as ReservaRequest["status"],
     tiposServico: r.tiposServico,
     valorTotal: r.valorTotal ?? 0,
     valorTaxas: r.valorTaxas ?? 0,
@@ -75,7 +79,7 @@ export function paraRequest(r: ReservaForm): ReservaRequest {
     fluxoPagamento: r.fluxoPagamento,
     formasPagamento: r.formasPagamento,
     nfseStatus: r.nfseStatus,
-    observacoes: r.observacoes.trim() === "" ? null : r.observacoes,
+    observacoes: observacoes === "" ? null : observacoes,
   };
 }
 
@@ -86,9 +90,7 @@ export function deDto(r: ReservaDto): ReservaForm {
     fornecedorId: r.fornecedorId,
     localizador: r.localizador ?? "",
     dataCompra: r.dataCompra,
-    // ponytail: reserva cancelada reaproveita o form como "emitida" — sem fluxo de
-    // cancelamento no front ainda; separar quando essa tela existir.
-    status: r.status === "cancelada" ? "emitida" : r.status,
+    status: r.status,
     nfseStatus: r.nfseStatus,
     tiposServico: r.tiposServico,
     valorTotal: r.valorTotal ?? null,
@@ -115,5 +117,6 @@ export function paraValoresReserva(r: ReservaForm): ValoresReserva {
     valorCliente: r.valorCliente ?? 0,
     taxaServico: r.taxaServico ?? 0,
     viaOperadora: r.ravClienteModo === "via_operadora",
+    cancelada: r.status === "cancelada",
   };
 }

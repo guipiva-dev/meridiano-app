@@ -21,9 +21,18 @@ interface BookingFieldsProps {
   fornecedores: FornecedorDto[];
   onNovoFornecedor: () => void;
   erros: Partial<Record<keyof ReservaForm, string>>;
+  /** Reserva cancelada: todos os campos viram leitura/seleção travada. */
+  readOnly?: boolean;
 }
 
-export function BookingFields({ value, onChange, fornecedores, onNovoFornecedor, erros }: BookingFieldsProps) {
+export function BookingFields({
+  value,
+  onChange,
+  fornecedores,
+  onNovoFornecedor,
+  erros,
+  readOnly = false,
+}: BookingFieldsProps) {
   const opcoesFornecedor = fornecedores.map((f) => ({ value: f.id, label: f.nome }));
   return (
     <div className="grid-form">
@@ -33,11 +42,12 @@ export function BookingFields({ value, onChange, fornecedores, onNovoFornecedor,
             options={opcoesFornecedor}
             placeholder="Selecione"
             value={value.fornecedorId}
+            disabled={readOnly}
             onChange={(e: ChangeEvent<HTMLSelectElement>) => {
               onChange({ fornecedorId: e.target.value });
             }}
           />
-          <Button variant="tertiary" size="sm" onClick={onNovoFornecedor}>
+          <Button variant="tertiary" size="sm" disabled={readOnly} onClick={onNovoFornecedor}>
             + novo
           </Button>
         </div>
@@ -46,6 +56,7 @@ export function BookingFields({ value, onChange, fornecedores, onNovoFornecedor,
         <Input
           className={s.mono}
           value={value.localizador}
+          readOnly={readOnly}
           onChange={(e: ChangeEvent<HTMLInputElement>) => {
             onChange({ localizador: e.target.value });
           }}
@@ -54,6 +65,7 @@ export function BookingFields({ value, onChange, fornecedores, onNovoFornecedor,
       <Field label="Data da compra" className="span-2" error={erros.dataCompra}>
         <DateInput
           value={value.dataCompra}
+          readOnly={readOnly}
           onChange={(e: ChangeEvent<HTMLInputElement>) => {
             onChange({ dataCompra: e.target.value });
           }}
@@ -63,6 +75,7 @@ export function BookingFields({ value, onChange, fornecedores, onNovoFornecedor,
         <Select
           options={OPCOES_NFSE}
           value={value.nfseStatus}
+          disabled={readOnly}
           onChange={(e: ChangeEvent<HTMLSelectElement>) => {
             onChange({ nfseStatus: e.target.value as NfseStatus });
           }}
@@ -71,6 +84,7 @@ export function BookingFields({ value, onChange, fornecedores, onNovoFornecedor,
       <Field label="Serviços vendidos" className="span-12">
         <ServiceChips
           value={value.tiposServico}
+          disabled={readOnly}
           onChange={(v) => {
             onChange({ tiposServico: v });
           }}

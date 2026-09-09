@@ -25,10 +25,20 @@ interface FinancialFieldsProps {
   onChange: (patch: Partial<ReservaForm>) => void;
   percentualSugerido: number | null;
   erros: Partial<Record<keyof ReservaForm, string>>;
+  /** Reserva cancelada: todos os campos viram leitura/seleção travada. */
+  readOnly?: boolean;
 }
 
 /** Sem componente Textarea compartilhado: copia o padrão do Input (useField p/ id/aria) localmente. */
-function Observacoes({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function Observacoes({
+  value,
+  onChange,
+  readOnly,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  readOnly: boolean;
+}) {
   const f = useField();
   return (
     <textarea
@@ -38,6 +48,7 @@ function Observacoes({ value, onChange }: { value: string; onChange: (v: string)
       rows={4}
       className={s.control}
       value={value}
+      readOnly={readOnly}
       onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
         onChange(e.target.value);
       }}
@@ -45,7 +56,13 @@ function Observacoes({ value, onChange }: { value: string; onChange: (v: string)
   );
 }
 
-export function FinancialFields({ value, onChange, percentualSugerido, erros }: FinancialFieldsProps) {
+export function FinancialFields({
+  value,
+  onChange,
+  percentualSugerido,
+  erros,
+  readOnly = false,
+}: FinancialFieldsProps) {
   function alternarForma(forma: FormaPagamento) {
     const atual = value.formasPagamento;
     onChange({ formasPagamento: atual.includes(forma) ? atual.filter((f) => f !== forma) : [...atual, forma] });
@@ -63,6 +80,7 @@ export function FinancialFields({ value, onChange, percentualSugerido, erros }: 
       >
         <MoneyInput
           value={value.valorTotal}
+          readOnly={readOnly}
           onChange={(v) => {
             onChange({ valorTotal: v });
           }}
@@ -71,6 +89,7 @@ export function FinancialFields({ value, onChange, percentualSugerido, erros }: 
       <Field label="Do total, quanto é taxa" className="span-2" error={erros.valorTaxas}>
         <MoneyInput
           value={value.valorTaxas}
+          readOnly={readOnly}
           onChange={(v) => {
             onChange({ valorTaxas: v });
           }}
@@ -79,6 +98,7 @@ export function FinancialFields({ value, onChange, percentualSugerido, erros }: 
       <Field label="Comissão" className="span-2" helper={helperComissao} error={erros.valorComissao}>
         <MoneyInput
           value={value.valorComissao}
+          readOnly={readOnly}
           onChange={(v) => {
             onChange({ valorComissao: v, comissaoSugerida: false });
           }}
@@ -87,6 +107,7 @@ export function FinancialFields({ value, onChange, percentualSugerido, erros }: 
       <Field label="RAV da operadora" className="span-2" error={erros.ravOperadora}>
         <MoneyInput
           value={value.ravOperadora}
+          readOnly={readOnly}
           onChange={(v) => {
             onChange({ ravOperadora: v });
           }}
@@ -100,6 +121,7 @@ export function FinancialFields({ value, onChange, percentualSugerido, erros }: 
       >
         <MoneyInput
           value={value.valorCliente}
+          readOnly={readOnly}
           onChange={(v) => {
             onChange({ valorCliente: v });
           }}
@@ -113,6 +135,7 @@ export function FinancialFields({ value, onChange, percentualSugerido, erros }: 
         <Select
           options={OPCOES_RAV_CLIENTE}
           value={value.ravClienteModo}
+          disabled={readOnly}
           onChange={(e: ChangeEvent<HTMLSelectElement>) => {
             onChange({ ravClienteModo: e.target.value as RavClienteModo });
           }}
@@ -124,6 +147,7 @@ export function FinancialFields({ value, onChange, percentualSugerido, erros }: 
             <Chip
               key={forma}
               selected={value.formasPagamento.includes(forma)}
+              disabled={readOnly}
               onClick={() => {
                 alternarForma(forma);
               }}
@@ -137,6 +161,7 @@ export function FinancialFields({ value, onChange, percentualSugerido, erros }: 
         <Select
           options={OPCOES_FLUXO}
           value={value.fluxoPagamento}
+          disabled={readOnly}
           onChange={(e: ChangeEvent<HTMLSelectElement>) => {
             onChange({ fluxoPagamento: e.target.value as FluxoPagamento });
           }}
@@ -148,6 +173,7 @@ export function FinancialFields({ value, onChange, percentualSugerido, erros }: 
           <Field label="Taxa de serviço" className="span-2" error={erros.taxaServico}>
             <MoneyInput
               value={value.taxaServico}
+              readOnly={readOnly}
               onChange={(v) => {
                 onChange({ taxaServico: v });
               }}
@@ -156,6 +182,7 @@ export function FinancialFields({ value, onChange, percentualSugerido, erros }: 
           <Field label="Observações" className="span-12">
             <Observacoes
               value={value.observacoes}
+              readOnly={readOnly}
               onChange={(v) => {
                 onChange({ observacoes: v });
               }}
