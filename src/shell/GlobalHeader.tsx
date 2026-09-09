@@ -1,8 +1,10 @@
 import { Bell, CircleHelp, LogOut, Menu, Plus, Search } from "lucide-react";
 import { useRef } from "react";
 import { useNavigate } from "react-router";
+import { mensagemDeErro } from "@/api/http";
 import { useAuth } from "@/auth/useAuth";
 import { Button, IconButton, Input } from "@/components";
+import { toast } from "@/components/feedback";
 import { useAtalho } from "@/lib/useAtalho";
 import s from "./GlobalHeader.module.css";
 import { SIDEBAR_ID } from "./Sidebar";
@@ -40,7 +42,11 @@ export function GlobalHeader({ onMenu, menuAberto }: { onMenu: () => void; menuA
           label="Sair"
           icon={<LogOut size={20} />}
           onClick={() => {
-            void sair().then(() => nav("/login"));
+            void sair()
+              .then(() => nav("/login"))
+              .catch((e: unknown) => {
+                toast.error(mensagemDeErro(e));
+              });
           }}
         />
       </div>

@@ -2,7 +2,6 @@ import { X } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { IconButton } from "@/components";
-import { instalarAtalhos } from "@/lib/atalhos";
 import { cx } from "@/lib/cx";
 import { useAtalho } from "@/lib/useAtalho";
 import s from "./Modal.module.css";
@@ -22,7 +21,6 @@ const FOCAVEIS =
 export function Modal({ open, title, onClose, size = "md", footer, children }: ModalProps) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
-  useEffect(instalarAtalhos, []);
   useAtalho("escape", onClose, open);
 
   useEffect(() => {

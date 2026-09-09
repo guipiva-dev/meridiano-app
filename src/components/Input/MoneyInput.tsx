@@ -1,4 +1,4 @@
-import { type FocusEvent, forwardRef, type InputHTMLAttributes, useState } from "react";
+import { type ChangeEvent, type FocusEvent, forwardRef, type InputHTMLAttributes, useRef, useState } from "react";
 import { cx } from "@/lib/cx";
 import { formatarDinheiro, parsearDinheiro } from "@/lib/dinheiro";
 import { useField } from "../Field/FieldContext";
@@ -23,19 +23,33 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function
   const f = useField();
   const [editando, setEditando] = useState(false);
   const [texto, setTexto] = useState("");
+  const ultimoEmitido = useRef(value);
 
   function focar(e: FocusEvent<HTMLInputElement>) {
     setTexto(cru(value));
+    ultimoEmitido.current = value;
     setEditando(true);
     requestAnimationFrame(() => {
       e.target.select();
     });
     onFocus?.(e);
   }
+  function mudar(e: ChangeEvent<HTMLInputElement>) {
+    const t = e.target.value;
+    setTexto(t);
+    const n = parsearDinheiro(t);
+    if (n !== ultimoEmitido.current) {
+      ultimoEmitido.current = n;
+      onChange(n);
+    }
+  }
   function sair(e: FocusEvent<HTMLInputElement>) {
     let n = parsearDinheiro(texto);
     if (n !== null && !allowNegative && n < 0) n = Math.abs(n);
-    if (n !== value) onChange(n);
+    if (n !== ultimoEmitido.current) {
+      ultimoEmitido.current = n;
+      onChange(n);
+    }
     setEditando(false);
     onBlur?.(e);
   }
@@ -51,9 +65,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function
         inputMode="decimal"
         readOnly={readOnly}
         value={editando ? texto : formatarDinheiro(value)}
-        onChange={(e) => {
-          setTexto(e.target.value);
-        }}
+        onChange={mudar}
         onFocus={focar}
         onBlur={sair}
         className={cx(s.control, s.money, calculated && s.calculated, readOnly && s.readOnly, className)}

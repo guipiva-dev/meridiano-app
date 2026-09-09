@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Outlet, useLocation } from "react-router";
-import { instalarAtalhos } from "@/lib/atalhos";
 import { useAtalho } from "@/lib/useAtalho";
 import s from "./AppShell.module.css";
 import { GlobalHeader } from "./GlobalHeader";
@@ -17,7 +16,6 @@ export function AppShell() {
   const fechar = () => {
     setMenu(false);
   };
-  useEffect(instalarAtalhos, []);
   useAtalho("escape", fechar, menu);
   return (
     <div className={s.shell}>

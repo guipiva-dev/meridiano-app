@@ -26,7 +26,7 @@ function TokenPage({ subtitle, title, submitLabel }: { subtitle: string; title: 
   const [enviando, setEnviando] = useState(false);
   const info = useQuery({
     queryKey: ["auth", "token", token],
-    queryFn: () => api.get<TokenInfo>(`/auth/tokens/${encodeURIComponent(token)}`),
+    queryFn: () => api.get<TokenInfo>(`/auth/tokens?token=${encodeURIComponent(token)}`),
     enabled: token !== "",
     retry: false,
   });

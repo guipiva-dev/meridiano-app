@@ -1,5 +1,5 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
-import { ApiError, NetworkError, UnauthenticatedError } from "./errors";
+import { NetworkError, UnauthenticatedError } from "./errors";
 
 let naoAutenticadoHandler: (() => void) | undefined;
 
@@ -22,7 +22,6 @@ export const queryClient = new QueryClient({
       staleTime: 30_000,
       refetchOnWindowFocus: false,
       retry: (count, e) => e instanceof NetworkError && count < 1,
-      throwOnError: (e) => e instanceof ApiError && e.status === 401,
     },
     mutations: { retry: 0 },
   },

@@ -49,7 +49,7 @@
 }
 @media (max-width: 1280px) {
   .side {
-    width: 64px;
+    width: calc(var(--sidebar-pad-x) * 2 + var(--icon-nav) + var(--space-4));
   }
   .label,
   .secaoTitulo,

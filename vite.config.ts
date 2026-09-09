@@ -12,7 +12,7 @@ export default defineConfig({
       "/health": "http://localhost:5000",
     },
   },
-  build: { outDir: "../backend/src/Meridiano.Api/wwwroot", emptyOutDir: true, sourcemap: true },
+  build: { outDir: "../backend/src/Meridiano.Api/wwwroot", emptyOutDir: true, sourcemap: false },
   css: { modules: { localsConvention: "camelCaseOnly" } },
   test: {
     environment: "jsdom",
