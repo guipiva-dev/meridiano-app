@@ -1,0 +1,33 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--card-pad);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+.label {
+  font: var(--type-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+.value {
+  font: var(--type-page);
+  color: var(--color-text-primary);
+}
+.warning .value {
+  color: var(--color-warning-text);
+}
+.danger .value {
+  color: var(--color-danger-text);
+}
+.contexto {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+}
+.action {
+  margin-top: var(--space-2);
+  align-self: flex-start;
+}

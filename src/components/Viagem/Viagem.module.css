@@ -93,10 +93,16 @@
 .addReserva {
   margin-left: auto;
 }
+.extra {
+  margin-left: auto;
+}
 @media (max-width: 1366px) {
   .addReserva {
     margin-left: 0;
     width: 100%;
+  }
+  .extra {
+    margin-left: 0;
   }
 }
 

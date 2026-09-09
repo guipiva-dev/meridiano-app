@@ -1,5 +1,10 @@
 export { Button, type ButtonProps, type ButtonVariant } from "./Button/Button";
 export { IconButton } from "./Button/IconButton";
+export { type Coluna, DataTable, type Ordenacao } from "./DataTable/DataTable";
+export { DateCell } from "./DataTable/DateCell";
+export { MoneyCell } from "./DataTable/MoneyCell";
+export { Paginacao } from "./DataTable/Paginacao";
+export { StatusCell } from "./DataTable/StatusCell";
 export { Field, type FieldProps } from "./Field/Field";
 export { useField } from "./Field/FieldContext";
 export { Checkbox } from "./Input/Checkbox";
@@ -9,3 +14,4 @@ export { MoneyInput } from "./Input/MoneyInput";
 export { MoneyValue } from "./Input/MoneyValue";
 export { Radio } from "./Input/Radio";
 export { Select, type SelectOption } from "./Input/Select";
+export { KpiCard } from "./KpiCard/KpiCard";
