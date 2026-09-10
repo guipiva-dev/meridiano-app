@@ -50,6 +50,29 @@ test("submit sem nome mostra erro de campo e não chama a API", async () => {
   expect(chamadas).toHaveLength(0);
 });
 
+test("422 nome_obrigatorio do servidor cai no campo Nome (via errosDeCadastro)", async () => {
+  const user = userEvent.setup();
+  vi.stubGlobal("fetch", () =>
+    Promise.resolve({
+      ok: false,
+      status: 422,
+      headers: { get: () => "application/json" },
+      json: () => Promise.resolve({ codigo: "nome_obrigatorio", detail: "Nome é obrigatório" }),
+    } as unknown as Response),
+  );
+  render(<GrupoInlineModal open onClose={vi.fn()} onCriado={vi.fn()} />);
+
+  // Digita um espaço para passar da validação local (client-side) e forçar a ida ao servidor.
+  await user.type(screen.getByLabelText(/Nome/), " a");
+  await user.click(screen.getByRole("button", { name: "Criar" }));
+
+  const campoNome = await screen.findByLabelText(/Nome/);
+  await waitFor(() => {
+    expect(campoNome).toHaveAttribute("aria-invalid", "true");
+  });
+  expect(screen.getByText("Nome é obrigatório")).toBeInTheDocument();
+});
+
 test("submit com nome chama POST /grupos e onCriado", async () => {
   const user = userEvent.setup();
   const onCriado = vi.fn();

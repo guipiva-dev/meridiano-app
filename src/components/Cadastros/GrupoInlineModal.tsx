@@ -1,5 +1,4 @@
 import { type SubmitEvent, useState } from "react";
-import { ConflictError, mensagemDeErro, ValidationError } from "@/api/errors";
 import type { GrupoDto, TipoGrupo } from "@/api/grupos";
 import { gruposApi } from "@/api/grupos";
 import { Button, Field, Input, Select } from "@/components";
@@ -7,6 +6,7 @@ import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
 import { apresentacaoStatus } from "@/dominio/status";
 import s from "./Cadastros.module.css";
+import { errosDeCadastro } from "./mapaErrosCadastro";
 
 const TIPOS: TipoGrupo[] = ["familia", "empresa", "outro"];
 const OPCOES_TIPO = TIPOS.map((t) => ({ value: t, label: apresentacaoStatus("grupo_tipo", t).texto }));
@@ -20,15 +20,15 @@ interface GrupoInlineModalProps {
 export function GrupoInlineModal({ open, onClose, onCriado }: GrupoInlineModalProps) {
   const [nome, setNome] = useState("");
   const [tipo, setTipo] = useState<TipoGrupo>("familia");
-  const [erroNome, setErroNome] = useState<string>();
-  const [erroBloco, setErroBloco] = useState<string>();
+  const [erros, setErros] = useState<Record<string, string>>({});
+  const [erroBloco, setErroBloco] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
 
   function limpar() {
     setNome("");
     setTipo("familia");
-    setErroNome(undefined);
-    setErroBloco(undefined);
+    setErros({});
+    setErroBloco(null);
     setSalvando(false);
   }
   function fechar() {
@@ -38,25 +38,23 @@ export function GrupoInlineModal({ open, onClose, onCriado }: GrupoInlineModalPr
 
   async function enviar(e?: SubmitEvent<HTMLFormElement>) {
     e?.preventDefault();
-    setErroBloco(undefined);
+    setErroBloco(null);
     if (!nome.trim()) {
-      setErroNome("Nome é obrigatório");
+      setErros({ nome: "Nome é obrigatório" });
       return;
     }
-    setErroNome(undefined);
+    setErros({});
     setSalvando(true);
     try {
       const criado = await gruposApi.criar({ nome: nome.trim(), tipo, cnpj: null, observacoes: null });
       onCriado(criado);
       fechar();
     } catch (erroCriar) {
-      if (erroCriar instanceof ValidationError && erroCriar.codigo === "nome_obrigatorio") {
-        setErroNome(erroCriar.detalhe);
-      } else if (erroCriar instanceof ConflictError) {
-        setErroBloco(erroCriar.detalhe);
-      } else {
-        setErroBloco(mensagemDeErro(erroCriar));
-      }
+      const resultado = errosDeCadastro(erroCriar);
+      setErros(resultado.campos);
+      setErroBloco(
+        resultado.conflito ? "Alguém alterou este registro enquanto você criava. Tente de novo." : resultado.bloco,
+      );
       setSalvando(false);
     }
   }
@@ -91,7 +89,7 @@ export function GrupoInlineModal({ open, onClose, onCriado }: GrupoInlineModalPr
         }}
       >
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
-        <Field label="Nome" required error={erroNome}>
+        <Field label="Nome" required error={erros.nome}>
           <Input
             value={nome}
             onChange={(e) => {
@@ -99,7 +97,7 @@ export function GrupoInlineModal({ open, onClose, onCriado }: GrupoInlineModalPr
             }}
           />
         </Field>
-        <Field label="Tipo">
+        <Field label="Tipo" error={erros.tipo}>
           <Select
             options={OPCOES_TIPO}
             value={tipo}
