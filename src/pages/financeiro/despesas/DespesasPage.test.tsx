@@ -173,6 +173,7 @@ function linha(descricao: string) {
 test("mostra os KPIs do protótipo no cabeçalho e nos cartões", async () => {
   montar();
   expect(await screen.findByText(/R\$ 2\.640,00 lançados/)).toBeInTheDocument();
+  expect(screen.getByText(/R\$ 1\.180,00 a pagar/)).toBeInTheDocument();
   expect(screen.getByText("9 despesas")).toBeInTheDocument();
   const valorApagar = screen.getByText("R$ 1.180,00");
   expect(valorApagar.closest("div")).toHaveClass("warning");

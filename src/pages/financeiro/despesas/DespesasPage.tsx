@@ -48,8 +48,6 @@ export function DespesasPage() {
   const itens = listaQ.data?.itens ?? [];
   const kpis = listaQ.data?.kpis ?? KPIS_VAZIOS;
   const podeMovimentar = pode("financeiro.movimentar");
-  // Sem um total explícito de "a pagar" no DTO: vencidas + vencem em breve é a melhor aproximação disponível.
-  const aPagarQtd = kpis.vencidas + kpis.vencemAte7Dias;
 
   function aoPagar(_despesa: DespesaDto, proxima: DespesaDto | null) {
     toast.success(proxima ? `Paga. Próxima criada para ${formatarData(proxima.vencimento)}` : "Paga");
@@ -60,7 +58,7 @@ export function DespesasPage() {
     <Page>
       <PageHeader
         title="Despesas"
-        subtitle={`Gastos da agência · ${nomeMes(mes)} · ${formatarDinheiro(kpis.lancadoValor)} lançados · ${aPagarQtd} a pagar`}
+        subtitle={`Gastos da agência · ${nomeMes(mes)} · ${formatarDinheiro(kpis.lancadoValor)} lançados · ${formatarDinheiro(kpis.aPagarValor)} a pagar`}
         actions={
           <>
             <Input
