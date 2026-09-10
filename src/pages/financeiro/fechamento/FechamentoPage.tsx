@@ -93,22 +93,43 @@ export function FechamentoPage() {
             {mensagemDeErro(listaQ.error)}
           </Alert>
         ) : (
-          <div className={s.lista}>
-            {periodos.map((p) => (
-              <LinhaMes
-                key={p.competencia}
-                periodo={p}
-                podeFechar={podeFechar}
-                podeReabrir={podeReabrir}
-                onFechar={() => {
-                  setPeriodoFechar(p);
-                }}
-                onReabrir={() => {
-                  setPeriodoReabrir(p);
-                }}
-              />
-            ))}
-          </div>
+          <>
+            {pendentesQ.isError && (
+              <Alert
+                tone="danger"
+                action={
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      void pendentesQ.refetch();
+                    }}
+                  >
+                    Tentar de novo
+                  </Button>
+                }
+              >
+                {mensagemDeErro(pendentesQ.error)}
+              </Alert>
+            )}
+            <div className={s.lista}>
+              {periodos.map((p) => (
+                <LinhaMes
+                  key={p.competencia}
+                  periodo={p}
+                  podeFechar={podeFechar}
+                  podeReabrir={podeReabrir}
+                  carregandoFechar={periodoFechar?.competencia === p.competencia && pendentesQ.isFetching}
+                  onFechar={() => {
+                    setPeriodoFechar(p);
+                  }}
+                  onReabrir={() => {
+                    setPeriodoReabrir(p);
+                  }}
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
 

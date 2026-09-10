@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
+import { formatarCarimbo } from "@/lib/datas";
 import { FechamentoPage } from "./FechamentoPage";
 
 // Cenário do protótipo (docs/design/prototipo-v1.html, tela Financeiro · Fechamento).
@@ -198,7 +199,8 @@ test("mês com pendências mostra o badge e abre o modal de fechar com as penden
 test("mês fechado mostra quem fechou e quando, e abre o modal de reabertura", async () => {
   montar();
   await screen.findByText("Fevereiro");
-  expect(within(linha("Fevereiro")).getByText("fechado em 05/03 por Guilherme")).toBeInTheDocument();
+  const dataFechamento = formatarCarimbo("2026-03-05T12:00:00Z").slice(0, 5);
+  expect(within(linha("Fevereiro")).getByText(`fechado em ${dataFechamento} por Guilherme`)).toBeInTheDocument();
   fireEvent.click(within(linha("Fevereiro")).getByRole("button", { name: "Reabrir…" }));
   const dialogo = await screen.findByRole("dialog");
   expect(within(dialogo).getByRole("heading", { name: "Reabrir Fevereiro de 2026?" })).toBeInTheDocument();
@@ -214,6 +216,21 @@ test("perfil sem financeiro.editar_periodo_fechado não vê o botão Reabrir", a
   montar((p) => p !== "financeiro.editar_periodo_fechado");
   await screen.findByText("Fevereiro");
   expect(screen.queryByRole("button", { name: /Reabrir/ })).toBeNull();
+});
+
+test("erro ao carregar as pendentes mostra alerta com tentar de novo, sem abrir o modal", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    chamadas.push(url);
+    if (url.includes("/periodos/2026-03/pendentes")) return Promise.resolve(resposta(500, null));
+    if (url.includes("/periodos?ano=")) return Promise.resolve(resposta(200, PERIODOS_2026));
+    return Promise.resolve(resposta(200, null));
+  });
+  montar();
+  await screen.findByText("Março");
+  fireEvent.click(screen.getByRole("button", { name: "Fechar Março…" }));
+  expect(await screen.findByText("Erro inesperado")).toBeInTheDocument();
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.getByRole("button", { name: "Tentar de novo" })).toBeInTheDocument();
 });
 
 test("trocar o ano refaz a busca de períodos", async () => {
