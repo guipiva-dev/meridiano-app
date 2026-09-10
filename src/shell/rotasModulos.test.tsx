@@ -4,16 +4,15 @@ import { createMemoryRouter, createRoutesFromElements, RouterProvider } from "re
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
 import { RotasApp } from "./rotasModulos";
 
-const auth: AuthValue = {
-  me: { usuarioId: "1", agenciaId: "2", perfil: "dono", nome: "A", permissoes: [] },
-  carregando: false,
-  pode: () => true,
-  entrar: () => Promise.resolve(),
-  sair: () => Promise.resolve(),
-  recarregar: () => Promise.resolve(),
-};
-
-function montar(caminho: string) {
+function montar(caminho: string, pode: (p: string) => boolean = () => true) {
+  const auth: AuthValue = {
+    me: { usuarioId: "1", agenciaId: "2", perfil: "dono", nome: "A", permissoes: [] },
+    carregando: false,
+    pode,
+    entrar: () => Promise.resolve(),
+    sair: () => Promise.resolve(),
+    recarregar: () => Promise.resolve(),
+  };
   const router = createMemoryRouter(createRoutesFromElements(RotasApp()), { initialEntries: [caminho] });
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
@@ -35,4 +34,15 @@ test("/clientes/:id renderiza Cliente, não a página não encontrada", () => {
 test("/clientes/grupos continua ganhando da rota dinâmica", () => {
   montar("/clientes/grupos");
   expect(screen.getByRole("heading", { name: "Grupos" })).toBeInTheDocument();
+});
+
+// C7: o Contador só tem financeiro.ver_dre e precisa enxergar o módulo em leitura.
+test("/financeiro exige uma das três permissões do módulo", () => {
+  montar("/financeiro", (p) => p === "financeiro.ver_dre");
+  expect(screen.getByRole("heading", { name: "Conciliação" })).toBeInTheDocument();
+});
+
+test("/financeiro sem nenhuma permissão do módulo cai em Sem permissão", () => {
+  montar("/financeiro", (p) => p === "viagem.ver");
+  expect(screen.getByText("Sem permissão")).toBeInTheDocument();
 });

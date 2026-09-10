@@ -14,4 +14,5 @@ export { MoneyInput } from "./Input/MoneyInput";
 export { MoneyValue } from "./Input/MoneyValue";
 export { Radio } from "./Input/Radio";
 export { Select, type SelectOption } from "./Input/Select";
+export { Textarea, type TextareaProps } from "./Input/Textarea";
 export { KpiCard } from "./KpiCard/KpiCard";

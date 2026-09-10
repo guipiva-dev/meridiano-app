@@ -29,6 +29,11 @@
   background: var(--field-readonly-bg);
   border-color: transparent;
 }
+.textarea {
+  height: auto;
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+}
 .money {
   text-align: right;
   font-variant-numeric: tabular-nums;

@@ -5,6 +5,8 @@ import { NovaViagemPage } from "@/pages/viagens/NovaViagemPage";
 import { AppShell } from "./AppShell";
 import { EmConstrucao } from "./EmConstrucao";
 import { RotaProtegida } from "./RotaProtegida";
+import { RotasCadastros } from "./rotasCadastros";
+import { RotasFinanceiro } from "./rotasFinanceiro";
 
 export function RotasApp() {
   return (
@@ -16,17 +18,8 @@ export function RotasApp() {
         <Route path="/viagens/:id" element={<ViagemPage />} />
         <Route path="/viagens/:id/editar" element={<NovaViagemPage />} />
       </Route>
-      <Route path="/clientes" element={<EmConstrucao titulo="Clientes" />} />
-      <Route path="/clientes/grupos" element={<EmConstrucao titulo="Grupos" />} />
-      {/* A busca global já linka para /clientes/:id; sem esta rota o resultado cai no 404. */}
-      <Route path="/clientes/:id" element={<EmConstrucao titulo="Cliente" />} />
-      <Route path="/fornecedores" element={<EmConstrucao titulo="Fornecedores" />} />
-      <Route element={<RotaProtegida permissao={["financeiro.movimentar", "financeiro.conciliar"]} />}>
-        <Route path="/financeiro" element={<EmConstrucao titulo="Conciliação" />} />
-        <Route path="/financeiro/repasses" element={<EmConstrucao titulo="Repasses" />} />
-        <Route path="/financeiro/despesas" element={<EmConstrucao titulo="Despesas" />} />
-        <Route path="/financeiro/fechamento" element={<EmConstrucao titulo="Fechamento" />} />
-      </Route>
+      {RotasCadastros()}
+      {RotasFinanceiro()}
       <Route path="/agenda" element={<EmConstrucao titulo="Agenda" />} />
       <Route element={<RotaProtegida permissao="relatorio.ver" />}>
         <Route path="/relatorios" element={<EmConstrucao titulo="Relatórios" />} />

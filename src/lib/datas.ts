@@ -45,3 +45,60 @@ export function diasAte(iso: string): number {
   const alvo = new Date(iso.slice(0, 10));
   return Math.round((alvo.getTime() - hoje.getTime()) / 86_400_000);
 }
+
+/** Anos completos entre `nascimentoIso` (yyyy-mm-dd) e hoje; null sem data. */
+export function idade(nascimentoIso: string | null | undefined): number | null {
+  if (!nascimentoIso) return null;
+  const hoje = hojeIso();
+  let anos = Number(hoje.slice(0, 4)) - Number(nascimentoIso.slice(0, 4));
+  if (hoje.slice(5, 10) < nascimentoIso.slice(5, 10)) anos -= 1;
+  return anos;
+}
+
+const MESES = [
+  "janeiro",
+  "fevereiro",
+  "março",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+];
+
+/** Nome do mês de um yyyy-mm ou yyyy-mm-dd. */
+function nomeDoMes(iso: string): string {
+  return MESES[Number(iso.slice(5, 7)) - 1] ?? "";
+}
+
+/** yyyy-mm-dd → "abr/2026"; null → "—". */
+export function formatarMesAno(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  return `${nomeDoMes(iso).slice(0, 3)}/${iso.slice(0, 4)}`;
+}
+
+/** Competência yyyy-mm → "Abril de 2026". */
+export function nomeMes(competencia: string): string {
+  const nome = nomeDoMes(competencia);
+  return `${nome.charAt(0).toUpperCase()}${nome.slice(1)} de ${competencia.slice(0, 4)}`;
+}
+
+/** Competência yyyy-mm do mês corrente (local). */
+export function competenciaAtual(): string {
+  return hojeIso().slice(0, 7);
+}
+
+/** yyyy-mm-dd → yyyy-mm. */
+export function competenciaDe(iso: string): string {
+  return iso.slice(0, 7);
+}
+
+/** Competência yyyy-mm somada de `n` meses, virando o ano. */
+export function somarMeses(competencia: string, n: number): string {
+  const total = Number(competencia.slice(0, 4)) * 12 + Number(competencia.slice(5, 7)) - 1 + n;
+  return `${String(Math.floor(total / 12)).padStart(4, "0")}-${String((total % 12) + 1).padStart(2, "0")}`;
+}

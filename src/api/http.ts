@@ -4,16 +4,22 @@ export { mensagemDeErro } from "./errors";
 
 const BASE = "/api/v1";
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+/** `motivo` justifica escrita auditada (período fechado, exclusão). Viaja no header, percent-encoded. */
+export interface OpcoesRequest {
+  motivo?: string;
+}
+
+async function request<T>(method: string, path: string, body?: unknown, opts?: OpcoesRequest): Promise<T> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  // Header HTTP é ASCII: o backend faz o decodeURIComponent equivalente.
+  if (opts?.motivo) headers["X-Motivo"] = encodeURIComponent(opts.motivo);
   let resposta: Response;
   try {
     resposta = await fetch(`${BASE}${path}`, {
       method,
       credentials: "same-origin",
-      headers:
-        body === undefined
-          ? { Accept: "application/json" }
-          : { Accept: "application/json", "Content-Type": "application/json" },
+      headers,
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
@@ -35,7 +41,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
 export const api = {
   get: <T>(path: string) => request<T>("GET", path),
-  post: <T = void>(path: string, body?: unknown) => request<T>("POST", path, body),
-  put: <T = void>(path: string, body: unknown) => request<T>("PUT", path, body),
-  delete: (path: string): Promise<void> => request("DELETE", path),
+  post: <T = void>(path: string, body?: unknown, opts?: OpcoesRequest) => request<T>("POST", path, body, opts),
+  put: <T = void>(path: string, body: unknown, opts?: OpcoesRequest) => request<T>("PUT", path, body, opts),
+  delete: (path: string, opts?: OpcoesRequest): Promise<void> => request("DELETE", path, undefined, opts),
 };

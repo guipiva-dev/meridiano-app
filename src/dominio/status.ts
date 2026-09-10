@@ -88,6 +88,70 @@ const anexo_tipo: Mapa = {
   outro: { texto: "Outro", tone: "neutral" },
 };
 
+const documento_tipo: Mapa = {
+  rg: { texto: "RG", tone: "neutral" },
+  cpf: { texto: "CPF", tone: "neutral" },
+  passaporte: { texto: "Passaporte", tone: "neutral" },
+  visto: { texto: "Visto", tone: "neutral" },
+  certidao: { texto: "Certidão", tone: "neutral" },
+  outro: { texto: "Outro", tone: "neutral" },
+};
+
+const grupo_tipo: Mapa = {
+  familia: { texto: "Família", tone: "neutral" },
+  empresa: { texto: "Empresa", tone: "info" },
+  outro: { texto: "Outro", tone: "neutral" },
+};
+
+const fornecedor_tipo: Mapa = {
+  operadora: { texto: "Operadora", tone: "neutral" },
+  consolidadora: { texto: "Consolidadora", tone: "neutral" },
+  cia_aerea: { texto: "Cia aérea", tone: "neutral" },
+  hotel: { texto: "Hotel", tone: "neutral" },
+  seguradora: { texto: "Seguradora", tone: "neutral" },
+  receptivo: { texto: "Receptivo", tone: "neutral" },
+  despachante: { texto: "Despachante", tone: "neutral" },
+  outro: { texto: "Outro", tone: "neutral" },
+};
+
+const canal: Mapa = {
+  whatsapp: { texto: "WhatsApp", tone: "neutral" },
+  ligacao: { texto: "Ligação", tone: "neutral" },
+  presencial: { texto: "Presencial", tone: "neutral" },
+  email: { texto: "E-mail", tone: "neutral" },
+  outro: { texto: "Outro", tone: "neutral" },
+};
+
+const movimento_tipo: Mapa = {
+  recebimento_operadora: { texto: "Recebimento da operadora", tone: "success" },
+  recebimento_cliente: { texto: "Recebimento do cliente", tone: "success" },
+  pagamento_fornecedor: { texto: "Pagamento ao fornecedor", tone: "warning" },
+  estorno_operadora: { texto: "Estorno da operadora", tone: "danger" },
+  reembolso_cliente: { texto: "Reembolso ao cliente", tone: "danger" },
+};
+
+const despesa_categoria: Mapa = {
+  fixo: { texto: "Fixo", tone: "neutral" },
+  imposto: { texto: "Imposto", tone: "neutral" },
+  operacional: { texto: "Operacional", tone: "neutral" },
+  marketing: { texto: "Marketing", tone: "neutral" },
+  outro: { texto: "Outro", tone: "neutral" },
+};
+
+const periodo: Mapa = {
+  aberto: { texto: "Aberto", tone: "info" },
+  pendencias: { texto: "Pendências", tone: "warning" },
+  fechado: { texto: "Fechado", tone: "success" },
+};
+
+const forma_pagamento_despesa: Mapa = {
+  pix: { texto: "PIX", tone: "neutral" },
+  boleto: { texto: "Boleto", tone: "neutral" },
+  cartao: { texto: "Cartão", tone: "neutral" },
+  transferencia: { texto: "Transferência", tone: "neutral" },
+  dinheiro: { texto: "Dinheiro", tone: "neutral" },
+};
+
 const mapas = {
   fase_viagem,
   comissao,
@@ -102,6 +166,14 @@ const mapas = {
   desfecho,
   nfse_tomador,
   anexo_tipo,
+  documento_tipo,
+  grupo_tipo,
+  fornecedor_tipo,
+  canal,
+  movimento_tipo,
+  despesa_categoria,
+  periodo,
+  forma_pagamento_despesa,
 } as const;
 export type EntidadeStatus = keyof typeof mapas;
 
