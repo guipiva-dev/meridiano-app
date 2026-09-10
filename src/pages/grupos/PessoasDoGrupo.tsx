@@ -38,9 +38,12 @@ export function PessoasDoGrupo({ grupo, podeEditar, onMudou }: PessoasDoGrupoPro
 
   const remover = useMutation({
     mutationFn: (p: PessoaDoGrupoDto) => gruposApi.desvincular(grupo.id, p.id),
-    onSettled: (_dados, erro) => {
+    onSuccess: () => {
       setRemovendo(undefined);
-      if (!erro) onMudou();
+      onMudou();
+    },
+    onError: () => {
+      setRemovendo(undefined);
     },
   });
 
@@ -178,6 +181,7 @@ export function PessoasDoGrupo({ grupo, podeEditar, onMudou }: PessoasDoGrupoPro
           </div>
         </div>
       )}
+      {remover.isError && <Alert tone="danger">{mensagemDeErro(remover.error)}</Alert>}
       {(erroBusca !== undefined || vincular.isError) && (
         <Alert tone="danger">{erroBusca ?? mensagemDeErro(vincular.error)}</Alert>
       )}

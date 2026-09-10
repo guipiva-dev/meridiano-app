@@ -36,6 +36,9 @@ const auth: AuthValue = {
   recarregar: () => Promise.resolve(),
 };
 
+/** Perfil só com `cliente.ver` (ex.: a rota exige só isso, mas editar/vincular/remover exigem `cliente.editar`). */
+const authSemEditar: AuthValue = { ...auth, pode: (p: string) => p !== "cliente.editar" };
+
 interface Chamada {
   method: string;
   url: string;
@@ -43,14 +46,18 @@ interface Chamada {
 }
 const chamadas: Chamada[] = [];
 
-function montar(entrada = "/clientes/grupos/g1") {
+function montar(entrada = "/clientes/grupos/g1", authValue: AuthValue = auth) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const router = createMemoryRouter([{ path: "/clientes/grupos/:id", element: <GrupoPage /> }], {
-    initialEntries: [entrada],
-  });
+  const router = createMemoryRouter(
+    [
+      { path: "/clientes/grupos", element: <div>Lista de grupos</div> },
+      { path: "/clientes/grupos/:id", element: <GrupoPage /> },
+    ],
+    { initialEntries: [entrada] },
+  );
   render(
     <QueryClientProvider client={qc}>
-      <AuthContext.Provider value={auth}>
+      <AuthContext.Provider value={authValue}>
         <RouterProvider router={router} />
       </AuthContext.Provider>
     </QueryClientProvider>,
@@ -138,4 +145,29 @@ test("+ Vincular pessoa busca e chama POST", async () => {
   });
   const post = chamadas.find((c) => c.method === "POST" && c.url === "/api/v1/grupos/g1/pessoas");
   expect(post?.body).toMatchObject({ clienteId: "c3" });
+});
+
+test("Fechar navega para /clientes/grupos (rota fixa, não histórico)", async () => {
+  montar();
+  await screen.findByDisplayValue("12.345.678/0001-99");
+
+  fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
+
+  expect(await screen.findByText("Lista de grupos")).toBeInTheDocument();
+});
+
+test("sem cliente.editar: não mostra Salvar, Remover nem Vincular; Ctrl+S não salva; Fechar continua liberado", async () => {
+  montar("/clientes/grupos/g1", authSemEditar);
+  await screen.findByDisplayValue("12.345.678/0001-99");
+
+  expect(screen.queryByRole("button", { name: "Salvar" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Remover" })).toBeNull();
+  expect(screen.queryByLabelText("Buscar pessoa para vincular")).toBeNull();
+  expect(screen.getByRole("button", { name: "Fechar" })).toBeInTheDocument();
+
+  fireEvent.keyDown(window, { key: "s", ctrlKey: true });
+  expect(chamadas.some((c) => c.method === "PUT")).toBe(false);
+
+  fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
+  expect(await screen.findByText("Lista de grupos")).toBeInTheDocument();
 });

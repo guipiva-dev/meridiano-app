@@ -27,9 +27,13 @@ export function GrupoPage() {
   const tipo = v.form.watch("tipo") as TipoGrupo | undefined;
   const dirty = v.salvamento.estado === "dirty" || v.salvamento.estado === "error";
 
-  useAtalho("ctrl+s", () => {
-    void v.salvar();
-  });
+  useAtalho(
+    "ctrl+s",
+    () => {
+      void v.salvar();
+    },
+    podeEditar,
+  );
 
   if (v.carregando) {
     return (
@@ -44,7 +48,7 @@ export function GrupoPage() {
   const viagens = v.dto?.viagens ?? 0;
 
   return (
-    <Page dirty={dirty} titulo={v.dto?.nome ?? "Novo grupo"} onSalvarESair={v.salvar}>
+    <Page dirty={dirty} titulo={v.dto?.nome ?? "Novo grupo"} onSalvarESair={podeEditar ? v.salvar : undefined}>
       <PageHeader
         title={v.dto?.nome ?? "Novo grupo"}
         subtitle={`${tipoTexto} · ${pessoas} pessoas · ${viagens} viagens`}
@@ -55,20 +59,22 @@ export function GrupoPage() {
             <Button
               variant="tertiary"
               onClick={() => {
-                void nav(-1);
+                void nav("/clientes/grupos");
               }}
             >
               Fechar
             </Button>
-            <Button
-              variant="primary"
-              loading={v.salvamento.estado === "saving"}
-              onClick={() => {
-                void v.salvar();
-              }}
-            >
-              Salvar
-            </Button>
+            {podeEditar && (
+              <Button
+                variant="primary"
+                loading={v.salvamento.estado === "saving"}
+                onClick={() => {
+                  void v.salvar();
+                }}
+              >
+                Salvar
+              </Button>
+            )}
           </>
         }
       />
