@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { chavesClientes, clientesApi } from "@/api/clientes";
+import { mensagemDeErro } from "@/api/http";
 import type { PassageiroDto } from "@/api/viagens";
-import { Badge } from "@/components/display";
+import { Button } from "@/components";
+import { Alert, Badge } from "@/components/display";
 import { Skeleton } from "@/components/feedback";
 import { apresentacaoStatus } from "@/dominio/status";
 import { formatarData } from "@/lib/datas";
@@ -29,11 +31,35 @@ function LinhasDoPassageiro({ passageiro }: { passageiro: PassageiroDto }) {
       </div>
     );
   }
-  const documentos = q.data ?? [];
+  // Falha de leitura nunca pode passar por "sem documentos": o vendedor levaria o passageiro
+  // ao aeroporto achando que não há passaporte cadastrado.
+  if (q.isError) {
+    return (
+      <div className={s.item}>
+        <Alert
+          tone="danger"
+          action={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                void q.refetch();
+              }}
+            >
+              Tentar de novo
+            </Button>
+          }
+        >
+          {nome}: {mensagemDeErro(q.error)}
+        </Alert>
+      </div>
+    );
+  }
+  const documentos = q.data;
   if (documentos.length === 0) {
     return (
       <div className={s.item}>
-        <span className={s.texto}>{nome} · Sem documentos cadastrados</span>
+        <span className={s.primary}>{nome} · Sem documentos cadastrados</span>
         {link}
       </div>
     );
@@ -44,7 +70,7 @@ function LinhasDoPassageiro({ passageiro }: { passageiro: PassageiroDto }) {
         const situacao = situacaoValidade(d.diasParaVencer);
         return (
           <div key={d.id} className={s.item}>
-            <span className={s.texto}>
+            <span className={s.primary}>
               {nome} · {apresentacaoStatus("documento_tipo", d.tipo).texto} ·{" "}
               <code className={s.mono}>{d.numero ?? "•••••"}</code> · validade {formatarData(d.validade)}
             </span>

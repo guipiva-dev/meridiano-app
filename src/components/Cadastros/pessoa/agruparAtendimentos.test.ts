@@ -1,3 +1,6 @@
+// O agrupamento é por mês LOCAL; sem fuso fixo o caso da virada do mês seria não determinístico.
+process.env.TZ = "America/Sao_Paulo";
+
 import type { AtendimentoDto } from "@/api/clientes";
 import { agruparAtendimentos } from "./agruparAtendimentos";
 
@@ -24,6 +27,14 @@ test("meses diferentes do ano corrente ficam em grupos separados", () => {
   const grupos = agruparAtendimentos([at("a1", "2026-04-18T10:00:00Z"), at("a2", "2026-03-30T09:00:00Z")], HOJE);
 
   expect(grupos.map((g) => g.titulo)).toEqual(["Abril de 2026", "Março de 2026"]);
+});
+
+test("virada do mês fica no mês local, não no do UTC", () => {
+  // 30/04 23:30 BRT = 01/05 02:30 UTC: o fatiamento do ISO cairia em maio.
+  const grupos = agruparAtendimentos([at("a1", "2026-04-30T23:30:00-03:00")], HOJE);
+
+  expect(grupos).toHaveLength(1);
+  expect(grupos[0]).toMatchObject({ chave: "2026-04", titulo: "Abril de 2026" });
 });
 
 test("lista vazia não gera grupo", () => {
