@@ -10,7 +10,7 @@ import { Alert } from "@/components/display";
 import { EmptyState } from "@/components/feedback";
 import { PagarRepasseModal } from "@/components/financeiro";
 import { Page, PageHeader, Subnav } from "@/components/shell";
-import { competenciaAtual } from "@/lib/datas";
+import { competenciaAtual, nomeMes } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
 import { subnavs } from "@/shell/navegacao";
 import s from "./Repasses.module.css";
@@ -137,8 +137,12 @@ export function RepassesPage() {
         </Alert>
       ) : vendedores.length === 0 && !listaQ.isLoading ? (
         <EmptyState
-          title="Nenhum repasse em aberto"
-          description="Repasses aparecem quando uma viagem tem vendedor externo com repasse."
+          title={historico ? `Nenhum repasse pago em ${nomeMes(pagos)}` : "Nenhum repasse em aberto"}
+          description={
+            historico
+              ? "Troque o mês ou volte aos abertos."
+              : "Repasses aparecem quando uma viagem tem vendedor externo com repasse."
+          }
         />
       ) : (
         <div className={s.grid}>
@@ -160,6 +164,7 @@ export function RepassesPage() {
 
       {modal && (
         <PagarRepasseModal
+          key={modal.vendedor.usuarioId}
           open
           vendedor={modal.vendedor}
           itens={modal.itens}

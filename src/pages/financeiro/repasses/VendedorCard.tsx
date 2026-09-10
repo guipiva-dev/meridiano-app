@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { mensagemDeErro } from "@/api/errors";
 import type { RepasseItemDto, VendedorRepassesDto } from "@/api/repasses";
 import { repassesApi } from "@/api/repasses";
 import { Button, MoneyInput, MoneyValue } from "@/components";
@@ -54,17 +55,21 @@ function ValorItem({
 }) {
   const [valor, setValor] = useState<number | null>(item.valor);
   const [salvando, setSalvando] = useState(false);
+  // Enter dispara salvar() diretamente e o blur que se segue dispara de novo: guarda síncrona (ref, não state) evita o duplo envio.
+  const emVoo = useRef(false);
 
   async function salvar() {
-    if (valor === null || valor === item.valor) return;
+    if (valor === null || valor === item.valor || emVoo.current) return;
+    emVoo.current = true;
     setSalvando(true);
     try {
       await repassesApi.definirValor(item.id, valor, item.versao);
       toast.success("Valor informado");
-    } catch {
-      toast.error("Não foi possível salvar o valor. Tente de novo.");
+    } catch (erro) {
+      toast.error(mensagemDeErro(erro));
     } finally {
       setSalvando(false);
+      emVoo.current = false;
     }
     onValorSalvo();
   }

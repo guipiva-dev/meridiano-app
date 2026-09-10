@@ -81,7 +81,7 @@ function resposta(status: number, body: unknown) {
   } as unknown as Response;
 }
 
-function montar(pode: (p: string) => boolean = () => true) {
+function montar(pode: (p: string) => boolean = () => true, entrada = "/financeiro/repasses") {
   const auth: AuthValue = {
     me: { usuarioId: "u1", agenciaId: "a1", perfil: "dono", nome: "Ana", permissoes: [] },
     carregando: false,
@@ -92,7 +92,7 @@ function montar(pode: (p: string) => boolean = () => true) {
   };
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createMemoryRouter([{ path: "/financeiro/repasses", element: <RepassesPage /> }], {
-    initialEntries: ["/financeiro/repasses"],
+    initialEntries: [entrada],
   });
   render(
     <QueryClientProvider client={qc}>
@@ -148,4 +148,16 @@ test("perfil externa sem repasse.pagar não vê botão Pagar nem input de valor"
   await screen.findByText("Ana Paula Ribeiro");
   expect(screen.queryByRole("button", { name: /Pagar R\$/ })).toBeNull();
   expect(screen.queryByLabelText(/Valor do repasse/)).toBeNull();
+});
+
+test("histórico sem repasses pagos mostra o empty state do mês, não o de aberto", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    ultimaUrl = url;
+    if (url.includes("/repasses")) return Promise.resolve(resposta(200, { ...REPASSES, vendedores: [] }));
+    return Promise.resolve(resposta(200, null));
+  });
+  montar(() => true, "/financeiro/repasses?pagos=2026-03");
+  expect(await screen.findByText("Nenhum repasse pago em Março de 2026")).toBeInTheDocument();
+  expect(screen.getByText("Troque o mês ou volte aos abertos.")).toBeInTheDocument();
+  expect(screen.queryByText("Nenhum repasse em aberto")).toBeNull();
 });

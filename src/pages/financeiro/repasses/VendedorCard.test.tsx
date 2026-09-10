@@ -1,7 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ConflictError } from "@/api/errors";
 import type * as RepassesApi from "@/api/repasses";
 import type { RepasseItemDto, VendedorRepassesDto } from "@/api/repasses";
+import type * as Feedback from "@/components/feedback";
 import { VendedorCard } from "./VendedorCard";
 
 const definirValor = vi.fn<(...args: unknown[]) => Promise<RepasseItemDto>>();
@@ -10,6 +12,20 @@ vi.mock("@/api/repasses", async (importOriginal) => {
   return {
     ...mod,
     repassesApi: { ...mod.repassesApi, definirValor: (...args: unknown[]) => definirValor(...args) },
+  };
+});
+
+const toastError = vi.fn<(texto: string) => void>();
+vi.mock("@/components/feedback", async (importOriginal) => {
+  const mod = await importOriginal<typeof Feedback>();
+  return {
+    ...mod,
+    toast: {
+      ...mod.toast,
+      error: (texto: string) => {
+        toastError(texto);
+      },
+    },
   };
 });
 
@@ -60,6 +76,7 @@ const VENDEDOR: VendedorRepassesDto = {
 
 afterEach(() => {
   definirValor.mockReset();
+  toastError.mockReset();
 });
 
 test("mostra os itens do protótipo com a comissão recebida e o badge de valor pendente", () => {
@@ -88,6 +105,44 @@ test("digitar valor e Enter chama definirValor com a versão do item", async () 
     expect(definirValor).toHaveBeenCalledWith("rp4", 300, "3");
   });
   expect(onValorSalvo).toHaveBeenCalled();
+});
+
+test("erro 409 ao salvar mostra a mensagem de conflito e ainda assim refaz a busca", async () => {
+  definirValor.mockRejectedValue(new ConflictError(409, "conflito_versao", "Versão desatualizada"));
+  const onValorSalvo = vi.fn();
+  render(
+    <VendedorCard vendedor={VENDEDOR} ano={2026} historico={false} podePagar onPagar={vi.fn()} onValorSalvo={onValorSalvo} />,
+  );
+
+  const input = screen.getByLabelText("Valor do repasse de VG-2026-0044");
+  fireEvent.change(input, { target: { value: "300,00" } });
+  fireEvent.keyDown(input, { key: "Enter" });
+
+  await waitFor(() => {
+    expect(toastError).toHaveBeenCalledWith("Alguém alterou este registro enquanto você editava. Recarregue e tente de novo.");
+  });
+  expect(onValorSalvo).toHaveBeenCalled();
+});
+
+test("Enter seguido de blur no mesmo valor não duplica o envio", async () => {
+  let liberar: (v: RepasseItemDto) => void = () => undefined;
+  definirValor.mockImplementation(
+    () =>
+      new Promise<RepasseItemDto>((resolve) => {
+        liberar = resolve;
+      }),
+  );
+  render(<VendedorCard vendedor={VENDEDOR} ano={2026} historico={false} podePagar onPagar={vi.fn()} onValorSalvo={vi.fn()} />);
+
+  const input = screen.getByLabelText("Valor do repasse de VG-2026-0044");
+  fireEvent.change(input, { target: { value: "300,00" } });
+  fireEvent.keyDown(input, { key: "Enter" });
+  fireEvent.blur(input);
+  liberar(item({ id: "rp4", versao: "3", valor: 300 }));
+
+  await waitFor(() => {
+    expect(definirValor).toHaveBeenCalledTimes(1);
+  });
 });
 
 test("Pagar R$ 850,00 chama onPagar com os itens liberados", async () => {
