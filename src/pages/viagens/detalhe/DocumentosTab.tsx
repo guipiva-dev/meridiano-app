@@ -1,7 +1,14 @@
 import type { ViagemDto } from "@/api/viagens";
 import { ListaAnexos } from "@/components/anexos";
+import { DocumentosDosPassageiros } from "@/components/Cadastros/pessoa/DocumentosDosPassageiros";
+import s from "@/components/Cadastros/pessoa/Pessoa.module.css";
 
-/** Só anexos da viagem/reservas; documentos dos passageiros ficam para a fase 3.4. */
+/** Anexos da viagem/reservas + documentos dos passageiros, em leitura (R11). */
 export function DocumentosTab({ viagem, podeEnviar }: { viagem: ViagemDto; podeEnviar: boolean }) {
-  return <ListaAnexos viagemId={viagem.id} reservas={viagem.reservas} podeEnviar={podeEnviar} />;
+  return (
+    <div className={s.painel}>
+      <ListaAnexos viagemId={viagem.id} reservas={viagem.reservas} podeEnviar={podeEnviar} />
+      <DocumentosDosPassageiros passageiros={viagem.passageiros} />
+    </div>
+  );
 }

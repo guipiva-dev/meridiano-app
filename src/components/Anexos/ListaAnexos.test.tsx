@@ -44,6 +44,15 @@ function montar() {
   );
 }
 
+function montarPessoa() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={qc}>
+      <ListaAnexos clienteId="c1" podeEnviar />
+    </QueryClientProvider>,
+  );
+}
+
 beforeEach(() => {
   urls.length = 0;
   vi.stubGlobal("fetch", (url: string) => {
@@ -75,4 +84,10 @@ test('"Abrir" pede a URL e abre em nova aba', async () => {
     expect(urls.some((u) => u.includes("/anexos/a1/download"))).toBe(true);
     expect(abrir).toHaveBeenCalledWith("https://r2/anexo.pdf", "_blank", "noopener");
   });
+});
+
+test("escopo pessoa busca os anexos do cliente", async () => {
+  montarPessoa();
+  await screen.findByText("voucher-cvc-K7X2PQ.pdf");
+  expect(urls[0]).toContain("/clientes/c1/anexos");
 });
