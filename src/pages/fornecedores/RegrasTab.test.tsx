@@ -63,7 +63,8 @@ test("sem permissão de editar não oferece nova versão", () => {
   expect(screen.queryByRole("button", { name: "Nova versão da regra a partir de…" })).toBeNull();
 });
 
-test("fornecedor sem regra mostra o estado vazio", () => {
+test("fornecedor sem regra mostra só o estado vazio, sem a linha de prazo fixo", () => {
   montar({ ...FORNECEDOR, regras: [], regraVigente: null });
   expect(screen.getByText("Sem regra de pagamento")).toBeInTheDocument();
+  expect(screen.queryByText("ou prazo fixo: 30 dias após a compra")).toBeNull();
 });

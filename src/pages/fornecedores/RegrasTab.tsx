@@ -44,16 +44,16 @@ export function RegrasTab({ fornecedor, podeEditar, onMudou }: RegrasTabProps) {
               Alterar cria uma nova versão válida a partir de uma data. Reservas já lançadas mantêm a previsão gravada.
             </Alert>
             <Janelas regra={vigente} />
+            {fornecedor.prazoComissaoDias !== null && (
+              <p className={s.meta}>ou prazo fixo: {fornecedor.prazoComissaoDias} dias após a compra</p>
+            )}
           </>
         ) : (
+          // Sem regra o texto do EmptyState já explica que a previsão cai no prazo em dias.
           <EmptyState
             title="Sem regra de pagamento"
             description="A previsão usa o prazo em dias (ou 30 dias). Cadastre janelas para prever pelo calendário da operadora."
           />
-        )}
-
-        {fornecedor.prazoComissaoDias !== null && (
-          <p className={s.meta}>ou prazo fixo: {fornecedor.prazoComissaoDias} dias após a compra</p>
         )}
 
         {podeEditar && (

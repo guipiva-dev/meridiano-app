@@ -49,16 +49,18 @@ function resposta(status: number, body: unknown) {
   } as unknown as Response;
 }
 
-const auth: AuthValue = {
-  me: { usuarioId: "u1", agenciaId: "a1", perfil: "dono", nome: "Ana", permissoes: [] },
-  carregando: false,
-  pode: () => true,
-  entrar: () => Promise.resolve(),
-  sair: () => Promise.resolve(),
-  recarregar: () => Promise.resolve(),
-};
+function autenticado(pode: (p: string) => boolean): AuthValue {
+  return {
+    me: { usuarioId: "u1", agenciaId: "a1", perfil: "dono", nome: "Ana", permissoes: [] },
+    carregando: false,
+    pode,
+    entrar: () => Promise.resolve(),
+    sair: () => Promise.resolve(),
+    recarregar: () => Promise.resolve(),
+  };
+}
 
-function montar(entrada = "/fornecedores/f1") {
+function montar(entrada = "/fornecedores/f1", pode: (p: string) => boolean = () => true) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createMemoryRouter(
     [
@@ -69,7 +71,7 @@ function montar(entrada = "/fornecedores/f1") {
   );
   render(
     <QueryClientProvider client={qc}>
-      <AuthContext.Provider value={auth}>
+      <AuthContext.Provider value={autenticado(pode)}>
         <RouterProvider router={router} />
       </AuthContext.Provider>
     </QueryClientProvider>,
@@ -114,6 +116,19 @@ test("Ctrl+S manda PUT com a versão carregada", async () => {
   const put = chamadas.find((c) => c.metodo === "PUT");
   expect(put?.url).toBe("/api/v1/fornecedores/f1");
   expect(put?.body).toMatchObject({ nome: "CVC", tipo: "operadora", ativo: true, versao: "77" });
+});
+
+test("sem fornecedor.editar não há botão Salvar e Ctrl+S não chama a API", async () => {
+  montar("/fornecedores/f1", () => false);
+  await screen.findByDisplayValue("CVC");
+
+  expect(screen.queryByRole("button", { name: "Salvar" })).toBeNull();
+  fireEvent.keyDown(window, { key: "s", ctrlKey: true });
+
+  await waitFor(() => {
+    expect(chamadas.some((c) => c.metodo === "GET")).toBe(true);
+  });
+  expect(chamadas.some((c) => c.metodo === "PUT")).toBe(false);
 });
 
 test("aba Financeiro mostra a regra vigente", async () => {

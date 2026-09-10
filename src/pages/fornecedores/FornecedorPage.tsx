@@ -29,9 +29,13 @@ export function FornecedorPage() {
   const podeEditar = pode("fornecedor.editar");
   const dirty = f.salvamento.estado === "dirty" || f.salvamento.estado === "error";
 
-  useAtalho("ctrl+s", () => {
-    void f.salvar();
-  });
+  useAtalho(
+    "ctrl+s",
+    () => {
+      void f.salvar();
+    },
+    podeEditar,
+  );
 
   if (f.carregando) {
     return (
@@ -53,7 +57,7 @@ export function FornecedorPage() {
   const tab = tabs.some((t) => t.id === f.tab) ? f.tab : "dados";
 
   return (
-    <Page dirty={dirty} titulo={dto?.nome ?? "Novo fornecedor"} onSalvarESair={f.salvar}>
+    <Page dirty={dirty} titulo={dto?.nome ?? "Novo fornecedor"} onSalvarESair={podeEditar ? f.salvar : undefined}>
       <PageHeader
         title={dto?.nome ?? "Novo fornecedor"}
         subtitle={dto ? subtitulo(dto) : undefined}
