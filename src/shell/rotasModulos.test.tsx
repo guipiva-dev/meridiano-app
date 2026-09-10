@@ -33,7 +33,7 @@ test("/clientes/:id renderiza Cliente, não a página não encontrada", () => {
 
 test("/clientes/grupos continua ganhando da rota dinâmica", () => {
   montar("/clientes/grupos");
-  expect(screen.getByRole("heading", { name: "Grupos" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: /Grupos e empresas/ })).toBeInTheDocument();
 });
 
 // C7: o Contador só tem financeiro.ver_dre e precisa enxergar o módulo em leitura.
