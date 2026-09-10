@@ -39,7 +39,7 @@ test("/clientes/grupos continua ganhando da rota dinâmica", () => {
 // C7: o Contador só tem financeiro.ver_dre e precisa enxergar o módulo em leitura.
 test("/financeiro exige uma das três permissões do módulo", () => {
   montar("/financeiro", (p) => p === "financeiro.ver_dre");
-  expect(screen.getByRole("heading", { name: "Conciliação" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Comissões a receber" })).toBeInTheDocument();
 });
 
 test("/financeiro sem nenhuma permissão do módulo cai em Sem permissão", () => {

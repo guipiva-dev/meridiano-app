@@ -1,6 +1,6 @@
 import { Route } from "react-router";
-import { EmConstrucao } from "@/shell/EmConstrucao";
+import { ConciliacaoPage } from "./ConciliacaoPage";
 
 export function RotasConciliacao() {
-  return <Route path="/financeiro" element={<EmConstrucao titulo="Conciliação" />} />;
+  return <Route path="/financeiro" element={<ConciliacaoPage />} />;
 }
