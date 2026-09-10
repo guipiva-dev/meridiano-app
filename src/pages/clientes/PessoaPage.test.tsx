@@ -134,6 +134,7 @@ interface Chamada {
 }
 const chamadas: Chamada[] = [];
 let cliente: Record<string, unknown> = LUCIA;
+let falhar = false;
 
 function DetalheStub() {
   const { id } = useParams();
@@ -163,6 +164,7 @@ function montar(entrada = "/clientes/p1", permissoes = TODAS) {
 beforeEach(() => {
   chamadas.length = 0;
   cliente = LUCIA;
+  falhar = false;
   vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
     const method = init?.method ?? "GET";
     const body = init?.body ? (JSON.parse(init.body as string) as Record<string, unknown>) : undefined;
@@ -173,7 +175,9 @@ beforeEach(() => {
     if (url === "/api/v1/clientes/p1" && method === "PUT") {
       return Promise.resolve(resposta(200, { ...cliente, ...body, versao: "8" }));
     }
-    if (url === "/api/v1/clientes/p1") return Promise.resolve(resposta(200, cliente));
+    if (url === "/api/v1/clientes/p1") {
+      return Promise.resolve(falhar ? resposta(500, { detail: "falhou" }) : resposta(200, cliente));
+    }
     if (url === "/api/v1/clientes/novo1") return Promise.resolve(resposta(200, { ...LUCIA, id: "novo1" }));
     if (url.startsWith("/api/v1/clientes/p1/documentos")) return Promise.resolve(resposta(200, DOCUMENTOS));
     if (url.startsWith("/api/v1/clientes/p1/viagens")) return Promise.resolve(resposta(200, VIAGENS));
@@ -198,7 +202,45 @@ test("cabeçalho e as cinco abas com contadores", async () => {
   expect(screen.getByText("3 pendências")).toBeInTheDocument();
 
   const abas = await screen.findAllByRole("tab");
-  expect(abas.map((t) => t.textContent)).toEqual(["Dados", "Documentos2", "Pendências3", "Viagens3", "Atendimentos1"]);
+  expect(abas.map((t) => t.textContent)).toEqual(["Dados", "Documentos", "Pendências3", "Viagens3", "Atendimentos1"]);
+});
+
+// LGPD: GET /clientes/{id}/documentos grava log_acesso_documento; só a aba Documentos pode dispará-lo.
+test("abrir a pessoa não busca os documentos; a aba Documentos busca", async () => {
+  montar();
+  await screen.findByDisplayValue("São Paulo");
+
+  expect(chamadas.some((c) => c.url.includes("/clientes/p1/documentos"))).toBe(false);
+
+  fireEvent.click(screen.getByRole("tab", { name: "Documentos" }));
+
+  await waitFor(() => {
+    expect(chamadas.some((c) => c.url.includes("/clientes/p1/documentos"))).toBe(true);
+  });
+});
+
+test("carga que falha mostra o erro, não um formulário de nova pessoa", async () => {
+  falhar = true;
+  montar();
+
+  expect(await screen.findByText("Não foi possível carregar esta pessoa.")).toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "Nova pessoa" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Tentar de novo" })).toBeInTheDocument();
+});
+
+test("sem cliente.editar não há Salvar e Ctrl+S não salva", async () => {
+  montar("/clientes/p1", ["cliente.ver"]);
+  const cidade = await screen.findByDisplayValue("São Paulo");
+
+  expect(screen.queryByRole("button", { name: "Salvar" })).not.toBeInTheDocument();
+
+  fireEvent.change(cidade, { target: { value: "Campinas" } });
+  fireEvent.keyDown(window, { key: "s", ctrlKey: true });
+
+  await waitFor(() => {
+    expect(screen.getByText("● Alterações não salvas")).toBeInTheDocument();
+  });
+  expect(chamadas.some((c) => c.method === "PUT")).toBe(false);
 });
 
 test("editar um campo marca alterações não salvas e Ctrl+S salva com a versão", async () => {

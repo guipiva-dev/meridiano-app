@@ -124,11 +124,8 @@ export function usePessoa(id: string | undefined) {
     queryFn: () => clientesApi.viagens(alvo),
     enabled: daPessoa,
   });
-  const documentosQ = useQuery({
-    queryKey: chavesClientes.documentos(alvo),
-    queryFn: () => clientesApi.documentos(alvo),
-    enabled: daPessoa,
-  });
+  // Documentos NÃO são buscados aqui: `GET /clientes/{id}/documentos` grava `log_acesso_documento`
+  // (LGPD) por linha devolvida. Só a aba Documentos, quando aberta, busca — por isso ela não tem contador.
   const pendenciasQ = useQuery({
     queryKey: chavesClientes.pendencias(alvo, false),
     queryFn: () => clientesApi.pendencias(alvo, false),
@@ -139,13 +136,6 @@ export function usePessoa(id: string | undefined) {
     queryFn: () => clientesApi.atendimentos(alvo),
     enabled: daPessoa,
   });
-  // Mesma chave que a ListaAnexos da aba Documentos usa: o react-query serve as duas com uma requisição.
-  const anexosQ = useQuery({
-    queryKey: chavesClientes.anexos(alvo),
-    queryFn: () => clientesApi.anexos(alvo),
-    enabled: daPessoa,
-  });
-
   return {
     ...base,
     tab,
@@ -153,9 +143,7 @@ export function usePessoa(id: string | undefined) {
     grupos: gruposQ.data?.itens ?? [],
     vendedores: vendedoresQ.data ?? [],
     viagens: viagensQ.data ?? [],
-    documentos: documentosQ.data ?? [],
     pendenciasAbertas: (pendenciasQ.data ?? []).filter((p) => p.status === "aberta").length,
     atendimentos: atendimentosQ.data?.length ?? 0,
-    anexos: anexosQ.data?.length ?? 0,
   };
 }

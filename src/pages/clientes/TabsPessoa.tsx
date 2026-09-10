@@ -15,7 +15,8 @@ interface TabsPessoaProps {
 export function TabsPessoa({ clienteId, pessoa, podeEditar, verDocumento, formulario }: TabsPessoaProps) {
   const tabs: Tab[] = [
     { id: "dados", label: "Dados" },
-    { id: "documentos", label: "Documentos", count: pessoa.documentos.length },
+    // Sem contador: buscar documentos aqui gravaria `log_acesso_documento` a cada abertura da pessoa.
+    { id: "documentos", label: "Documentos" },
     { id: "pendencias", label: "Pendências", count: pessoa.pendenciasAbertas },
     { id: "viagens", label: "Viagens", count: pessoa.viagens.length },
     { id: "atendimentos", label: "Atendimentos", count: pessoa.atendimentos },

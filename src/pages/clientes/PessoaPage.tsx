@@ -30,14 +30,41 @@ export function PessoaPage() {
   const dirty = v.salvamento.estado === "dirty" || v.salvamento.estado === "error";
   const titulo = v.dto?.nome ?? "Nova pessoa";
 
-  useAtalho("ctrl+s", () => {
-    void v.salvar();
-  });
+  useAtalho(
+    "ctrl+s",
+    () => {
+      void v.salvar();
+    },
+    podeEditar,
+  );
 
   if (v.carregando) {
     return (
       <Page>
         <Skeleton lines={6} />
+      </Page>
+    );
+  }
+
+  // Com `id` e sem DTO depois da carga, a busca falhou: nem "Nova pessoa" nem formulário em branco.
+  if (id && !v.dto) {
+    return (
+      <Page>
+        <Alert
+          tone="danger"
+          action={
+            <Button
+              variant="secondary"
+              onClick={() => {
+                void v.recarregar();
+              }}
+            >
+              Tentar de novo
+            </Button>
+          }
+        >
+          Não foi possível carregar esta pessoa.
+        </Alert>
       </Page>
     );
   }
@@ -61,7 +88,7 @@ export function PessoaPage() {
   );
 
   return (
-    <Page dirty={dirty} titulo={titulo} onSalvarESair={v.salvar}>
+    <Page dirty={dirty} titulo={titulo} onSalvarESair={podeEditar ? v.salvar : undefined}>
       <PageHeader
         title={titulo}
         subtitle={partes.length > 0 ? partes.join(" · ") : undefined}
