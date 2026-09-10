@@ -52,6 +52,8 @@ test("soma os saldos no botão e envia os reservaIds", async () => {
   render(<ReceberLoteModal open itens={itens} onClose={vi.fn()} onRecebido={onRecebido} />);
 
   expect(screen.getByText("Marcar 2 comissões como recebidas")).toBeInTheDocument();
+  // Cada linha mostra o saldo que vai ser lançado; a soma deles é o total do botão.
+  expect(screen.getAllByText("(R$ 960,00)")).toHaveLength(2);
   fireEvent.change(screen.getByLabelText(/^Data/), { target: { value: "2026-04-10" } });
   await user.click(screen.getByRole("button", { name: "Confirmar R$ 1.920,00" }));
 

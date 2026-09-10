@@ -1,15 +1,14 @@
 import { useState } from "react";
 import type { ConciliacaoItemDto, FormaPagamentoFin, MovimentoDto, MovimentoRequest } from "@/api/financeiro";
-import { FORMAS_PAGAMENTO, financeiroApi } from "@/api/financeiro";
+import { financeiroApi } from "@/api/financeiro";
 import { Button, DateInput, Field, MoneyInput, Select } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
-import { apresentacaoStatus } from "@/dominio/status";
 import { hojeIso } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
 import s from "./Financeiro.module.css";
 import { MotivoField } from "./MotivoField";
-import { CAMPO_POR_CODIGO_FIN } from "./mapaErrosFinanceiro";
+import { CAMPO_POR_CODIGO_FIN, OPCOES_FORMA } from "./mapaErrosFinanceiro";
 import { useMutacaoFinanceira } from "./useMutacaoFinanceira";
 
 export type ItemRecebimento = Pick<
@@ -23,11 +22,6 @@ interface ReceberModalProps {
   onClose: () => void;
   onRecebido: (m: MovimentoDto) => void;
 }
-
-export const OPCOES_FORMA = FORMAS_PAGAMENTO.map((f) => ({
-  value: f,
-  label: apresentacaoStatus("forma_pagamento_despesa", f).texto,
-}));
 
 export function ReceberModal({ open, item, onClose, onRecebido }: ReceberModalProps) {
   const [valor, setValor] = useState<number | null>(item.saldo);

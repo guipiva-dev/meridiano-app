@@ -9,8 +9,7 @@ import { apresentacaoStatus } from "@/dominio/status";
 import { hojeIso } from "@/lib/datas";
 import s from "./Financeiro.module.css";
 import { MotivoField } from "./MotivoField";
-import { CAMPO_POR_CODIGO_FIN } from "./mapaErrosFinanceiro";
-import { OPCOES_FORMA } from "./ReceberModal";
+import { CAMPO_POR_CODIGO_FIN, OPCOES_FORMA } from "./mapaErrosFinanceiro";
 import { useMutacaoFinanceira } from "./useMutacaoFinanceira";
 
 interface MovimentoModalProps {

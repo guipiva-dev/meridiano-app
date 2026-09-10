@@ -8,8 +8,7 @@ import { hojeIso } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
 import s from "./Financeiro.module.css";
 import { MotivoField } from "./MotivoField";
-import { CAMPO_POR_CODIGO_FIN } from "./mapaErrosFinanceiro";
-import { OPCOES_FORMA } from "./ReceberModal";
+import { CAMPO_POR_CODIGO_FIN, OPCOES_FORMA } from "./mapaErrosFinanceiro";
 import { useMutacaoFinanceira } from "./useMutacaoFinanceira";
 
 interface ReceberLoteModalProps {
@@ -84,7 +83,8 @@ export function ReceberLoteModal({ open, itens, onClose, onRecebido }: ReceberLo
           {itens.map((i) => (
             <li key={i.reservaId} className={s.linha}>
               {i.fornecedorNome} · {i.localizador ?? "sem localizador"}{" "}
-              <span className={s.meta}>({formatarDinheiro(i.esperado)})</span>
+              {/* Saldo, não esperado: é o que cada linha lança, e a soma do botão fecha com a lista. */}
+              <span className={s.meta}>({formatarDinheiro(i.saldo)})</span>
             </li>
           ))}
         </ul>
