@@ -26,7 +26,14 @@ function item(over: Record<string, unknown>) {
 
 // Cenário do protótipo (docs/design/prototipo-v1.html, tela Financeiro · Repasses).
 const REPASSES = {
-  kpis: { aPagarValor: 1150, aPagarVendedores: 2, aPagarViagens: 5, bloqueadoValor: 2380, bloqueadoViagens: 9, semValor: 3 },
+  kpis: {
+    aPagarValor: 1150,
+    aPagarVendedores: 2,
+    aPagarViagens: 5,
+    bloqueadoValor: 2380,
+    bloqueadoViagens: 9,
+    semValor: 3,
+  },
   vendedores: [
     {
       usuarioId: "u1",
@@ -35,9 +42,30 @@ const REPASSES = {
       aPagarValor: 850,
       aPagarViagens: 3,
       itens: [
-        item({ id: "rp1", codigo: "VG-2026-0038", titular: "Família Oliveira", destino: "Gramado", valor: 250, ultimoRecebimentoEm: "2026-04-02" }),
-        item({ id: "rp2", codigo: "VG-2026-0035", titular: "Juliana Prado", destino: "Buenos Aires", valor: 200, ultimoRecebimentoEm: "2026-03-28" }),
-        item({ id: "rp3", codigo: "VG-2026-0033", titular: "Roberto Tanaka", destino: "Orlando", valor: 400, ultimoRecebimentoEm: "2026-03-30" }),
+        item({
+          id: "rp1",
+          codigo: "VG-2026-0038",
+          titular: "Família Oliveira",
+          destino: "Gramado",
+          valor: 250,
+          ultimoRecebimentoEm: "2026-04-02",
+        }),
+        item({
+          id: "rp2",
+          codigo: "VG-2026-0035",
+          titular: "Juliana Prado",
+          destino: "Buenos Aires",
+          valor: 200,
+          ultimoRecebimentoEm: "2026-03-28",
+        }),
+        item({
+          id: "rp3",
+          codigo: "VG-2026-0033",
+          titular: "Roberto Tanaka",
+          destino: "Orlando",
+          valor: 400,
+          ultimoRecebimentoEm: "2026-03-30",
+        }),
       ],
     },
     {

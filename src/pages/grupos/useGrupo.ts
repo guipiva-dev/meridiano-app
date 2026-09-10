@@ -1,4 +1,4 @@
-import { type GrupoDto, type GrupoRequest, type TipoGrupo, chavesGrupos, gruposApi } from "@/api/grupos";
+import { chavesGrupos, type GrupoDto, type GrupoRequest, gruposApi, type TipoGrupo } from "@/api/grupos";
 import { useFormularioCadastro } from "@/components/cadastros";
 import { formatarCnpj, somenteDigitos } from "@/lib/documentos";
 

@@ -6,7 +6,13 @@ import { chaves, type ViagemDto, viagensApi } from "@/api/viagens";
 import { Button, MoneyValue, StatusCell } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
-import { CAMPO_POR_CODIGO_FIN, DespesaModal, MotivoField, PagarDespesaModal, useMutacaoFinanceira } from "@/components/financeiro";
+import {
+  CAMPO_POR_CODIGO_FIN,
+  DespesaModal,
+  MotivoField,
+  PagarDespesaModal,
+  useMutacaoFinanceira,
+} from "@/components/financeiro";
 import { MenuAcoes } from "@/components/Menu/MenuAcoes";
 import { apresentacaoStatus } from "@/dominio/status";
 import { formatarData } from "@/lib/datas";
@@ -133,8 +139,7 @@ export function DespesasViagem({ viagem, podeMovimentar, onMudou }: DespesasViag
           <span className={s.linhaTexto}>
             <b className={s.linhaTitulo}>{d.descricao}</b>
             <span className={s.linhaMeta}>
-              {apresentacaoStatus("despesa_categoria", d.categoria).texto} · vencimento{" "}
-              {formatarData(d.vencimento)}
+              {apresentacaoStatus("despesa_categoria", d.categoria).texto} · vencimento {formatarData(d.vencimento)}
             </span>
           </span>
           <StatusCell entidade="despesa" valor={d.situacao} />
@@ -198,9 +203,7 @@ export function DespesasViagem({ viagem, podeMovimentar, onMudou }: DespesasViag
         />
       )}
       {modal?.tipo === "pagar" && <PagarDespesaModal open despesa={modal.despesa} onClose={fechar} onPaga={salva} />}
-      {modal?.tipo === "excluir" && (
-        <ExcluirDespesaModal despesa={modal.despesa} onClose={fechar} onExcluida={salva} />
-      )}
+      {modal?.tipo === "excluir" && <ExcluirDespesaModal despesa={modal.despesa} onClose={fechar} onExcluida={salva} />}
     </Bloco>
   );
 }

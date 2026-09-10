@@ -51,9 +51,30 @@ function item(over: Partial<RepasseItemDto>): RepasseItemDto {
 
 // Cenário do protótipo (docs/design/prototipo-v1.html, tela Financeiro · Repasses, card Ana Paula Ribeiro).
 const ITENS = [
-  item({ id: "rp1", codigo: "VG-2026-0038", titular: "Família Oliveira", destino: "Gramado", valor: 250, ultimoRecebimentoEm: "2026-04-02" }),
-  item({ id: "rp2", codigo: "VG-2026-0035", titular: "Juliana Prado", destino: "Buenos Aires", valor: 200, ultimoRecebimentoEm: "2026-03-28" }),
-  item({ id: "rp3", codigo: "VG-2026-0033", titular: "Roberto Tanaka", destino: "Orlando", valor: 400, ultimoRecebimentoEm: "2026-03-30" }),
+  item({
+    id: "rp1",
+    codigo: "VG-2026-0038",
+    titular: "Família Oliveira",
+    destino: "Gramado",
+    valor: 250,
+    ultimoRecebimentoEm: "2026-04-02",
+  }),
+  item({
+    id: "rp2",
+    codigo: "VG-2026-0035",
+    titular: "Juliana Prado",
+    destino: "Buenos Aires",
+    valor: 200,
+    ultimoRecebimentoEm: "2026-03-28",
+  }),
+  item({
+    id: "rp3",
+    codigo: "VG-2026-0033",
+    titular: "Roberto Tanaka",
+    destino: "Orlando",
+    valor: 400,
+    ultimoRecebimentoEm: "2026-03-30",
+  }),
   item({
     id: "rp4",
     versao: "3",
@@ -80,7 +101,16 @@ afterEach(() => {
 });
 
 test("mostra os itens do protótipo com a comissão recebida e o badge de valor pendente", () => {
-  render(<VendedorCard vendedor={VENDEDOR} ano={2026} historico={false} podePagar onPagar={vi.fn()} onValorSalvo={vi.fn()} />);
+  render(
+    <VendedorCard
+      vendedor={VENDEDOR}
+      ano={2026}
+      historico={false}
+      podePagar
+      onPagar={vi.fn()}
+      onValorSalvo={vi.fn()}
+    />,
+  );
 
   expect(screen.getByText("Ana Paula Ribeiro")).toBeInTheDocument();
   expect(screen.getByText(/vendedor\(a\) externo\(a\) · 12 viagens em 2026/)).toBeInTheDocument();
@@ -94,7 +124,14 @@ test("digitar valor e Enter chama definirValor com a versão do item", async () 
   definirValor.mockResolvedValue(item({ id: "rp4", versao: "3", valor: 300 }));
   const onValorSalvo = vi.fn();
   render(
-    <VendedorCard vendedor={VENDEDOR} ano={2026} historico={false} podePagar onPagar={vi.fn()} onValorSalvo={onValorSalvo} />,
+    <VendedorCard
+      vendedor={VENDEDOR}
+      ano={2026}
+      historico={false}
+      podePagar
+      onPagar={vi.fn()}
+      onValorSalvo={onValorSalvo}
+    />,
   );
 
   const input = screen.getByLabelText("Valor do repasse de VG-2026-0044");
@@ -111,7 +148,14 @@ test("erro 409 ao salvar mostra a mensagem de conflito e ainda assim refaz a bus
   definirValor.mockRejectedValue(new ConflictError(409, "conflito_versao", "Versão desatualizada"));
   const onValorSalvo = vi.fn();
   render(
-    <VendedorCard vendedor={VENDEDOR} ano={2026} historico={false} podePagar onPagar={vi.fn()} onValorSalvo={onValorSalvo} />,
+    <VendedorCard
+      vendedor={VENDEDOR}
+      ano={2026}
+      historico={false}
+      podePagar
+      onPagar={vi.fn()}
+      onValorSalvo={onValorSalvo}
+    />,
   );
 
   const input = screen.getByLabelText("Valor do repasse de VG-2026-0044");
@@ -119,7 +163,9 @@ test("erro 409 ao salvar mostra a mensagem de conflito e ainda assim refaz a bus
   fireEvent.keyDown(input, { key: "Enter" });
 
   await waitFor(() => {
-    expect(toastError).toHaveBeenCalledWith("Alguém alterou este registro enquanto você editava. Recarregue e tente de novo.");
+    expect(toastError).toHaveBeenCalledWith(
+      "Alguém alterou este registro enquanto você editava. Recarregue e tente de novo.",
+    );
   });
   expect(onValorSalvo).toHaveBeenCalled();
 });
@@ -132,7 +178,16 @@ test("Enter seguido de blur no mesmo valor não duplica o envio", async () => {
         liberar = resolve;
       }),
   );
-  render(<VendedorCard vendedor={VENDEDOR} ano={2026} historico={false} podePagar onPagar={vi.fn()} onValorSalvo={vi.fn()} />);
+  render(
+    <VendedorCard
+      vendedor={VENDEDOR}
+      ano={2026}
+      historico={false}
+      podePagar
+      onPagar={vi.fn()}
+      onValorSalvo={vi.fn()}
+    />,
+  );
 
   const input = screen.getByLabelText("Valor do repasse de VG-2026-0044");
   fireEvent.change(input, { target: { value: "300,00" } });
@@ -148,7 +203,16 @@ test("Enter seguido de blur no mesmo valor não duplica o envio", async () => {
 test("Pagar R$ 850,00 chama onPagar com os itens liberados", async () => {
   const user = userEvent.setup();
   const onPagar = vi.fn();
-  render(<VendedorCard vendedor={VENDEDOR} ano={2026} historico={false} podePagar onPagar={onPagar} onValorSalvo={vi.fn()} />);
+  render(
+    <VendedorCard
+      vendedor={VENDEDOR}
+      ano={2026}
+      historico={false}
+      podePagar
+      onPagar={onPagar}
+      onValorSalvo={vi.fn()}
+    />,
+  );
 
   await user.click(screen.getByRole("button", { name: "Pagar R$ 850,00" }));
   expect(onPagar).toHaveBeenCalledWith([ITENS[0], ITENS[1], ITENS[2]]);
