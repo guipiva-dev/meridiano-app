@@ -1,8 +1,18 @@
-// O agrupamento é por mês LOCAL; sem fuso fixo o caso da virada do mês seria não determinístico.
-process.env.TZ = "America/Sao_Paulo";
-
 import type { AtendimentoDto } from "@/api/clientes";
 import { agruparAtendimentos } from "./agruparAtendimentos";
+
+// O agrupamento é por mês LOCAL; sem fuso fixo o caso da virada do mês seria não determinístico.
+// O worker do vitest é reaproveitado entre arquivos, então o fuso volta ao original no fim.
+const TZ_ORIGINAL = process.env.TZ;
+
+beforeAll(() => {
+  process.env.TZ = "America/Sao_Paulo";
+});
+
+afterAll(() => {
+  if (TZ_ORIGINAL === undefined) delete process.env.TZ;
+  else process.env.TZ = TZ_ORIGINAL;
+});
 
 function at(id: string, ocorridoEm: string): AtendimentoDto {
   return { id, versao: "1", canal: "whatsapp", resumo: `resumo ${id}`, ocorridoEm, usuarioId: null, usuarioNome: null };
