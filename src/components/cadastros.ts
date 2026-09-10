@@ -1,3 +1,9 @@
 export { GrupoInlineModal } from "./Cadastros/GrupoInlineModal";
+export { AtendimentoModal } from "./Cadastros/pessoa/AtendimentoModal";
+export { AtendimentosPessoa } from "./Cadastros/pessoa/AtendimentosPessoa";
+export { DocumentoModal } from "./Cadastros/pessoa/DocumentoModal";
+export { DocumentosDosPassageiros } from "./Cadastros/pessoa/DocumentosDosPassageiros";
+export { DocumentosPessoa } from "./Cadastros/pessoa/DocumentosPessoa";
+export { ViagensPessoa } from "./Cadastros/pessoa/ViagensPessoa";
 export { TagsInput } from "./Cadastros/TagsInput";
 export { useFormularioCadastro } from "./Cadastros/useFormularioCadastro";

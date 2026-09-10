@@ -25,10 +25,40 @@ function montar(caminho: string, pode: (p: string) => boolean = () => true) {
 }
 
 // A busca global linka para /clientes/<id>; sem a rota o resultado caía no 404.
-test("/clientes/:id renderiza Cliente, não a página não encontrada", () => {
+test("/clientes/:id renderiza a pessoa, não a página não encontrada", async () => {
+  const pessoa = {
+    id: "abc",
+    versao: "1",
+    nome: "Marina Alves",
+    email: null,
+    telefone: null,
+    whatsapp: null,
+    dataNascimento: null,
+    cidade: null,
+    uf: null,
+    origemLead: null,
+    tags: [],
+    observacoes: null,
+    contatoEmergencia: null,
+    grupoId: null,
+    grupoNome: null,
+    criadoEm: "2026-01-01T00:00:00Z",
+    resumo: { viagens: 0, ultimaViagem: null, pendenciasAbertas: 0, pendenciasUrgentes: 0, clienteDesde: 2026 },
+  };
+  vi.stubGlobal("fetch", (url: string) =>
+    Promise.resolve({
+      ok: true,
+      status: 200,
+      headers: { get: () => "application/json" },
+      json: () => Promise.resolve(url.endsWith("/clientes/abc") ? pessoa : []),
+    } as unknown as Response),
+  );
+
   montar("/clientes/abc");
-  expect(screen.getByRole("heading", { name: "Cliente" })).toBeInTheDocument();
+
+  expect(await screen.findByRole("heading", { name: "Marina Alves" })).toBeInTheDocument();
   expect(screen.queryByText("Página não encontrada")).toBeNull();
+  vi.unstubAllGlobals();
 });
 
 test("/clientes/grupos continua ganhando da rota dinâmica", () => {
