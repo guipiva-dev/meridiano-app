@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { type Coluna, DataTable, type Ordenacao } from "./DataTable";
@@ -92,4 +92,21 @@ test("clicar em cabeçalho ordenável alterna asc/desc e reflete em aria-sort", 
   expect(screen.getByRole("columnheader", { name: /Nome/ })).toHaveAttribute("aria-sort", "ascending");
   await userEvent.click(botao);
   expect(screen.getByRole("columnheader", { name: /Nome/ })).toHaveAttribute("aria-sort", "descending");
+});
+
+test("Espaço na linha focada chama onLinha sem rolar a página", () => {
+  const onLinha = vi.fn();
+  render(
+    <DataTable
+      colunas={colunas}
+      linhas={linhas}
+      chave={(l) => l.id}
+      onLinha={onLinha}
+      rotuloLinha={(l) => `Abrir ${l.nome}`}
+      legenda="Pessoas"
+    />,
+  );
+  const evento = fireEvent.keyDown(screen.getByRole("row", { name: "Abrir Bruno" }), { key: " " });
+  expect(evento).toBe(false); // preventDefault() foi chamado
+  expect(onLinha).toHaveBeenCalledWith(linhas[1]);
 });

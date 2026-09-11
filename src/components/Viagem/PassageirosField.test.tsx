@@ -124,3 +124,39 @@ test("clicar em outro chip troca o titular (exatamente um)", async () => {
     { clienteId: "2", nome: "Lúcia Mendes", titular: true },
   ]);
 });
+
+test("resposta atrasada de busca anterior não sobrescreve as opções da busca atual", async () => {
+  vi.useFakeTimers();
+  let resolverPrimeira: (r: ClienteBuscaDto[]) => void = () => undefined;
+  const buscar = vi
+    .fn<(q: string) => Promise<ClienteBuscaDto[]>>()
+    .mockImplementationOnce(
+      () =>
+        new Promise((res) => {
+          resolverPrimeira = res;
+        }),
+    )
+    .mockResolvedValueOnce([cliente("2", "Lúcia Mendes")]);
+  render(<PassageirosField value={[]} onChange={vi.fn()} buscar={buscar} onNovaPessoa={vi.fn()} erro={undefined} />);
+
+  const input = screen.getByLabelText("Passageiros");
+  fireEvent.change(input, { target: { value: "ca" } });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(250);
+  });
+  fireEvent.change(input, { target: { value: "lu" } });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(250);
+  });
+  expect(screen.getByRole("option")).toHaveTextContent("Lúcia Mendes");
+
+  // a primeira resposta chega depois da segunda: deve ser descartada
+  await act(async () => {
+    resolverPrimeira([cliente("1", "Carlos Mendes")]);
+    await Promise.resolve();
+  });
+
+  expect(buscar).toHaveBeenCalledTimes(2);
+  expect(screen.getByRole("option")).toHaveTextContent("Lúcia Mendes");
+  vi.useRealTimers();
+});

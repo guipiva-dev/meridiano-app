@@ -26,6 +26,8 @@ export function Modal({ open, title, onClose, size = "md", footer, children }: M
   useEffect(() => {
     if (!open) return;
     const anterior = document.activeElement as HTMLElement | null;
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = "hidden"; // trava o scroll do documento
     const el = ref.current;
     if (el && !el.contains(document.activeElement)) {
       const primeiro = el.querySelectorAll<HTMLElement>(FOCAVEIS)[0];
@@ -53,6 +55,7 @@ export function Modal({ open, title, onClose, size = "md", footer, children }: M
     el?.addEventListener("keydown", prender);
     return () => {
       el?.removeEventListener("keydown", prender);
+      document.body.style.overflow = overflowAnterior;
       anterior?.focus();
     };
   }, [open]);

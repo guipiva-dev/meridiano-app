@@ -30,6 +30,7 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
   const [ativo, setAtivo] = useState(-1);
   const [erroBusca, setErroBusca] = useState<string>();
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const seq = useRef(0); // descarta resposta de busca anterior que chegue depois da atual
   const listboxId = useId();
 
   useEffect(() => {
@@ -43,19 +44,23 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
     setAtivo(-1);
     setErroBusca(undefined);
     clearTimeout(timer.current);
+    seq.current++;
     if (!q.trim()) {
       setOpcoes([]);
       setAberto(false);
       return;
     }
     timer.current = setTimeout(() => {
+      const minha = seq.current;
       void buscar(q)
         .then((r) => {
+          if (minha !== seq.current) return;
           setOpcoes(r);
           setAberto(true);
           setAtivo(0);
         })
         .catch((erroBuscar: unknown) => {
+          if (minha !== seq.current) return;
           setOpcoes([]);
           setAberto(false);
           setErroBusca(mensagemDeErro(erroBuscar));
@@ -65,6 +70,7 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
 
   function adicionar(c: ClienteBuscaDto) {
     clearTimeout(timer.current);
+    seq.current++;
     if (value.some((p) => p.clienteId === c.id)) return;
     onChange([...value, { clienteId: c.id, nome: c.nome, titular: value.length === 0 }]);
     setQuery("");

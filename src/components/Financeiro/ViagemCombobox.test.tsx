@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { BuscaDto } from "@/api/busca";
+import { type BuscaDto, buscaApi } from "@/api/busca";
 import { ViagemCombobox } from "./ViagemCombobox";
 
 const resposta: BuscaDto = {
@@ -31,6 +31,7 @@ function stubFetch() {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 test("digitar busca em /busca e lista só as viagens", async () => {
@@ -62,4 +63,39 @@ test("com viagem escolhida mostra o rótulo e permite limpar", async () => {
   expect(screen.getByText("Carlos · Lisboa · VG-2026-0001")).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Remover viagem" }));
   expect(onChange).toHaveBeenCalledWith(null);
+});
+
+test("resposta atrasada de busca anterior não sobrescreve as opções da busca atual", async () => {
+  vi.useFakeTimers();
+  const viagem = resposta.viagens[0]!;
+  let resolverPrimeira: (r: BuscaDto) => void = () => undefined;
+  vi.spyOn(buscaApi, "buscar")
+    .mockImplementationOnce(
+      () =>
+        new Promise((res) => {
+          resolverPrimeira = res;
+        }),
+    )
+    .mockResolvedValueOnce({ ...resposta, viagens: [{ ...viagem, id: "v2", destino: "Porto" }] });
+  render(<ViagemCombobox value={null} onChange={vi.fn()} />);
+
+  const input = screen.getByRole("combobox");
+  fireEvent.change(input, { target: { value: "Lis" } });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(250);
+  });
+  fireEvent.change(input, { target: { value: "Por" } });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(250);
+  });
+  expect(screen.getByRole("option")).toHaveTextContent("Porto");
+
+  // a primeira resposta chega depois da segunda: deve ser descartada
+  await act(async () => {
+    resolverPrimeira(resposta);
+    await Promise.resolve();
+  });
+
+  expect(screen.getByRole("option")).toHaveTextContent("Porto");
+  vi.useRealTimers();
 });

@@ -36,6 +36,7 @@ export function ViagemCombobox({ value, onChange, label = "Viagem", helper, erro
   const [ativo, setAtivo] = useState(-1);
   const [erroBusca, setErroBusca] = useState<string>();
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const seq = useRef(0); // descarta resposta de busca anterior que chegue depois da atual
   const listboxId = useId();
 
   useEffect(() => {
@@ -49,20 +50,24 @@ export function ViagemCombobox({ value, onChange, label = "Viagem", helper, erro
     setAtivo(-1);
     setErroBusca(undefined);
     clearTimeout(timer.current);
+    seq.current++;
     if (!q.trim()) {
       setOpcoes([]);
       setAberto(false);
       return;
     }
     timer.current = setTimeout(() => {
+      const minha = seq.current;
       void buscaApi
         .buscar(q)
         .then((r) => {
+          if (minha !== seq.current) return;
           setOpcoes(r.viagens);
           setAberto(true);
           setAtivo(0);
         })
         .catch((e: unknown) => {
+          if (minha !== seq.current) return;
           setOpcoes([]);
           setAberto(false);
           setErroBusca(mensagemDeErro(e));
@@ -72,6 +77,7 @@ export function ViagemCombobox({ value, onChange, label = "Viagem", helper, erro
 
   function escolher(v: ViagemBusca) {
     clearTimeout(timer.current);
+    seq.current++;
     onChange({ id: v.id, rotulo: rotuloDe(v) });
     setQuery("");
     setOpcoes([]);

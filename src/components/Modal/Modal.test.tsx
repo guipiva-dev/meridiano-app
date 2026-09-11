@@ -89,3 +89,19 @@ test("ConfirmModal foca inicialmente o botão cancelar", () => {
   );
   expect(screen.getByRole("button", { name: "Cancelar" })).toHaveFocus();
 });
+
+test("aberto trava o scroll do documento e restaura ao fechar", () => {
+  document.body.style.overflow = "auto";
+  const { rerender } = render(
+    <Modal open title="t" onClose={() => undefined}>
+      corpo
+    </Modal>,
+  );
+  expect(document.body.style.overflow).toBe("hidden");
+  rerender(
+    <Modal open={false} title="t" onClose={() => undefined}>
+      corpo
+    </Modal>,
+  );
+  expect(document.body.style.overflow).toBe("auto");
+});

@@ -51,6 +51,10 @@ export function DataTable<T>({
   }
   function teclaLinha(e: KeyboardEvent<HTMLTableRowElement>, l: T) {
     if (e.key === "Enter") onLinha?.(l);
+    else if (e.key === " ") {
+      e.preventDefault(); // não rola a página
+      onLinha?.(l);
+    }
   }
 
   return (
