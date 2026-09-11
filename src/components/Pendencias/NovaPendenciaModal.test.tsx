@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ViagemDaPessoaDto } from "@/api/clientes";
 import type { PassageiroDto, VendedorDto } from "@/api/viagens";
 import { NovaPendenciaModal } from "./NovaPendenciaModal";
@@ -56,6 +56,21 @@ function montar() {
       <NovaPendenciaModal
         open
         escopo={{ viagemId: "v1", passageiros: PASSAGEIROS }}
+        vendedores={VENDEDORES}
+        onClose={() => undefined}
+        onSalva={() => undefined}
+      />
+    </QueryClientProvider>,
+  );
+}
+
+function montarAgenda() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={qc}>
+      <NovaPendenciaModal
+        open
+        escopo={{ agenda: true, responsavelId: null }}
         vendedores={VENDEDORES}
         onClose={() => undefined}
         onSalva={() => undefined}
@@ -147,4 +162,92 @@ test("sem título mostra erro local e não chama a API", async () => {
 
   expect(await screen.findByText("Descreva o que precisa ser feito")).toBeInTheDocument();
   expect(chamadas.some((c) => c.method === "POST")).toBe(false);
+});
+
+test("escopo agenda: sem 'Para quem', envia POST /pendencias com clienteIds []", async () => {
+  montarAgenda();
+
+  expect(screen.queryByText("Para quem")).toBeNull();
+  expect(screen.getByRole("button", { name: "Criar pendência" })).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText(/O que precisa ser feito/), { target: { value: "Ligar para o cliente" } });
+  fireEvent.click(screen.getByRole("button", { name: "Criar pendência" }));
+
+  await waitFor(() => {
+    const c = chamadas.find((x) => x.method === "POST");
+    expect(c?.url).toBe("/api/v1/pendencias");
+    expect(c?.body).toMatchObject({ titulo: "Ligar para o cliente", clienteIds: [] });
+  });
+});
+
+test("escopo agenda: selecionar uma pessoa envia clienteIds com o id dela", async () => {
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    chamadas.push({
+      url,
+      method: init?.method ?? "GET",
+      body: init?.body === undefined ? undefined : JSON.parse(init.body as string),
+    });
+    if (url.includes("/clientes/busca"))
+      return Promise.resolve(resposta(200, [{ id: "c9", nome: "Roberto Tanaka", telefone: null }]));
+    return Promise.resolve(resposta(201, []));
+  });
+  vi.useFakeTimers();
+
+  montarAgenda();
+  fireEvent.change(screen.getByLabelText(/O que precisa ser feito/), { target: { value: "Retomar contato" } });
+  fireEvent.change(screen.getByPlaceholderText("Buscar pessoa…"), { target: { value: "rob" } });
+
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(250);
+  });
+  fireEvent.mouseDown(screen.getByRole("option", { name: "Roberto Tanaka" }));
+
+  vi.useRealTimers();
+  fireEvent.click(screen.getByRole("button", { name: "Criar pendência" }));
+
+  await waitFor(() => {
+    const c = chamadas.find((x) => x.method === "POST" && x.url === "/api/v1/pendencias");
+    expect((c?.body as { clienteIds: string[] }).clienteIds).toEqual(["c9"]);
+  });
+});
+
+test("escopo agenda: seleciona a pessoa pelo teclado (seta + Enter) e envia o id dela", async () => {
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    chamadas.push({
+      url,
+      method: init?.method ?? "GET",
+      body: init?.body === undefined ? undefined : JSON.parse(init.body as string),
+    });
+    if (url.includes("/clientes/busca"))
+      return Promise.resolve(
+        resposta(200, [
+          { id: "c8", nome: "Rosa Lima", telefone: null },
+          { id: "c9", nome: "Roberto Tanaka", telefone: null },
+        ]),
+      );
+    return Promise.resolve(resposta(201, []));
+  });
+  vi.useFakeTimers();
+
+  montarAgenda();
+  fireEvent.change(screen.getByLabelText(/O que precisa ser feito/), { target: { value: "Retomar contato" } });
+  const busca = screen.getByPlaceholderText("Buscar pessoa…");
+  fireEvent.change(busca, { target: { value: "ro" } });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(250);
+  });
+  expect(busca).toHaveAttribute("aria-expanded", "true");
+  expect(screen.getByRole("option", { name: "Rosa Lima" })).toHaveAttribute("aria-selected", "true");
+  fireEvent.keyDown(busca, { key: "ArrowDown" });
+  expect(screen.getByRole("option", { name: "Roberto Tanaka" })).toHaveAttribute("aria-selected", "true");
+  fireEvent.keyDown(busca, { key: "Enter" });
+  expect(screen.getByText("Roberto Tanaka")).toBeInTheDocument();
+  expect(screen.queryByRole("listbox")).toBeNull();
+
+  vi.useRealTimers();
+  fireEvent.click(screen.getByRole("button", { name: "Criar pendência" }));
+  await waitFor(() => {
+    const c = chamadas.find((x) => x.method === "POST" && x.url === "/api/v1/pendencias");
+    expect((c?.body as { clienteIds: string[] }).clienteIds).toEqual(["c9"]);
+  });
 });

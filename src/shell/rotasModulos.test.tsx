@@ -76,3 +76,29 @@ test("/financeiro sem nenhuma permissão do módulo cai em Sem permissão", () =
   montar("/financeiro", (p) => p === "viagem.ver");
   expect(screen.getByText("Sem permissão")).toBeInTheDocument();
 });
+
+// 3.6 (R16): /agenda deixa de ser aberta — exige ver viagens (todas ou as próprias).
+test("/agenda sem viagem.ver nem viagem.ver_proprias cai em Sem permissão", () => {
+  montar("/agenda", () => false);
+  expect(screen.getByText("Sem permissão")).toBeInTheDocument();
+});
+
+test("/agenda abre só com viagem.ver_proprias", () => {
+  montar("/agenda", (p) => p === "viagem.ver_proprias");
+  expect(screen.getByRole("heading", { name: "Agenda" })).toBeInTheDocument();
+});
+
+test("/relatorios abre só com relatorio.ver", () => {
+  montar("/relatorios", (p) => p === "relatorio.ver");
+  expect(screen.getByRole("heading", { name: "Relatórios" })).toBeInTheDocument();
+});
+
+test("/equipe/:id sem usuario.gerenciar cai em Sem permissão", () => {
+  montar("/equipe/abc", (p) => p !== "usuario.gerenciar");
+  expect(screen.getByText("Sem permissão")).toBeInTheDocument();
+});
+
+test("/auditoria abre com auditoria.ver", () => {
+  montar("/auditoria", (p) => p === "auditoria.ver");
+  expect(screen.getByRole("heading", { name: "Auditoria" })).toBeInTheDocument();
+});

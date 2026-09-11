@@ -1,21 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { auditoriaApi, chavesAuditoria, type EventoAuditoriaDto } from "@/api/auditoria";
 import { mensagemDeErro } from "@/api/errors";
+import { valorDoCampo } from "@/components/auditoria";
 import { Alert } from "@/components/display";
 import { EmptyState, Skeleton } from "@/components/feedback";
 import { cx } from "@/lib/cx";
 import { formatarCarimbo } from "@/lib/datas";
-import { formatarDinheiro } from "@/lib/dinheiro";
 import s from "./Viagem.module.css";
-
-const DINHEIRO = /^(valor_|rav_|taxa_|multa_)/;
-
-/** Dinheiro formatado nos campos de valor; o resto vira texto (JSON para objeto/array). */
-function valorDoCampo(campo: string, valor: unknown): string {
-  if (valor === null || valor === undefined) return "—";
-  if (DINHEIRO.test(campo) && typeof valor === "number") return formatarDinheiro(valor);
-  return typeof valor === "string" ? valor : JSON.stringify(valor);
-}
 
 function bolinhaDe(e: EventoAuditoriaDto): string | undefined {
   if (e.tabela === "movimento_financeiro" || e.tabela === "repasse") return s.money;

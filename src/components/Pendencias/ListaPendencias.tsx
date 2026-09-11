@@ -1,16 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { mensagemDeErro } from "@/api/http";
-import { type PendenciaDto, pendenciasApi } from "@/api/pendencias";
+import type { PendenciaDto } from "@/api/pendencias";
 import type { VendedorDto } from "@/api/viagens";
 import { Button, Checkbox } from "@/components";
 import { Alert } from "@/components/display";
-import { ConfirmModal, EmptyState, Skeleton, toast } from "@/components/feedback";
+import { ConfirmModal, EmptyState, Skeleton } from "@/components/feedback";
 import { AdiarModal } from "./AdiarModal";
 import { type EscopoPendencias, fontePendencias } from "./escopo";
 import { LinhaPendencia } from "./LinhaPendencia";
 import { NovaPendenciaModal } from "./NovaPendenciaModal";
 import s from "./Pendencias.module.css";
+import { usePendenciasAcoes } from "./usePendenciasAcoes";
 
 type ListaPendenciasProps = EscopoPendencias & {
   vendedores: VendedorDto[];
@@ -21,7 +22,6 @@ const AJUDA = "Toda pendência tem data. Aparece aqui, na Agenda e na aba Pendê
 
 export function ListaPendencias(props: ListaPendenciasProps) {
   const { vendedores, podeEditar } = props;
-  const qc = useQueryClient();
   const [mostrarConcluidas, setMostrarConcluidas] = useState(false);
   const [editando, setEditando] = useState<PendenciaDto | undefined>();
   const [criando, setCriando] = useState(false);
@@ -34,30 +34,7 @@ export function ListaPendencias(props: ListaPendenciasProps) {
     queryFn: () => fonte.buscar(mostrarConcluidas),
   });
 
-  function invalidar() {
-    void qc.invalidateQueries({ queryKey: fonte.prefixo });
-  }
-  function falhou(e: unknown) {
-    toast.error(mensagemDeErro(e));
-    invalidar();
-  }
-
-  const concluir = useMutation({
-    mutationFn: (p: PendenciaDto) => pendenciasApi.concluir(p.id, p.versao),
-    onSuccess: invalidar,
-    onError: falhou,
-  });
-  const excluir = useMutation({
-    mutationFn: (p: PendenciaDto) => pendenciasApi.cancelar(p.id),
-    onSuccess: () => {
-      setExcluindo(undefined);
-      invalidar();
-    },
-    onError: (e) => {
-      setExcluindo(undefined);
-      falhou(e);
-    },
-  });
+  const { concluir, excluir, invalidar } = usePendenciasAcoes(fonte);
 
   const itens = q.data ?? [];
   return (
@@ -155,7 +132,11 @@ export function ListaPendencias(props: ListaPendenciasProps) {
           tone="danger"
           loading={excluir.isPending}
           onConfirm={() => {
-            excluir.mutate(excluindo);
+            excluir.mutate(excluindo, {
+              onSettled: () => {
+                setExcluindo(undefined);
+              },
+            });
           }}
           onCancel={() => {
             setExcluindo(undefined);

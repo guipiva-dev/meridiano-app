@@ -49,6 +49,8 @@ export const pendenciasApi = {
   adiar: (id: string, novaData: string, versao: string) =>
     api.post<PendenciaDto>(`/pendencias/${id}/adiar`, { novaData, versao }),
   cancelar: (id: string) => api.delete(`/pendencias/${id}`),
+  /** R3: pendência solta (sem viagem), criada a partir da Agenda. `clienteIds` pode ser vazio. */
+  criarSolta: (r: NovaPendenciaRequest) => api.post<PendenciaDto[]>("/pendencias", r),
 };
 
 export const chavesPendencias = {

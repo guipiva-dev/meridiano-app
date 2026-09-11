@@ -5,8 +5,12 @@ import { NovaViagemPage } from "@/pages/viagens/NovaViagemPage";
 import { AppShell } from "./AppShell";
 import { EmConstrucao } from "./EmConstrucao";
 import { RotaProtegida } from "./RotaProtegida";
+import { RotasAgenda } from "./rotasAgenda";
+import { RotasAuditoria } from "./rotasAuditoria";
 import { RotasCadastros } from "./rotasCadastros";
+import { RotasEquipe } from "./rotasEquipe";
 import { RotasFinanceiro } from "./rotasFinanceiro";
+import { RotasRelatorios } from "./rotasRelatorios";
 
 export function RotasApp() {
   return (
@@ -20,16 +24,10 @@ export function RotasApp() {
       </Route>
       {RotasCadastros()}
       {RotasFinanceiro()}
-      <Route path="/agenda" element={<EmConstrucao titulo="Agenda" />} />
-      <Route element={<RotaProtegida permissao="relatorio.ver" />}>
-        <Route path="/relatorios" element={<EmConstrucao titulo="Relatórios" />} />
-      </Route>
-      <Route element={<RotaProtegida permissao="usuario.gerenciar" />}>
-        <Route path="/equipe" element={<EmConstrucao titulo="Equipe" />} />
-      </Route>
-      <Route element={<RotaProtegida permissao="auditoria.ver" />}>
-        <Route path="/auditoria" element={<EmConstrucao titulo="Auditoria" />} />
-      </Route>
+      {RotasAgenda()}
+      {RotasRelatorios()}
+      {RotasEquipe()}
+      {RotasAuditoria()}
       <Route
         path="*"
         element={

@@ -1,0 +1,65 @@
+.primary {
+  font: var(--type-component);
+  color: var(--color-text-heading);
+}
+.secondary {
+  font: var(--type-helper);
+  color: var(--color-text-secondary);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  max-width: 1100px;
+}
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: 2fr 1fr;
+    align-items: start;
+  }
+}
+
+.perfilVe {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
+}
+.eyebrow {
+  font: var(--type-caption);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--color-text-muted);
+}
+.perfilLinha {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.perfilLinha b {
+  font: var(--type-label);
+  color: var(--color-text-heading);
+}
+.ok,
+.no {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-helper);
+}
+.ok {
+  color: var(--color-success-text);
+}
+.no {
+  color: var(--color-text-muted);
+}
+
+.emailFixo {
+  font: var(--type-body);
+  color: var(--color-text-secondary);
+  padding: var(--space-2) 0;
+}
