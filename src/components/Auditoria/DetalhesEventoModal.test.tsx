@@ -18,9 +18,7 @@ function evento(alteracoes: EventoAuditoriaDto["alteracoes"]): EventoAuditoriaDt
 }
 
 test("valor monetário formatado em De/Para", () => {
-  render(
-    <DetalhesEventoModal evento={evento({ valor_comissao: { de: 1000, para: 1100 } })} onClose={vi.fn()} />,
-  );
+  render(<DetalhesEventoModal evento={evento({ valor_comissao: { de: 1000, para: 1100 } })} onClose={vi.fn()} />);
   expect(screen.getByText("R$ 1.000,00")).toBeInTheDocument();
   expect(screen.getByText("R$ 1.100,00")).toBeInTheDocument();
 });
@@ -38,10 +36,7 @@ test("null vira travessão", () => {
 
 test("data ISO formatada", () => {
   render(
-    <DetalhesEventoModal
-      evento={evento({ validade: { de: "2026-04-01", para: "2026-05-01" } })}
-      onClose={vi.fn()}
-    />,
+    <DetalhesEventoModal evento={evento({ validade: { de: "2026-04-01", para: "2026-05-01" } })} onClose={vi.fn()} />,
   );
   expect(screen.getByText("01/04/2026")).toBeInTheDocument();
   expect(screen.getByText("01/05/2026")).toBeInTheDocument();

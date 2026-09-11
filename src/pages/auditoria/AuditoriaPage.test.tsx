@@ -17,7 +17,7 @@ function evento(over: Partial<EventoAuditoriaDto>): EventoAuditoriaDto {
     titulo: "Valores da reserva alterados",
     subtitulo: null,
     alteracoes: { valor_comissao: { de: 1000, para: 1100 } },
-    motivo: 'operadora revisou %',
+    motivo: "operadora revisou %",
     usuarioNome: "Guilherme",
     criadoEm: new Date().toISOString(),
     viagemId: "v1",
