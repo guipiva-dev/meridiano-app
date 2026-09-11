@@ -34,6 +34,7 @@ export function useGrupo(id: string | undefined) {
     id,
     carregar: (id) => gruposApi.obter(id),
     chave: chavesGrupos.grupo,
+    chaveLista: ["grupos", "lista"],
     paraForm,
     paraRequest,
     criar: (req) => gruposApi.criar(req as GrupoRequest),

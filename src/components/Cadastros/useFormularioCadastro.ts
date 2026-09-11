@@ -9,6 +9,8 @@ export interface OpcoesFormularioCadastro<TForm extends FieldValues, TDto> {
   id: string | undefined;
   carregar: (id: string) => Promise<TDto>;
   chave: (id: string) => readonly unknown[];
+  /** Prefixo das queries de listagem; invalidado após salvar para a lista não ficar stale ao voltar. */
+  chaveLista: readonly unknown[];
   paraForm: (dto: TDto) => TForm;
   paraRequest: (f: TForm, versao?: string) => unknown;
   criar: (req: unknown) => Promise<TDto>;
@@ -25,7 +27,8 @@ const CHAVE_NOVO = ["cadastro", "novo"] as const;
 
 /** Receita comum das telas de cadastro (cliente/grupo/fornecedor): carrega por id, salva, trata 409/422. */
 export function useFormularioCadastro<TForm extends FieldValues, TDto>(opts: OpcoesFormularioCadastro<TForm, TDto>) {
-  const { id, carregar, chave, paraForm, paraRequest, criar, atualizar, rotaDepoisDeCriar, versaoDe } = opts;
+  const { id, carregar, chave, chaveLista, paraForm, paraRequest, criar, atualizar, rotaDepoisDeCriar, versaoDe } =
+    opts;
   const { errosDe = errosDeCadastro, defaultValues } = opts;
   const qc = useQueryClient();
   const nav = useNavigate();
@@ -56,11 +59,14 @@ export function useFormularioCadastro<TForm extends FieldValues, TDto>(opts: Opc
         const req = paraRequest(dados, undefined);
         const salvo = await criar(req);
         const novoId = (salvo as { id: string }).id;
+        // Cache imediato evita flash de loading na rota nova; o GET real substitui o dto do POST (pode ser sintético).
         qc.setQueryData(chave(novoId), salvo);
         await nav(rotaDepoisDeCriar(salvo), { replace: true });
+        void qc.invalidateQueries({ queryKey: chave(novoId) });
       }
+      void qc.invalidateQueries({ queryKey: chaveLista });
     },
-    [id, dto, paraRequest, atualizar, criar, chave, qc, nav, rotaDepoisDeCriar, versaoDe],
+    [id, dto, paraRequest, atualizar, criar, chave, chaveLista, qc, nav, rotaDepoisDeCriar, versaoDe],
   );
 
   const salvamento = useSalvamento<TForm>(enviar);

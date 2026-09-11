@@ -94,6 +94,7 @@ export function useFornecedor(id: string | undefined) {
     id,
     carregar: fornecedoresApi.obter,
     chave: chavesFornecedores.fornecedor,
+    chaveLista: ["fornecedores", "resumo"],
     paraForm,
     paraRequest: (f, versao) => paraRequest(f, versao),
     criar,

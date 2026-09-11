@@ -79,6 +79,7 @@ export function useColaborador(id: string | undefined) {
     id,
     carregar: equipeApi.obter,
     chave: chavesEquipe.item,
+    chaveLista: chavesEquipe.lista(),
     paraForm,
     paraRequest,
     criar: (req) => equipeApi.criar(req as NovoColaboradorRequest),

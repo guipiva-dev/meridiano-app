@@ -32,6 +32,7 @@ function montar(opts: {
         id: opts.id,
         carregar,
         chave: (id) => ["teste", id] as const,
+        chaveLista: ["teste", "lista"],
         paraForm: (dto) => ({ nome: dto.nome }),
         paraRequest: (f, versao) => ({ nome: f.nome, versao }),
         criar,
@@ -106,4 +107,33 @@ test("422 cpf_duplicado vira erro no campo cpf", async () => {
   });
 
   expect(result.current.erros.cpf).toBe("CPF já cadastrado");
+});
+
+test("criar invalida a lista e o detalhe do novo id (substitui o dto sintético pelo GET real)", async () => {
+  const criar = vi.fn().mockResolvedValue({ id: "novo", versao: "", nome: "Ana" });
+  const { qc, result } = montar({ criar });
+  const invalidar = vi.spyOn(qc, "invalidateQueries");
+
+  await act(async () => {
+    await result.current.salvar();
+  });
+
+  expect(invalidar).toHaveBeenCalledWith({ queryKey: ["teste", "lista"] });
+  expect(invalidar).toHaveBeenCalledWith({ queryKey: ["teste", "novo"] });
+});
+
+test("atualizar invalida a lista", async () => {
+  const carregar = vi.fn().mockResolvedValue({ id: "c1", versao: "7", nome: "Bia" });
+  const atualizar = vi.fn().mockResolvedValue({ id: "c1", versao: "8", nome: "Bia" });
+  const { qc, result } = montar({ id: "c1", carregar, atualizar });
+  await waitFor(() => {
+    expect(result.current.form.getValues("nome")).toBe("Bia");
+  });
+  const invalidar = vi.spyOn(qc, "invalidateQueries");
+
+  await act(async () => {
+    await result.current.salvar();
+  });
+
+  expect(invalidar).toHaveBeenCalledWith({ queryKey: ["teste", "lista"] });
 });

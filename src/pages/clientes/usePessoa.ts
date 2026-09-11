@@ -101,6 +101,7 @@ export function usePessoa(id: string | undefined) {
     id,
     carregar: (i) => clientesApi.obter(i),
     chave: chavesClientes.cliente,
+    chaveLista: ["clientes", "lista"],
     paraForm,
     paraRequest,
     criar: (req) => clientesApi.criar(req as ClienteRequest),
