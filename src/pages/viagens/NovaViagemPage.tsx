@@ -142,7 +142,7 @@ export function NovaViagemPage() {
         const duplicada = v.duplicadas[i];
         return (
           <ReservationCard
-            key={r.id ?? `nova-${i}`}
+            key={r.id ?? r.chaveLocal}
             indice={i + 1}
             value={r}
             onChange={(patch) => {

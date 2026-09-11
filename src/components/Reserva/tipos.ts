@@ -15,6 +15,8 @@ import type { ValoresReserva } from "@/dominio/calculoReserva";
 export interface ReservaForm {
   id?: string;
   versao?: string;
+  /** Chave de React da reserva ainda sem `id` (estável ao remover outra da lista). Não vai no request. */
+  chaveLocal?: string;
   fornecedorId: string;
   localizador: string;
   dataCompra: string;
@@ -42,6 +44,7 @@ export interface ReservaForm {
 
 export function reservaVazia(taxaServicoPadrao: number): ReservaForm {
   return {
+    chaveLocal: crypto.randomUUID(),
     fornecedorId: "",
     localizador: "",
     dataCompra: new Date().toLocaleDateString("en-CA"),

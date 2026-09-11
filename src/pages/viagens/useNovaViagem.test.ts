@@ -135,6 +135,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -346,4 +347,45 @@ test("?reserva=<id> abre só aquele card na carga inicial da edição", async ()
   const reservas = result.current.form.getValues("reservas");
   expect(reservas.find((r) => r.id === "r1")?.aberta).toBe(false);
   expect(reservas.find((r) => r.id === "r2")?.aberta).toBe(true);
+});
+
+/** Segura as respostas de `padrao` até o teste resolvê-las, na ordem que quiser. */
+function adiarRespostas(padrao: string) {
+  const base = globalThis.fetch;
+  const pendentes: ((body: unknown) => void)[] = [];
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    if (!url.includes(padrao)) return base(url, init);
+    return new Promise<Response>((res) => {
+      pendentes.push((body) => {
+        res(resposta(200, body));
+      });
+    });
+  });
+  return pendentes;
+}
+
+test("resposta antiga que chega depois não sobrescreve semelhante nem duplicada da entrada atual", async () => {
+  vi.useFakeTimers();
+  const semelhantes = adiarRespostas("/viagens/semelhantes");
+  const duplicadas = adiarRespostas("/reservas/duplicada");
+  const { result } = montar();
+  act(() => {
+    result.current.adicionarReserva();
+  });
+  for (const n of [1, 2]) {
+    act(() => {
+      result.current.form.setValue("passageiros", [{ clienteId: `c${n}`, nome: "X", titular: true }]);
+      result.current.atualizarReserva(0, { fornecedorId: "f1", localizador: `LOC${n}` });
+    });
+    await act(() => vi.advanceTimersByTimeAsync(500));
+  }
+  await act(async () => {
+    semelhantes[1]!([{ id: "vB", codigo: "VG-B" }]);
+    duplicadas[1]!(null);
+    semelhantes[0]!([{ id: "vA", codigo: "VG-A" }]);
+    duplicadas[0]!({ viagemId: "vX", codigo: "VG-X" });
+    await vi.advanceTimersByTimeAsync(0);
+  });
+  expect(result.current.semelhante?.id).toBe("vB");
+  expect(result.current.duplicadas[0]).toBeNull();
 });

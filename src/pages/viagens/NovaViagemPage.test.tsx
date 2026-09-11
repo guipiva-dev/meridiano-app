@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
+import { reservaVazia } from "@/components/reserva";
 import { NovaViagemPage } from "./NovaViagemPage";
 
 const FORNECEDORES = [
@@ -100,4 +101,9 @@ test("falha ao carregar a viagem mostra o erro no topo e sai do esqueleto", asyn
   expect(await screen.findByText("Falha ao carregar a viagem")).toBeInTheDocument();
   expect(screen.queryByLabelText("Carregando")).toBeNull();
   expect(screen.getByRole("heading", { name: /Nova viagem/ })).toBeInTheDocument();
+});
+
+test("reservaVazia gera chaveLocal distinta a cada chamada (key estável do card sem id)", () => {
+  expect(reservaVazia(0).chaveLocal).toBeTruthy();
+  expect(reservaVazia(0).chaveLocal).not.toBe(reservaVazia(0).chaveLocal);
 });

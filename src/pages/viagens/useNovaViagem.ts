@@ -231,17 +231,20 @@ export function useNovaViagem(id: string | undefined) {
       setSemelhante(null);
       return;
     }
+    // Resposta de uma entrada anterior pode chegar depois da atual: só a viva aplica.
+    let vivo = true;
     const t = setTimeout(() => {
       void viagensApi
         .semelhantes(titularId, dataIda || null, dataVolta || null, id)
         .then((lista) => {
-          setSemelhante(lista[0] ?? null);
+          if (vivo) setSemelhante(lista[0] ?? null);
         })
         .catch(() => {
-          setSemelhante(null);
+          if (vivo) setSemelhante(null);
         });
     }, DEBOUNCE_MS);
     return () => {
+      vivo = false;
       clearTimeout(t);
     };
   }, [id, titularId, dataIda, dataVolta]);
@@ -251,6 +254,7 @@ export function useNovaViagem(id: string | undefined) {
   const chaveDuplicadas = reservas.map((r) => `${r.fornecedorId}|${r.localizador.trim()}`).join("\n");
   useEffect(() => {
     const pares = chaveDuplicadas === "" ? [] : chaveDuplicadas.split("\n");
+    let vivo = true;
     const t = setTimeout(() => {
       void Promise.all(
         pares.map(async (par) => {
@@ -264,10 +268,11 @@ export function useNovaViagem(id: string | undefined) {
           }
         }),
       ).then((codigos) => {
-        setDuplicadas(Object.fromEntries(codigos.map((c, i) => [i, c])));
+        if (vivo) setDuplicadas(Object.fromEntries(codigos.map((c, i) => [i, c])));
       });
     }, DEBOUNCE_MS);
     return () => {
+      vivo = false;
       clearTimeout(t);
     };
   }, [chaveDuplicadas, id]);
