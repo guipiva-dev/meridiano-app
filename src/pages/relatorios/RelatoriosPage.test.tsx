@@ -154,7 +154,14 @@ test("Exportar CSV baixa o csv do ano e vendedor atuais", async () => {
 test("teto MEI em alerta mostra tone de aviso", async () => {
   respostaAtual = dto({ tetoMei: { receitaAno: 65000, teto: 81000, percentualTeto: 80, alerta: true } });
   montar();
-  expect(await screen.findByText("80 %")).toBeInTheDocument();
+  const valor = await screen.findByText("80 %");
+  expect(valor.closest(".warning")).not.toBeNull();
+});
+
+test("teto MEI sem alerta não mostra tone de aviso", async () => {
+  montar();
+  const valor = await screen.findByText("34 %");
+  expect(valor.closest(".warning")).toBeNull();
 });
 
 test("sem movimentos no ano mostra o card sem teto", async () => {
