@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
@@ -74,7 +74,7 @@ test("q com 1 caractere não chama a API", async () => {
   const user = userEvent.setup({ delay: null });
   montar();
   await user.type(screen.getByRole("combobox", { name: "Buscar" }), "c");
-  await vi.advanceTimersByTimeAsync(300);
+  await act(() => vi.advanceTimersByTimeAsync(300));
   expect(urls).toHaveLength(0);
   expect(screen.queryByRole("listbox")).toBeNull();
 });
@@ -87,7 +87,7 @@ test("digitar 'carl' chama /busca?q=carl após o debounce e mostra Clientes com 
   const user = userEvent.setup({ delay: null });
   montar();
   await user.type(screen.getByRole("combobox", { name: "Buscar" }), "carl");
-  await vi.advanceTimersByTimeAsync(300);
+  await act(() => vi.advanceTimersByTimeAsync(300));
   await waitFor(() => {
     expect(urls).toEqual(["/api/v1/busca?q=carl"]);
   });
@@ -102,7 +102,7 @@ test("ArrowDown + Enter navega para /viagens/<id> quando o primeiro item é viag
   montar();
   const input = screen.getByRole("combobox", { name: "Buscar" });
   await user.type(input, "roma");
-  await vi.advanceTimersByTimeAsync(300);
+  await act(() => vi.advanceTimersByTimeAsync(300));
   await screen.findByRole("option");
   await user.keyboard("{ArrowDown}{Enter}");
   expect(router.state.location.pathname).toBe("/viagens/v1");
@@ -114,7 +114,7 @@ test("Esc fecha o popover", async () => {
   const user = userEvent.setup({ delay: null });
   montar();
   await user.type(screen.getByRole("combobox", { name: "Buscar" }), "carl");
-  await vi.advanceTimersByTimeAsync(300);
+  await act(() => vi.advanceTimersByTimeAsync(300));
   await screen.findByRole("listbox");
   await user.keyboard("{Escape}");
   expect(screen.queryByRole("listbox")).toBeNull();
@@ -133,14 +133,14 @@ test("resposta antiga não sobrescreve a nova (guarda de stale)", async () => {
   montar();
   const input = screen.getByRole("combobox", { name: "Buscar" });
   await user.type(input, "ab");
-  await vi.advanceTimersByTimeAsync(300);
+  await act(() => vi.advanceTimersByTimeAsync(300));
   await user.clear(input);
   await user.type(input, "roma");
-  await vi.advanceTimersByTimeAsync(300);
+  await act(() => vi.advanceTimersByTimeAsync(300));
   const opcaoRoma = await screen.findByRole("option");
   expect(within(opcaoRoma).getByText("Roma", { exact: false })).toBeInTheDocument();
   resolveAntiga(resposta(200, BUSCA_CARL));
-  await vi.advanceTimersByTimeAsync(10);
+  await act(() => vi.advanceTimersByTimeAsync(10));
   expect(screen.queryByText("Carla Souza")).toBeNull();
   expect(screen.getByRole("option").textContent).toContain("Roma");
 });
