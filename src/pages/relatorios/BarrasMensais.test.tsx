@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
+import type { ReceitaMesDto } from "@/api/relatorios";
 import { formatarDinheiro } from "@/lib/dinheiro";
 import { BarrasMensais } from "./BarrasMensais";
-import type { ReceitaMesDto } from "@/api/relatorios";
 
 function meses(over: Partial<Record<number, Partial<ReceitaMesDto>>> = {}): ReceitaMesDto[] {
   return Array.from({ length: 12 }, (_, i) => ({

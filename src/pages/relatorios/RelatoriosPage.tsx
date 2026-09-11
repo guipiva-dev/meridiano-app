@@ -1,17 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { CircleHelp } from "lucide-react";
 import { type CSSProperties, useState } from "react";
-import { chavesRelatorios, relatoriosApi, urlCsv } from "@/api/relatorios";
 import { mensagemDeErro } from "@/api/errors";
+import { chavesRelatorios, relatoriosApi, urlCsv } from "@/api/relatorios";
 import { Button, DataTable, KpiCard, MoneyCell, MoneyValue, Select } from "@/components";
 import { Alert, Tooltip } from "@/components/display";
-import { Page, PageHeader, Section } from "@/components/shell";
 import { Skeleton } from "@/components/Skeleton/Skeleton";
-import { baixar } from "@/lib/download";
+import { Page, PageHeader, Section } from "@/components/shell";
 import { formatarDinheiro } from "@/lib/dinheiro";
+import { baixar } from "@/lib/download";
 import { BarrasMensais } from "./BarrasMensais";
-import { ServicosVendidos } from "./ServicosVendidos";
 import s from "./Relatorios.module.css";
+import { ServicosVendidos } from "./ServicosVendidos";
 
 function pct1(v: number | null): string {
   if (v === null) return "—";
