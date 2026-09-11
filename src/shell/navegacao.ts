@@ -9,6 +9,7 @@ import {
   UsersRound,
   Wallet,
 } from "lucide-react";
+import type { BadgesDto } from "@/api/agenda";
 
 export interface ItemSidebar {
   label: string;
@@ -16,6 +17,8 @@ export interface ItemSidebar {
   path: string;
   section: "Operação" | "Administração";
   permission: string | string[];
+  /** R4: chave de `BadgesDto` cujo valor vira badge amarelo ao lado do label. */
+  badge?: keyof BadgesDto;
 }
 
 export const itensSidebar: ItemSidebar[] = [
@@ -32,6 +35,7 @@ export const itensSidebar: ItemSidebar[] = [
     path: "/clientes",
     section: "Operação",
     permission: ["cliente.ver", "cliente.ver_proprios"],
+    badge: "clientes",
   },
   {
     label: "Fornecedores",
@@ -47,6 +51,7 @@ export const itensSidebar: ItemSidebar[] = [
     section: "Operação",
     // C7: o Contador só tem `financeiro.ver_dre` e precisa enxergar o módulo em leitura.
     permission: ["financeiro.movimentar", "financeiro.conciliar", "financeiro.ver_dre"],
+    badge: "financeiro",
   },
   {
     label: "Agenda",
@@ -54,6 +59,7 @@ export const itensSidebar: ItemSidebar[] = [
     path: "/agenda",
     section: "Operação",
     permission: ["viagem.ver", "viagem.ver_proprias"],
+    badge: "agenda",
   },
   { label: "Relatórios", icon: ChartColumn, path: "/relatorios", section: "Operação", permission: "relatorio.ver" },
   { label: "Equipe", icon: UsersRound, path: "/equipe", section: "Administração", permission: "usuario.gerenciar" },

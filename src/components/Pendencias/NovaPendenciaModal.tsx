@@ -1,26 +1,35 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { type SubmitEvent, useId, useState } from "react";
+import { X } from "lucide-react";
+import { type SubmitEvent, useId, useRef, useState } from "react";
 import { clientesApi } from "@/api/clientes";
 import { ConflictError, ValidationError } from "@/api/errors";
 import { mensagemDeErro } from "@/api/http";
 import { type PendenciaDto, type Prioridade, pendenciasApi } from "@/api/pendencias";
-import type { VendedorDto } from "@/api/viagens";
-import { Button, DateInput, Field, Input, Select } from "@/components";
+import { type ClienteBuscaDto, viagensApi } from "@/api/viagens";
+import { Button, DateInput, Field, IconButton, Input, Select } from "@/components";
 import { Alert, Chip } from "@/components/display";
 import { Modal } from "@/components/feedback";
 import { hojeIso } from "@/lib/datas";
 import { type EscopoPendencias, fontePendencias } from "./escopo";
 import s from "./Pendencias.module.css";
 
+/** Só os campos usados no `<Select>` de responsável — cabe tanto `VendedorDto` quanto `ResponsavelDto` da Agenda. */
+interface ResponsavelOpcao {
+  id: string;
+  nome: string;
+}
+
 interface NovaPendenciaModalProps {
   open: boolean;
   escopo: EscopoPendencias;
-  vendedores: VendedorDto[];
+  vendedores: ResponsavelOpcao[];
   /** Quando presente, o modal edita essa pendência (sem "Para quem"). */
   pendencia?: PendenciaDto;
   onClose: () => void;
   onSalva: () => void;
 }
+
+const DEBOUNCE_MS = 250;
 
 const PRIORIDADES = [
   { value: "normal", label: "Normal" },
@@ -32,6 +41,7 @@ export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClos
   const idForm = useId();
   const pessoa = "clienteId" in escopo ? escopo : null;
   const daViagem = "viagemId" in escopo ? escopo : null;
+  const agenda = "agenda" in escopo ? escopo : null;
   // O chamador monta o modal só quando abre, então o estado inicial já é o "reset".
   const [titulo, setTitulo] = useState(pendencia?.titulo ?? "");
   const [dataPrevista, setDataPrevista] = useState(() => pendencia?.dataPrevista ?? hojeIso());
@@ -39,9 +49,14 @@ export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClos
   const [prioridade, setPrioridade] = useState<Prioridade>(pendencia?.prioridade ?? "normal");
   const [clienteIds, setClienteIds] = useState<string[]>([]);
   const [viagemId, setViagemId] = useState("");
+  const [pessoaAgenda, setPessoaAgenda] = useState<ClienteBuscaDto | null>(null);
+  const [pessoaQuery, setPessoaQuery] = useState("");
+  const [pessoaOpcoes, setPessoaOpcoes] = useState<ClienteBuscaDto[]>([]);
+  const [pessoaAberta, setPessoaAberta] = useState(false);
   const [erroTitulo, setErroTitulo] = useState<string>();
   const [erroBloco, setErroBloco] = useState<string>();
   const [salvando, setSalvando] = useState(false);
+  const pessoaTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const passageiros = daViagem?.passageiros ?? [];
   const viagens = (pessoa?.viagens ?? []).filter((v) => v.faseOperacional !== "cancelada");
@@ -50,6 +65,30 @@ export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClos
     setClienteIds((atual) =>
       atual.includes(clienteId) ? atual.filter((c) => c !== clienteId) : [...atual, clienteId],
     );
+  }
+
+  function buscarPessoaAgenda(q: string) {
+    setPessoaQuery(q);
+    clearTimeout(pessoaTimer.current);
+    if (!q.trim()) {
+      setPessoaOpcoes([]);
+      setPessoaAberta(false);
+      return;
+    }
+    pessoaTimer.current = setTimeout(() => {
+      void viagensApi.buscarClientes(q).then((r) => {
+        setPessoaOpcoes(r);
+        setPessoaAberta(true);
+      });
+    }, DEBOUNCE_MS);
+  }
+
+  function selecionarPessoaAgenda(c: ClienteBuscaDto) {
+    clearTimeout(pessoaTimer.current);
+    setPessoaAgenda(c);
+    setPessoaQuery("");
+    setPessoaOpcoes([]);
+    setPessoaAberta(false);
   }
 
   async function enviar(e?: SubmitEvent<HTMLFormElement>) {
@@ -72,6 +111,7 @@ export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClos
       if (pendencia) await pendenciasApi.atualizar(pendencia.id, { ...base, versao: pendencia.versao });
       else if (pessoa)
         await clientesApi.criarPendencia(pessoa.clienteId, { ...base, viagemId: viagemId === "" ? null : viagemId });
+      else if (agenda) await pendenciasApi.criarSolta({ ...base, clienteIds: pessoaAgenda ? [pessoaAgenda.id] : [] });
       else if (daViagem) await pendenciasApi.criar(daViagem.viagemId, { ...base, clienteIds });
       onSalva();
       onClose();
@@ -88,7 +128,7 @@ export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClos
   const quantidade = clienteIds.length === 0 ? 1 : clienteIds.length;
   const rotulo = pendencia
     ? "Salvar"
-    : pessoa
+    : pessoa || agenda
       ? "Criar pendência"
       : `Criar ${quantidade} ${quantidade === 1 ? "pendência" : "pendências"}`;
 
@@ -165,7 +205,7 @@ export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClos
             />
           </Field>
         )}
-        {!pendencia && !pessoa && (
+        {!pendencia && !pessoa && !agenda && (
           <Field label="Para quem" helper="Uma pendência por passageiro selecionado; sem seleção, fica na viagem.">
             <div className={s.chips}>
               {passageiros.map((p) => (
@@ -191,6 +231,60 @@ export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClos
                 </Button>
               )}
             </div>
+          </Field>
+        )}
+        {!pendencia && agenda && (
+          <Field label="Pessoa (opcional)">
+            {pessoaAgenda ? (
+              <div className={s.chips}>
+                <span className={s.passChip}>
+                  <Chip selected onClick={() => undefined}>
+                    {pessoaAgenda.nome}
+                  </Chip>
+                  <IconButton
+                    label={`Remover ${pessoaAgenda.nome}`}
+                    icon={<X size={14} />}
+                    onClick={() => {
+                      setPessoaAgenda(null);
+                    }}
+                  />
+                </span>
+              </div>
+            ) : (
+              <div className={s.buscaWrap}>
+                <Input
+                  role="combobox"
+                  aria-expanded={pessoaAberta}
+                  autoComplete="off"
+                  placeholder="Buscar pessoa…"
+                  value={pessoaQuery}
+                  onChange={(e) => {
+                    buscarPessoaAgenda(e.target.value);
+                  }}
+                  onBlur={() => {
+                    setPessoaAberta(false);
+                  }}
+                />
+                {pessoaAberta && pessoaOpcoes.length > 0 && (
+                  <ul role="listbox" className={s.listbox}>
+                    {pessoaOpcoes.map((c) => (
+                      <li
+                        key={c.id}
+                        role="option"
+                        aria-selected={false}
+                        className={s.option}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          selecionarPessoaAgenda(c);
+                        }}
+                      >
+                        {c.nome}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </Field>
         )}
       </form>

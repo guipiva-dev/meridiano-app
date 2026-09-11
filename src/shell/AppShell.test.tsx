@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
@@ -5,6 +6,16 @@ import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
 import { AppShell } from "./AppShell";
 
 function montar() {
+  vi.stubGlobal(
+    "fetch",
+    () =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        headers: { get: () => "application/json" },
+        json: () => Promise.resolve({ agenda: 0, financeiro: null, clientes: null }),
+      }) as unknown as Promise<Response>,
+  );
   const v: AuthValue = {
     me: { usuarioId: "1", agenciaId: "2", perfil: "dono", nome: "A", permissoes: ["viagem.ver"] },
     carregando: false,
@@ -13,18 +24,25 @@ function montar() {
     sair: () => Promise.resolve(),
     recarregar: () => Promise.resolve(),
   };
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <AuthContext.Provider value={v}>
-      <MemoryRouter initialEntries={["/viagens"]}>
-        <Routes>
-          <Route element={<AppShell />}>
-            <Route path="/viagens" element={<p>conteúdo</p>} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    </AuthContext.Provider>,
+    <QueryClientProvider client={qc}>
+      <AuthContext.Provider value={v}>
+        <MemoryRouter initialEntries={["/viagens"]}>
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="/viagens" element={<p>conteúdo</p>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>
+    </QueryClientProvider>,
   );
 }
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 // Nota: este ambiente de teste (vitest/jsdom) não injeta o CSS real dos
 // componentes (nenhuma <style> chega ao documento), então `visibility`
