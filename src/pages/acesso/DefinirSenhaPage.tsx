@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { api, mensagemDeErro } from "@/api/http";
 import { useAuth } from "@/auth/useAuth";
@@ -17,8 +17,19 @@ interface TokenInfo {
 }
 
 function TokenPage({ subtitle, title, submitLabel }: { subtitle: string; title: string; submitLabel: string }) {
-  const [params] = useSearchParams();
-  const token = params.get("token") ?? "";
+  const [params, setParams] = useSearchParams();
+  // Token fica só em memória: sai da URL (e do histórico) logo após montar.
+  const [token] = useState(() => params.get("token") ?? "");
+  useEffect(() => {
+    if (!params.has("token")) return;
+    setParams(
+      (p) => {
+        p.delete("token");
+        return p;
+      },
+      { replace: true },
+    );
+  }, [params, setParams]);
   const nav = useNavigate();
   const { entrar } = useAuth();
   const [erro, setErro] = useState<string | null>(null);

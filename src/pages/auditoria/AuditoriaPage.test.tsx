@@ -68,7 +68,7 @@ function resposta(body: unknown) {
 }
 
 let ultimaUrl = "";
-function montar() {
+function montar(caminho = "/auditoria") {
   const auth: AuthValue = {
     me: { usuarioId: "u1", agenciaId: "a1", perfil: "dono", nome: "Guilherme", permissoes: [] },
     carregando: false,
@@ -79,7 +79,7 @@ function montar() {
   };
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createMemoryRouter([{ path: "/auditoria", element: <AuditoriaPage /> }], {
-    initialEntries: ["/auditoria"],
+    initialEntries: [caminho],
   });
   render(
     <QueryClientProvider client={qc}>
@@ -169,4 +169,11 @@ test("proximoAntesDe null esconde o botão Mais antigas", async () => {
   montar();
   await screen.findByText("1–7 de 412");
   expect(screen.queryByRole("button", { name: "Mais antigas →" })).toBeNull();
+});
+
+test("filtros vêm da URL", async () => {
+  montar("/auditoria?oque=valores&de=2026-01-01");
+  await screen.findByText("1–7 de 412");
+  expect(ultimaUrl).toContain("oque=valores");
+  expect(ultimaUrl).toContain("de=2026-01-01");
 });

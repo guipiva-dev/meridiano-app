@@ -1,5 +1,6 @@
 import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 import type { EventoAuditoriaDto, FiltroAuditoria } from "@/api/auditoria";
 import { auditoriaApi, chavesAuditoria, urlCsv } from "@/api/auditoria";
 import { mensagemDeErro } from "@/api/errors";
@@ -13,13 +14,29 @@ import s from "./Auditoria.module.css";
 import { FiltrosAuditoria } from "./FiltrosAuditoria";
 
 export function AuditoriaPage() {
-  const [usuarioId, setUsuarioId] = useState<string | undefined>(undefined);
-  const [oque, setOque] = useState<FiltroAuditoria["oque"]>(undefined);
-  const [de, setDe] = useState<string | undefined>(undefined);
-  const [ate, setAte] = useState<string | undefined>(undefined);
+  // Filtros vivem na URL (como nas demais telas): compartilháveis e sobrevivem ao recarregar.
+  const [params, setParams] = useSearchParams();
+  const usuarioId = params.get("usuario") ?? undefined;
+  const oque = (params.get("oque") as FiltroAuditoria["oque"]) ?? undefined;
+  const de = params.get("de") ?? undefined;
+  const ate = params.get("ate") ?? undefined;
   const [detalhe, setDetalhe] = useState<EventoAuditoriaDto | null>(null);
 
   const filtroBase: FiltroAuditoria = { usuarioId, oque, de, ate };
+
+  function definirFiltro(chave: string) {
+    return (valor: string | undefined) => {
+      setParams(
+        (prev) => {
+          const proximos = new URLSearchParams(prev);
+          if (valor) proximos.set(chave, valor);
+          else proximos.delete(chave);
+          return proximos;
+        },
+        { replace: true },
+      );
+    };
+  }
 
   const q = useInfiniteQuery({
     queryKey: chavesAuditoria.lista(filtroBase),
@@ -57,10 +74,10 @@ export function AuditoriaPage() {
         oque={oque}
         de={de}
         ate={ate}
-        onUsuarioId={setUsuarioId}
-        onOque={setOque}
-        onDe={setDe}
-        onAte={setAte}
+        onUsuarioId={definirFiltro("usuario")}
+        onOque={definirFiltro("oque")}
+        onDe={definirFiltro("de")}
+        onAte={definirFiltro("ate")}
       />
 
       {q.isError ? (
