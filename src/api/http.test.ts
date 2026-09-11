@@ -75,3 +75,10 @@ test("JSON malformado vira ApiError resposta_invalida", async () => {
   expect(e).toBeInstanceOf(ApiError);
   expect((e as ApiError).codigo).toBe("resposta_invalida");
 });
+
+// T5: request preso não pode virar spinner infinito — timeout do fetch vira NetworkError.
+test("timeout do fetch vira NetworkError e envia signal", async () => {
+  const spy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new DOMException("timeout", "TimeoutError"));
+  await expect(api.get("/x")).rejects.toBeInstanceOf(NetworkError);
+  expect(spy.mock.calls[0]?.[1]?.signal).toBeInstanceOf(AbortSignal);
+});
