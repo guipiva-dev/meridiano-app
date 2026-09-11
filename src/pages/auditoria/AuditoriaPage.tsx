@@ -40,9 +40,13 @@ export function AuditoriaPage() {
 
   const q = useInfiniteQuery({
     queryKey: chavesAuditoria.lista(filtroBase),
-    queryFn: ({ pageParam }) => auditoriaApi.listar({ ...filtroBase, antesDe: pageParam }),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (ultimaPagina) => ultimaPagina.proximoAntesDe ?? undefined,
+    queryFn: ({ pageParam }) => auditoriaApi.listar({ ...filtroBase, ...pageParam }),
+    // Cursor composto (criado_em, id): eventos da mesma transação compartilham criado_em.
+    initialPageParam: null as { antesDe: string; antesDeId: number } | null,
+    getNextPageParam: (ultimaPagina) =>
+      ultimaPagina.proximoAntesDe != null && ultimaPagina.proximoAntesDeId != null
+        ? { antesDe: ultimaPagina.proximoAntesDe, antesDeId: ultimaPagina.proximoAntesDeId }
+        : null,
     placeholderData: keepPreviousData,
   });
 

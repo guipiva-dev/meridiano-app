@@ -52,6 +52,7 @@ const RESPOSTA: AuditoriaDto = {
   itens: EVENTOS,
   total: 412,
   proximoAntesDe: "2026-03-05T09:15:00Z",
+  proximoAntesDeId: 7,
   usuarios: [
     { id: "u1", nome: "Guilherme" },
     { id: "u2", nome: "Ana Paula" },
@@ -111,12 +112,13 @@ test("renderiza os eventos do protótipo e o rodapé de paginação", async () =
   expect(screen.getByText("1–7 de 412")).toBeInTheDocument();
 });
 
-test("Mais antigas pede ?antesDe= e acrescenta itens", async () => {
+test("Mais antigas pede ?antesDe=&antesDeId= e acrescenta itens", async () => {
   montar();
   await screen.findByText("1–7 de 412");
   fireEvent.click(screen.getByRole("button", { name: "Mais antigas →" }));
   await waitFor(() => {
     expect(ultimaUrl).toContain(`antesDe=${encodeURIComponent(RESPOSTA.proximoAntesDe!)}`);
+    expect(ultimaUrl).toContain("antesDeId=7");
   });
   await screen.findByText("1–14 de 412");
 });
@@ -164,7 +166,7 @@ test("Exportar CSV chama baixar com os filtros ativos", async () => {
 test("proximoAntesDe null esconde o botão Mais antigas", async () => {
   vi.stubGlobal("fetch", (url: string) => {
     ultimaUrl = url;
-    return Promise.resolve(resposta({ ...RESPOSTA, proximoAntesDe: null }));
+    return Promise.resolve(resposta({ ...RESPOSTA, proximoAntesDe: null, proximoAntesDeId: null }));
   });
   montar();
   await screen.findByText("1–7 de 412");

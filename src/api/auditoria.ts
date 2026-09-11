@@ -28,6 +28,7 @@ export interface FiltroAuditoria {
   de?: string;
   ate?: string;
   antesDe?: string;
+  antesDeId?: number;
   tamanho?: number;
 }
 
@@ -40,16 +41,18 @@ export interface AuditoriaDto {
   itens: EventoAuditoriaDto[];
   total: number;
   proximoAntesDe: string | null;
+  proximoAntesDeId: number | null;
   usuarios: ResponsavelDto[];
 }
 
-function querystring(f: Omit<FiltroAuditoria, "antesDe"> & { antesDe?: string }): string {
+function querystring(f: FiltroAuditoria): string {
   const p = new URLSearchParams();
   if (f.usuarioId) p.set("usuarioId", f.usuarioId);
   if (f.oque) p.set("oque", f.oque);
   if (f.de) p.set("de", f.de);
   if (f.ate) p.set("ate", f.ate);
   if (f.antesDe) p.set("antesDe", f.antesDe);
+  if (f.antesDeId != null) p.set("antesDeId", String(f.antesDeId));
   if (f.tamanho) p.set("tamanho", String(f.tamanho));
   const qs = p.toString();
   return qs ? `?${qs}` : "";
@@ -60,7 +63,7 @@ export const auditoriaApi = {
   listar: (f: FiltroAuditoria) => api.get<AuditoriaDto>(`/auditoria${querystring(f)}`),
 };
 
-/** CSV não usa cursor (`antesDe`/`tamanho`): sempre o filtro ativo, sem paginação. */
+/** CSV não usa cursor (`antesDe`/`antesDeId`/`tamanho`): sempre o filtro ativo, sem paginação. */
 export function urlCsv(f: FiltroAuditoria): string {
   const { usuarioId, oque, de, ate } = f;
   return `/api/v1/auditoria/csv${querystring({ usuarioId, oque, de, ate })}`;
