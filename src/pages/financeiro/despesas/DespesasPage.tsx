@@ -7,13 +7,13 @@ import { useAuth } from "@/auth/useAuth";
 import { Button, Input, KpiCard, Paginacao } from "@/components";
 import { Alert } from "@/components/display";
 import { toast } from "@/components/feedback";
-import { DespesaModal, PagarDespesaModal } from "@/components/financeiro";
+import { DespesaModal, ExcluirDespesaModal, PagarDespesaModal } from "@/components/financeiro";
 import { Page, PageHeader, Subnav } from "@/components/shell";
 import { competenciaAtual, formatarData, hojeIso, nomeMes } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
 import { subnavs } from "@/shell/navegacao";
 import s from "./Despesas.module.css";
-import { ExcluirDespesaModal, FiltrosDespesas, TabelaDespesas } from "./TabelaDespesas";
+import { FiltrosDespesas, TabelaDespesas } from "./TabelaDespesas";
 import { useDespesas } from "./useDespesas";
 
 const KPIS_VAZIOS = {

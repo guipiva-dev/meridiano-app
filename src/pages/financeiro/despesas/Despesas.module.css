@@ -29,17 +29,6 @@
   gap: var(--space-2);
 }
 
-.grid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-.impacto {
-  font: var(--type-body);
-  color: var(--color-text-secondary);
-  margin: 0;
-}
-
 @media (max-width: 1024px) {
   .kpis {
     grid-template-columns: repeat(2, 1fr);

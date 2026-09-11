@@ -4,19 +4,10 @@ import type { DespesaDto } from "@/api/despesas";
 import { chavesDespesas, despesasApi } from "@/api/despesas";
 import { chaves, type ViagemDto, viagensApi } from "@/api/viagens";
 import { Button, MoneyValue, StatusCell } from "@/components";
-import { Alert } from "@/components/display";
-import { Modal } from "@/components/feedback";
-import {
-  CAMPO_POR_CODIGO_FIN,
-  DespesaModal,
-  MotivoField,
-  PagarDespesaModal,
-  useMutacaoFinanceira,
-} from "@/components/financeiro";
+import { DespesaModal, ExcluirDespesaModal, PagarDespesaModal } from "@/components/financeiro";
 import { MenuAcoes } from "@/components/Menu/MenuAcoes";
 import { apresentacaoStatus } from "@/dominio/status";
 import { formatarData } from "@/lib/datas";
-import { formatarDinheiro } from "@/lib/dinheiro";
 import fs from "./FinanceiroTab.module.css";
 import { Bloco } from "./ResumoTab";
 import s from "./Viagem.module.css";
@@ -31,66 +22,6 @@ interface DespesasViagemProps {
   viagem: ViagemDto;
   podeMovimentar: boolean;
   onMudou: () => void;
-}
-
-/** Despesas da viagem (R10): entram no resultado; excluir só existe aqui, sem `ExcluirDespesaModal`
- * (não faz parte do barrel `components/financeiro`) — versão mínima local, mesma receita. */
-function ExcluirDespesaModal({
-  despesa,
-  onClose,
-  onExcluida,
-}: {
-  despesa: DespesaDto;
-  onClose: () => void;
-  onExcluida: () => void;
-}) {
-  const m = useMutacaoFinanceira<undefined, true>(
-    (_args, motivo) => despesasApi.excluir(despesa.id, motivo).then(() => true as const),
-    CAMPO_POR_CODIGO_FIN,
-  );
-
-  function fechar() {
-    m.limpar();
-    onClose();
-  }
-
-  async function confirmar() {
-    if (await m.enviar(undefined)) {
-      onExcluida();
-      fechar();
-    }
-  }
-
-  return (
-    <Modal
-      open
-      title="Excluir despesa"
-      onClose={fechar}
-      footer={
-        <>
-          <Button variant="tertiary" onClick={fechar}>
-            Voltar
-          </Button>
-          <Button
-            variant="danger"
-            loading={m.salvando}
-            onClick={() => {
-              void confirmar();
-            }}
-          >
-            Excluir despesa
-          </Button>
-        </>
-      }
-    >
-      {m.conflito && <Alert tone="danger">Alguém alterou esta despesa enquanto você decidia. Recarregue.</Alert>}
-      {m.erroBloco && <Alert tone="danger">{m.erroBloco}</Alert>}
-      <p>
-        {despesa.descricao} · {formatarDinheiro(despesa.valor)} · vencimento {formatarData(despesa.vencimento)}
-      </p>
-      {m.precisaMotivo && <MotivoField value={m.motivo} onChange={m.setMotivo} erro={m.erros.motivo} />}
-    </Modal>
-  );
 }
 
 /** Despesas ligadas à viagem (R10): entram no resultado; lançar/editar/pagar/excluir daqui aplicam
@@ -203,7 +134,9 @@ export function DespesasViagem({ viagem, podeMovimentar, onMudou }: DespesasViag
         />
       )}
       {modal?.tipo === "pagar" && <PagarDespesaModal open despesa={modal.despesa} onClose={fechar} onPaga={salva} />}
-      {modal?.tipo === "excluir" && <ExcluirDespesaModal despesa={modal.despesa} onClose={fechar} onExcluida={salva} />}
+      {modal?.tipo === "excluir" && (
+        <ExcluirDespesaModal open despesa={modal.despesa} onClose={fechar} onExcluida={salva} />
+      )}
     </Bloco>
   );
 }

@@ -1,5 +1,6 @@
 export { DespesaModal } from "./Financeiro/DespesaModal";
 export { DivergenciaModal } from "./Financeiro/DivergenciaModal";
+export { ExcluirDespesaModal } from "./Financeiro/ExcluirDespesaModal";
 export { ExcluirMovimentoModal } from "./Financeiro/ExcluirMovimentoModal";
 export { FecharPeriodoModal } from "./Financeiro/FecharPeriodoModal";
 export { MotivoField } from "./Financeiro/MotivoField";
