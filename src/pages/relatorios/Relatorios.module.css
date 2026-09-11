@@ -1,0 +1,154 @@
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.select {
+  min-width: 140px;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-3);
+}
+@media (max-width: 1366px) {
+  .kpis {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 1024px) {
+  .kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tetoWrap {
+  position: relative;
+}
+.tetoTooltip {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+}
+
+.linha {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-4);
+}
+.linha2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+@media (max-width: 1024px) {
+  .linha,
+  .linha2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bloco {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
+}
+
+/* Barras mensais (vertical): altura via --altura em cada barra individual. */
+.grafico {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  height: 160px;
+  padding-top: var(--space-4);
+}
+.coluna {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  height: 100%;
+}
+.barras {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-1);
+  flex: 1;
+  width: 100%;
+  justify-content: center;
+}
+.barraPrevista,
+.barraRecebida {
+  width: 40%;
+  min-height: 2px;
+  height: calc(var(--altura) * 1%);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.barraPrevista {
+  background: var(--color-bg-subtle);
+}
+.barraRecebida {
+  background: var(--color-brand);
+}
+.rotuloMes {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+  text-transform: lowercase;
+}
+
+/* Barras horizontais (nacional × internacional, serviços vendidos): largura via --largura. */
+.horizontal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.horizontalCabecalho {
+  display: flex;
+  justify-content: space-between;
+  font: var(--type-body);
+}
+.horizontalValor {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+.trilha {
+  height: 8px;
+  background: var(--color-bg-subtle);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.preenchimento {
+  height: 100%;
+  width: calc(var(--largura) * 1%);
+  border-radius: var(--radius-pill);
+}
+.internacional {
+  background: var(--color-brand);
+}
+.nacional {
+  background: var(--blue-500);
+}
+.rodapeMargens {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+}
+
+.servicos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.servico {
+  background: var(--color-brand);
+}
