@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { chavesAgenda } from "@/api/agenda";
 import { mensagemDeErro } from "@/api/http";
 import { type PendenciaDto, pendenciasApi } from "@/api/pendencias";
 import { toast } from "@/components/feedback";
@@ -13,6 +14,7 @@ export function usePendenciasAcoes(fonte: FontePendencias) {
 
   function invalidar() {
     void qc.invalidateQueries({ queryKey: fonte.prefixo });
+    void qc.invalidateQueries({ queryKey: chavesAgenda.badges() });
   }
   function falhou(e: unknown) {
     toast.error(mensagemDeErro(e));
@@ -30,5 +32,5 @@ export function usePendenciasAcoes(fonte: FontePendencias) {
     onError: falhou,
   });
 
-  return { concluir, excluir, invalidar, falhou };
+  return { concluir, excluir, invalidar };
 }

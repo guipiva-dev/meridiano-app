@@ -4,27 +4,15 @@ import { useNavigate } from "react-router";
 import type { ColaboradorDto } from "@/api/equipe";
 import { chavesEquipe, equipeApi } from "@/api/equipe";
 import { mensagemDeErro } from "@/api/errors";
-import { Button, type Coluna, DataTable, StatusCell } from "@/components";
-import { Alert } from "@/components/display";
+import { Button, type Coluna, DataTable } from "@/components";
+import { Alert, Badge } from "@/components/display";
 import { toast } from "@/components/feedback";
 import { Page, PageHeader } from "@/components/shell";
 import { apresentacaoStatus } from "@/dominio/status";
+import { formatarCarimboRelativo } from "@/lib/datas";
 import { ConvidarModal } from "./ConvidarModal";
 import s from "./Equipe.module.css";
 import { ROTULO_PERFIL } from "./perfis";
-
-/** yyyy-mm-ddTHH:mm:ssZ → "hoje 09:12" · "ontem 18:40" · "02/04". */
-function formatarUltimoAcesso(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  const hora = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  const hoje = new Date();
-  if (d.toDateString() === hoje.toDateString()) return `hoje ${hora}`;
-  const ontem = new Date(hoje);
-  ontem.setDate(hoje.getDate() - 1);
-  if (d.toDateString() === ontem.toDateString()) return `ontem ${hora}`;
-  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-}
 
 function formatarPercentual(p: number): string {
   const texto = p % 1 === 0 ? String(p) : p.toFixed(1).replace(".", ",");
@@ -35,6 +23,10 @@ function diasAteCarimbo(iso: string): number {
   return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000));
 }
 
+function conviteExpirado(c: ColaboradorDto): boolean {
+  return c.acesso === "sem_acesso" && !!c.conviteExpiraEm && new Date(c.conviteExpiraEm).getTime() < Date.now();
+}
+
 /** Acesso combina o mapa `acesso` (status.ts) com o prazo do convite quando aplicável. */
 function rotuloAcesso(c: ColaboradorDto): { texto: string; tone: ReturnType<typeof apresentacaoStatus>["tone"] } {
   const base = apresentacaoStatus("acesso", c.acesso);
@@ -42,9 +34,7 @@ function rotuloAcesso(c: ColaboradorDto): { texto: string; tone: ReturnType<type
     const dias = diasAteCarimbo(c.conviteExpiraEm);
     return { texto: `convite expira em ${dias} dia${dias === 1 ? "" : "s"}`, tone: base.tone };
   }
-  if (c.acesso === "sem_acesso" && c.conviteExpiraEm && new Date(c.conviteExpiraEm).getTime() < Date.now()) {
-    return { texto: "convite expirado", tone: base.tone };
-  }
+  if (conviteExpirado(c)) return { texto: "convite expirado", tone: base.tone };
   return base;
 }
 
@@ -61,9 +51,13 @@ export function EquipePage() {
   }
 
   async function convidar(c: ColaboradorDto) {
-    await equipeApi.convidar(c.id);
-    toast.success(`Convite enviado para ${c.email}`);
-    invalidar();
+    try {
+      await equipeApi.convidar(c.id);
+      toast.success(`Convite enviado para ${c.email}`);
+      invalidar();
+    } catch (e) {
+      toast.error(mensagemDeErro(e));
+    }
   }
 
   const colunas: Coluna<ColaboradorDto>[] = [
@@ -90,18 +84,14 @@ export function EquipePage() {
     {
       id: "ultimoAcesso",
       titulo: "Último acesso",
-      render: (c) => <span>{formatarUltimoAcesso(c.ultimoLoginEm)}</span>,
+      render: (c) => <span>{formatarCarimboRelativo(c.ultimoLoginEm)}</span>,
     },
     {
       id: "acesso",
       titulo: "Acesso",
       render: (c) => {
         const r = rotuloAcesso(c);
-        return r.texto === apresentacaoStatus("acesso", c.acesso).texto ? (
-          <StatusCell entidade="acesso" valor={c.acesso} />
-        ) : (
-          <span data-tone={r.tone}>{r.texto}</span>
-        );
+        return <Badge tone={r.tone}>{r.texto}</Badge>;
       },
     },
     {
@@ -109,7 +99,7 @@ export function EquipePage() {
       titulo: "",
       alinhar: "right",
       render: (c) =>
-        c.acesso === "sem_acesso" ? (
+        c.acesso === "sem_acesso" || c.acesso === "convite_pendente" ? (
           <Button
             variant="tertiary"
             size="sm"
@@ -118,18 +108,7 @@ export function EquipePage() {
               void convidar(c);
             }}
           >
-            Convidar
-          </Button>
-        ) : c.acesso === "convite_pendente" ? (
-          <Button
-            variant="tertiary"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              void convidar(c);
-            }}
-          >
-            Reenviar
+            {c.acesso === "sem_acesso" && !conviteExpirado(c) ? "Convidar" : "Reenviar"}
           </Button>
         ) : (
           <Button

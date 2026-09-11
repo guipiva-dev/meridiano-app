@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import type { DocumentoVencendoDto } from "@/api/agenda";
 import { type Coluna, DataTable, DateCell } from "@/components";
-import { Chip } from "@/components/display";
+import { Badge } from "@/components/display";
 import { EmptyState } from "@/components/feedback";
 
 /** yyyy-mm-dd → dd/mm (sem ano, como no protótipo "Lisboa · 18/04"). */
@@ -40,7 +40,11 @@ const COLUNAS: Coluna<DocumentoVencendoDto>[] = [
   {
     id: "pendencia",
     titulo: "Pendência",
-    render: (d) => <Chip selected={false}>{d.situacao === "na_agenda" ? "na agenda" : "só no cadastro"}</Chip>,
+    render: (d) => (
+      <Badge tone={d.situacao === "na_agenda" ? "info" : "neutral"}>
+        {d.situacao === "na_agenda" ? "na agenda" : "só no cadastro"}
+      </Badge>
+    ),
   },
   {
     id: "abrir",

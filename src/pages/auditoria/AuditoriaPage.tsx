@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import type { EventoAuditoriaDto, FiltroAuditoria } from "@/api/auditoria";
 import { auditoriaApi, chavesAuditoria, urlCsv } from "@/api/auditoria";
@@ -6,7 +6,7 @@ import { mensagemDeErro } from "@/api/errors";
 import { Button } from "@/components";
 import { DetalhesEventoModal, LinhaEvento } from "@/components/auditoria";
 import { Alert } from "@/components/display";
-import { EmptyState } from "@/components/feedback";
+import { EmptyState, Skeleton } from "@/components/feedback";
 import { Page, PageHeader } from "@/components/shell";
 import { baixar } from "@/lib/download";
 import s from "./Auditoria.module.css";
@@ -26,6 +26,7 @@ export function AuditoriaPage() {
     queryFn: ({ pageParam }) => auditoriaApi.listar({ ...filtroBase, antesDe: pageParam }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (ultimaPagina) => ultimaPagina.proximoAntesDe ?? undefined,
+    placeholderData: keepPreviousData,
   });
 
   const itens = q.data?.pages.flatMap((p) => p.itens) ?? [];
@@ -64,7 +65,9 @@ export function AuditoriaPage() {
 
       {q.isError ? (
         <Alert tone="danger">{mensagemDeErro(q.error)}</Alert>
-      ) : itens.length === 0 && !q.isLoading ? (
+      ) : q.isLoading ? (
+        <Skeleton lines={6} />
+      ) : itens.length === 0 ? (
         <EmptyState title="Nenhum evento no período" description="Ajuste os filtros para ver outros eventos." />
       ) : (
         <>

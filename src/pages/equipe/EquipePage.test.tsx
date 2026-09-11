@@ -114,7 +114,7 @@ beforeEach(() => {
     if (url.includes("/usuarios") && (!init?.method || init.method === "GET")) {
       return Promise.resolve(resposta(200, EQUIPE));
     }
-    if (url.includes("/convite")) return Promise.resolve(resposta(200, EQUIPE.itens[4]));
+    if (url.endsWith("/convite")) return Promise.resolve(resposta(200, EQUIPE.itens[4]));
     return Promise.resolve(resposta(200, {}));
   });
 });
@@ -192,4 +192,27 @@ test("+ Convidar para acessar abre o modal e envia POST /auth/convites", async (
   await waitFor(() => {
     expect(chamadas.some((c) => c.url === "/api/v1/auth/convites" && c.method === "POST")).toBe(true);
   });
+});
+
+test("convite expirado (sem_acesso + conviteExpiraEm no passado) mostra o rótulo e o botão Reenviar", async () => {
+  const expirado = { ...EQUIPE.itens[2]!, id: "u-exp", nome: "Paula Expirada", conviteExpiraEm: diasNoFuturo(-3) };
+  vi.stubGlobal("fetch", () => Promise.resolve(resposta(200, { ...EQUIPE, itens: [expirado] })));
+  montar();
+  await screen.findByText("Paula Expirada");
+  expect(screen.getByText("convite expirado")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Reenviar" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Convidar" })).toBeNull();
+});
+
+test("422 ao convidar mostra o erro num toast", async () => {
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    if (url.endsWith("/convite") && init?.method === "POST") {
+      return Promise.resolve(resposta(422, { codigo: "ja_tem_acesso", detail: "Este colaborador já tem acesso" }));
+    }
+    return Promise.resolve(resposta(200, EQUIPE));
+  });
+  montar();
+  await screen.findByText("Marcos Castro");
+  fireEvent.click(screen.getByRole("button", { name: "Convidar" }));
+  expect(await screen.findByText("Este colaborador já tem acesso")).toBeInTheDocument();
 });

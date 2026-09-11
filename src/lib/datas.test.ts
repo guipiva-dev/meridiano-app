@@ -3,6 +3,7 @@ import {
   competenciaDe,
   diasAte,
   formatarCarimbo,
+  formatarCarimboRelativo,
   formatarData,
   formatarDataHora,
   formatarMesAno,
@@ -73,4 +74,21 @@ test("competências: formatação, extração, atual e soma que vira o ano", () 
   expect(competenciaAtual()).toBe(hojeIso().slice(0, 7));
   expect(somarMeses("2026-12", 1)).toBe("2027-01");
   expect(somarMeses("2026-01", -1)).toBe("2025-12");
+});
+
+test("formatarCarimboRelativo: hoje, ontem, dd/MM e dd/MM HH:mm com horaSempre", () => {
+  const hora = (d: Date) => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const hoje = new Date();
+  hoje.setHours(9, 12, 0, 0);
+  const ontem = new Date(hoje);
+  ontem.setDate(hoje.getDate() - 1);
+  const antiga = new Date(hoje);
+  antiga.setDate(hoje.getDate() - 30);
+  const diaMes = antiga.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+
+  expect(formatarCarimboRelativo(hoje.toISOString())).toBe(`hoje ${hora(hoje)}`);
+  expect(formatarCarimboRelativo(ontem.toISOString())).toBe(`ontem ${hora(ontem)}`);
+  expect(formatarCarimboRelativo(antiga.toISOString())).toBe(diaMes);
+  expect(formatarCarimboRelativo(antiga.toISOString(), { horaSempre: true })).toBe(`${diaMes} ${hora(antiga)}`);
+  expect(formatarCarimboRelativo(null)).toBe("—");
 });

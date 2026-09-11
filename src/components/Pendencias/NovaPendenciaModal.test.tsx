@@ -210,3 +210,44 @@ test("escopo agenda: selecionar uma pessoa envia clienteIds com o id dela", asyn
     expect((c?.body as { clienteIds: string[] }).clienteIds).toEqual(["c9"]);
   });
 });
+
+test("escopo agenda: seleciona a pessoa pelo teclado (seta + Enter) e envia o id dela", async () => {
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    chamadas.push({
+      url,
+      method: init?.method ?? "GET",
+      body: init?.body === undefined ? undefined : JSON.parse(init.body as string),
+    });
+    if (url.includes("/clientes/busca"))
+      return Promise.resolve(
+        resposta(200, [
+          { id: "c8", nome: "Rosa Lima", telefone: null },
+          { id: "c9", nome: "Roberto Tanaka", telefone: null },
+        ]),
+      );
+    return Promise.resolve(resposta(201, []));
+  });
+  vi.useFakeTimers();
+
+  montarAgenda();
+  fireEvent.change(screen.getByLabelText(/O que precisa ser feito/), { target: { value: "Retomar contato" } });
+  const busca = screen.getByPlaceholderText("Buscar pessoa…");
+  fireEvent.change(busca, { target: { value: "ro" } });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(250);
+  });
+  expect(busca).toHaveAttribute("aria-expanded", "true");
+  expect(screen.getByRole("option", { name: "Rosa Lima" })).toHaveAttribute("aria-selected", "true");
+  fireEvent.keyDown(busca, { key: "ArrowDown" });
+  expect(screen.getByRole("option", { name: "Roberto Tanaka" })).toHaveAttribute("aria-selected", "true");
+  fireEvent.keyDown(busca, { key: "Enter" });
+  expect(screen.getByText("Roberto Tanaka")).toBeInTheDocument();
+  expect(screen.queryByRole("listbox")).toBeNull();
+
+  vi.useRealTimers();
+  fireEvent.click(screen.getByRole("button", { name: "Criar pendência" }));
+  await waitFor(() => {
+    const c = chamadas.find((x) => x.method === "POST" && x.url === "/api/v1/pendencias");
+    expect((c?.body as { clienteIds: string[] }).clienteIds).toEqual(["c9"]);
+  });
+});

@@ -20,7 +20,7 @@ export function Sidebar({ aberta = false, onFechar }: { aberta?: boolean; onFech
   const badgesQ = useQuery({
     queryKey: chavesAgenda.badges(),
     queryFn: agendaApi.badges,
-    enabled: !!me,
+    enabled: !!me && (pode("viagem.ver") || pode("viagem.ver_proprias")),
     refetchInterval: 5 * 60_000,
     refetchOnWindowFocus: true,
   });

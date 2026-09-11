@@ -1,6 +1,6 @@
 import { type SubmitEvent, useState } from "react";
 import { equipeApi } from "@/api/equipe";
-import { ValidationError } from "@/api/errors";
+import { mensagemDeErro, ValidationError } from "@/api/errors";
 import { Button, Field, Input, Select } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
@@ -50,12 +50,13 @@ export function ConvidarModal({ open, onClose, onConvidado }: ConvidarModalProps
       onConvidado();
       fechar();
     } catch (erroConvite) {
-      if (erroConvite instanceof ValidationError && erroConvite.codigo === "email_ja_cadastrado") {
-        setErros({ email: erroConvite.detalhe });
-      } else if (erroConvite instanceof ValidationError && erroConvite.codigo === "email_invalido") {
+      if (
+        erroConvite instanceof ValidationError &&
+        (erroConvite.codigo === "email_ja_cadastrado" || erroConvite.codigo === "email_invalido")
+      ) {
         setErros({ email: erroConvite.detalhe });
       } else {
-        setErroBloco(erroConvite instanceof ValidationError ? erroConvite.detalhe : "Erro inesperado. Tente de novo.");
+        setErroBloco(mensagemDeErro(erroConvite));
       }
       setEnviando(false);
     }

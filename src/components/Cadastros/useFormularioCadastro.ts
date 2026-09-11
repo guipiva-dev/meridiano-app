@@ -1,9 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
-import { type FieldValues, useForm } from "react-hook-form";
+import { type DefaultValues, type FieldValues, useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { useSalvamento } from "@/lib/useSalvamento";
-import { errosDeCadastro } from "./mapaErrosCadastro";
+import { type ErrosApi, errosDeCadastro } from "./mapaErrosCadastro";
 
 export interface OpcoesFormularioCadastro<TForm extends FieldValues, TDto> {
   id: string | undefined;
@@ -15,6 +15,10 @@ export interface OpcoesFormularioCadastro<TForm extends FieldValues, TDto> {
   atualizar: (id: string, req: unknown) => Promise<TDto>;
   rotaDepoisDeCriar: (dto: TDto) => string;
   versaoDe: (dto: TDto) => string;
+  /** Mapeia o erro de salvar em campos/bloco/conflito; default `errosDeCadastro`. */
+  errosDe?: (erro: unknown) => ErrosApi;
+  /** Valores iniciais do form (e do reset quando não há `id`). */
+  defaultValues?: DefaultValues<TForm>;
 }
 
 const CHAVE_NOVO = ["cadastro", "novo"] as const;
@@ -22,9 +26,10 @@ const CHAVE_NOVO = ["cadastro", "novo"] as const;
 /** Receita comum das telas de cadastro (cliente/grupo/fornecedor): carrega por id, salva, trata 409/422. */
 export function useFormularioCadastro<TForm extends FieldValues, TDto>(opts: OpcoesFormularioCadastro<TForm, TDto>) {
   const { id, carregar, chave, paraForm, paraRequest, criar, atualizar, rotaDepoisDeCriar, versaoDe } = opts;
+  const { errosDe = errosDeCadastro, defaultValues } = opts;
   const qc = useQueryClient();
   const nav = useNavigate();
-  const form = useForm<TForm>();
+  const form = useForm<TForm>({ defaultValues });
   const { isDirty } = form.formState;
 
   const dtoQ = useQuery({
@@ -37,8 +42,9 @@ export function useFormularioCadastro<TForm extends FieldValues, TDto>(opts: Opc
   // Toda resposta oficial (carga inicial ou recarregar após 409) substitui o form.
   useEffect(() => {
     if (dto) form.reset(paraForm(dto));
+    else if (!id && defaultValues) form.reset(defaultValues);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage a uma nova referência de dto (nova carga/recarga)
-  }, [dto]);
+  }, [dto, id]);
 
   const enviar = useCallback(
     async (dados: TForm) => {
@@ -72,8 +78,8 @@ export function useFormularioCadastro<TForm extends FieldValues, TDto>(opts: Opc
   }, [id, qc, chave, limpar]);
 
   const daApi = useMemo(
-    () => errosDeCadastro(salvamento.estado === "error" ? salvamento.erro : null),
-    [salvamento.estado, salvamento.erro],
+    () => errosDe(salvamento.estado === "error" ? salvamento.erro : null),
+    [errosDe, salvamento.estado, salvamento.erro],
   );
 
   return {

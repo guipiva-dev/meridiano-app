@@ -1,20 +1,9 @@
 import type { CSSProperties } from "react";
 import type { ServicoVendidoDto } from "@/api/relatorios";
+import { ROTULO_SERVICO } from "@/api/viagens";
 import { Section } from "@/components/shell";
 import { cx } from "@/lib/cx";
 import s from "./Relatorios.module.css";
-
-const ROTULOS_SERVICO: Record<string, string> = {
-  aereo: "Aéreo",
-  hospedagem: "Hospedagem",
-  seguro: "Seguro",
-  traslado: "Traslado",
-  passeio: "Passeio",
-  ingresso: "Ingresso",
-  aluguel_carro: "Aluguel de carro",
-  documentacao: "Documentação",
-  outro: "Outro",
-};
 
 /** Reservas que incluem cada serviço; uma reserva com N tipos conta em N barras (não é o total de reservas). */
 export function ServicosVendidos({ servicos }: { servicos: ServicoVendidoDto[] }) {
@@ -32,7 +21,7 @@ export function ServicosVendidos({ servicos }: { servicos: ServicoVendidoDto[] }
             return (
               <div key={sv.tipo} className={s.horizontal}>
                 <div className={s.horizontalCabecalho}>
-                  <b>{ROTULOS_SERVICO[sv.tipo] ?? sv.tipo}</b>
+                  <b>{(ROTULO_SERVICO as Record<string, string>)[sv.tipo] ?? sv.tipo}</b>
                   <span className={s.horizontalValor}>{sv.reservas}</span>
                 </div>
                 <div className={s.trilha}>

@@ -82,8 +82,12 @@ export interface BadgesDto {
 }
 
 export const agendaApi = {
-  listar: (responsavelId: string | null) =>
-    api.get<AgendaDto>(`/agenda${responsavelId ? `?responsavelId=${responsavelId}` : ""}`),
+  listar: (responsavelId: string | null) => {
+    const qs = new URLSearchParams();
+    if (responsavelId) qs.set("responsavelId", responsavelId);
+    const q = qs.toString();
+    return api.get<AgendaDto>(`/agenda${q ? `?${q}` : ""}`);
+  },
   badges: () => api.get<BadgesDto>("/agenda/badges"),
 };
 

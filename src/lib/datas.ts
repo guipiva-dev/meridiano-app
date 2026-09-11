@@ -20,6 +20,23 @@ export function formatarCarimbo(iso: string | null | undefined): string {
 }
 
 /**
+ * `timestamptz` relativo ao dia local: "hoje HH:mm" · "ontem HH:mm" · "dd/MM" (ou "dd/MM HH:mm" com `horaSempre`);
+ * null → "—".
+ */
+export function formatarCarimboRelativo(iso: string | null | undefined, opts?: { horaSempre?: boolean }): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  const hora = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const hoje = new Date();
+  if (d.toDateString() === hoje.toDateString()) return `hoje ${hora}`;
+  const ontem = new Date(hoje);
+  ontem.setDate(hoje.getDate() - 1);
+  if (d.toDateString() === ontem.toDateString()) return `ontem ${hora}`;
+  const diaMes = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  return opts?.horaSempre ? `${diaMes} ${hora}` : diaMes;
+}
+
+/**
  * Período ida–volta, comprimido quando mês/ano coincidem:
  * "18–28/04/2026" (mesmo mês) · "28/04–02/05/2026" (mesmo ano) · "18/04/2026–02/01/2027" ·
  * só ida → "18/04/2026" · nada → "—".

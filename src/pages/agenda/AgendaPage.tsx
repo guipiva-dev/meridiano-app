@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { agendaApi, chavesAgenda } from "@/api/agenda";
@@ -7,6 +7,7 @@ import type { PendenciaDto } from "@/api/pendencias";
 import { useAuth } from "@/auth/useAuth";
 import { Button, Select } from "@/components";
 import { Alert } from "@/components/display";
+import { Skeleton } from "@/components/feedback";
 import { NovaPendenciaModal } from "@/components/pendencias";
 import { Page, PageHeader, type Tab, Tabs } from "@/components/shell";
 import s from "./Agenda.module.css";
@@ -37,6 +38,7 @@ export function AgendaPage() {
   const q = useQuery({
     queryKey: chavesAgenda.lista(responsavelId),
     queryFn: () => agendaApi.listar(responsavelId),
+    placeholderData: keepPreviousData,
   });
   const dto = q.data;
 
@@ -91,6 +93,7 @@ export function AgendaPage() {
       />
 
       {q.isError && <Alert tone="danger">{mensagemDeErro(q.error)}</Alert>}
+      {q.isPending && <Skeleton lines={8} />}
 
       {dto && (
         <Tabs tabs={tabs} active={aba} onChange={setAba}>

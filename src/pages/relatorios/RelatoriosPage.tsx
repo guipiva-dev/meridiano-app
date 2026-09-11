@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { CircleHelp } from "lucide-react";
 import { type CSSProperties, useState } from "react";
 import { mensagemDeErro } from "@/api/errors";
@@ -28,6 +28,7 @@ export function RelatoriosPage() {
   const resumoQ = useQuery({
     queryKey: chavesRelatorios.resumo(anoSelecionado, vendedorId),
     queryFn: () => relatoriosApi.resumo(anoSelecionado, vendedorId),
+    placeholderData: keepPreviousData,
   });
 
   const dto = resumoQ.data;

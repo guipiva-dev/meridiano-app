@@ -137,7 +137,7 @@
   background: var(--color-brand);
 }
 .nacional {
-  background: var(--blue-500);
+  background: var(--color-info);
 }
 .rodapeMargens {
   font: var(--type-helper);

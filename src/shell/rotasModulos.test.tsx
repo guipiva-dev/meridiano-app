@@ -83,6 +83,11 @@ test("/agenda sem viagem.ver nem viagem.ver_proprias cai em Sem permissão", () 
   expect(screen.getByText("Sem permissão")).toBeInTheDocument();
 });
 
+test("/agenda abre só com viagem.ver_proprias", () => {
+  montar("/agenda", (p) => p === "viagem.ver_proprias");
+  expect(screen.getByRole("heading", { name: "Agenda" })).toBeInTheDocument();
+});
+
 test("/relatorios abre só com relatorio.ver", () => {
   montar("/relatorios", (p) => p === "relatorio.ver");
   expect(screen.getByRole("heading", { name: "Relatórios" })).toBeInTheDocument();

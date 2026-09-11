@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
-import { type SubmitEvent, useId, useRef, useState } from "react";
+import { type KeyboardEvent, type SubmitEvent, useId, useRef, useState } from "react";
 import { clientesApi } from "@/api/clientes";
 import { ConflictError, ValidationError } from "@/api/errors";
 import { mensagemDeErro } from "@/api/http";
@@ -9,6 +9,7 @@ import { type ClienteBuscaDto, viagensApi } from "@/api/viagens";
 import { Button, DateInput, Field, IconButton, Input, Select } from "@/components";
 import { Alert, Chip } from "@/components/display";
 import { Modal } from "@/components/feedback";
+import { cx } from "@/lib/cx";
 import { hojeIso } from "@/lib/datas";
 import { type EscopoPendencias, fontePendencias } from "./escopo";
 import s from "./Pendencias.module.css";
@@ -39,6 +40,7 @@ const PRIORIDADES = [
 export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClose, onSalva }: NovaPendenciaModalProps) {
   const qc = useQueryClient();
   const idForm = useId();
+  const listboxId = useId();
   const pessoa = "clienteId" in escopo ? escopo : null;
   const daViagem = "viagemId" in escopo ? escopo : null;
   const agenda = "agenda" in escopo ? escopo : null;
@@ -53,6 +55,7 @@ export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClos
   const [pessoaQuery, setPessoaQuery] = useState("");
   const [pessoaOpcoes, setPessoaOpcoes] = useState<ClienteBuscaDto[]>([]);
   const [pessoaAberta, setPessoaAberta] = useState(false);
+  const [pessoaAtiva, setPessoaAtiva] = useState(-1);
   const [erroTitulo, setErroTitulo] = useState<string>();
   const [erroBloco, setErroBloco] = useState<string>();
   const [salvando, setSalvando] = useState(false);
@@ -69,6 +72,7 @@ export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClos
 
   function buscarPessoaAgenda(q: string) {
     setPessoaQuery(q);
+    setPessoaAtiva(-1);
     clearTimeout(pessoaTimer.current);
     if (!q.trim()) {
       setPessoaOpcoes([]);
@@ -76,11 +80,34 @@ export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClos
       return;
     }
     pessoaTimer.current = setTimeout(() => {
-      void viagensApi.buscarClientes(q).then((r) => {
-        setPessoaOpcoes(r);
-        setPessoaAberta(true);
-      });
+      viagensApi
+        .buscarClientes(q)
+        .then((r) => {
+          setPessoaOpcoes(r);
+          setPessoaAberta(true);
+          setPessoaAtiva(0);
+        })
+        .catch(() => {
+          setPessoaOpcoes([]);
+          setPessoaAberta(false);
+        });
     }, DEBOUNCE_MS);
+  }
+
+  function tecladoPessoa(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      if (!pessoaOpcoes.length) return;
+      e.preventDefault();
+      const n = pessoaOpcoes.length;
+      setPessoaAtiva((i) => (e.key === "ArrowDown" ? (i + 1) % n : i <= 0 ? n - 1 : i - 1));
+    } else if (e.key === "Enter") {
+      if (!pessoaAberta) return;
+      e.preventDefault();
+      const c = pessoaOpcoes[pessoaAtiva >= 0 ? pessoaAtiva : 0];
+      if (c) selecionarPessoaAgenda(c);
+    } else if (e.key === "Escape") {
+      setPessoaAberta(false);
+    }
   }
 
   function selecionarPessoaAgenda(c: ClienteBuscaDto) {
@@ -255,24 +282,28 @@ export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClos
                 <Input
                   role="combobox"
                   aria-expanded={pessoaAberta}
+                  aria-controls={pessoaAberta ? listboxId : undefined}
+                  aria-activedescendant={pessoaAtiva >= 0 ? `${listboxId}-${pessoaAtiva}` : undefined}
                   autoComplete="off"
                   placeholder="Buscar pessoa…"
                   value={pessoaQuery}
                   onChange={(e) => {
                     buscarPessoaAgenda(e.target.value);
                   }}
+                  onKeyDown={tecladoPessoa}
                   onBlur={() => {
                     setPessoaAberta(false);
                   }}
                 />
                 {pessoaAberta && pessoaOpcoes.length > 0 && (
-                  <ul role="listbox" className={s.listbox}>
-                    {pessoaOpcoes.map((c) => (
+                  <ul role="listbox" id={listboxId} className={s.listbox}>
+                    {pessoaOpcoes.map((c, i) => (
                       <li
                         key={c.id}
+                        id={`${listboxId}-${i}`}
                         role="option"
-                        aria-selected={false}
-                        className={s.option}
+                        aria-selected={i === pessoaAtiva}
+                        className={cx(s.option, i === pessoaAtiva && s.optionAtivo)}
                         onMouseDown={(e) => {
                           e.preventDefault();
                           selecionarPessoaAgenda(c);

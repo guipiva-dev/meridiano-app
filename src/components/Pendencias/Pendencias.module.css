@@ -107,6 +107,9 @@
   color: var(--color-text-primary);
   cursor: pointer;
 }
+.optionAtivo {
+  background: var(--color-bg-selected);
+}
 
 /* Contrato §4.5: abaixo de 1366 o responsável cai para a 2ª linha da descrição. */
 @media (max-width: 1366px) {
