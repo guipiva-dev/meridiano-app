@@ -1,20 +1,20 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { type SubmitEvent, useId, useState } from "react";
+import { clientesApi } from "@/api/clientes";
 import { ConflictError, ValidationError } from "@/api/errors";
 import { mensagemDeErro } from "@/api/http";
 import { type PendenciaDto, type Prioridade, pendenciasApi } from "@/api/pendencias";
-import type { PassageiroDto, VendedorDto } from "@/api/viagens";
+import type { VendedorDto } from "@/api/viagens";
 import { Button, DateInput, Field, Input, Select } from "@/components";
 import { Alert, Chip } from "@/components/display";
 import { Modal } from "@/components/feedback";
 import { hojeIso } from "@/lib/datas";
-import { chaveDasPendencias } from "./chave";
+import { type EscopoPendencias, fontePendencias } from "./escopo";
 import s from "./Pendencias.module.css";
 
 interface NovaPendenciaModalProps {
   open: boolean;
-  viagemId: string;
-  passageiros: PassageiroDto[];
+  escopo: EscopoPendencias;
   vendedores: VendedorDto[];
   /** Quando presente, o modal edita essa pendência (sem "Para quem"). */
   pendencia?: PendenciaDto;
@@ -27,26 +27,24 @@ const PRIORIDADES = [
   { value: "urgente", label: "Urgente" },
 ];
 
-export function NovaPendenciaModal({
-  open,
-  viagemId,
-  passageiros,
-  vendedores,
-  pendencia,
-  onClose,
-  onSalva,
-}: NovaPendenciaModalProps) {
+export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClose, onSalva }: NovaPendenciaModalProps) {
   const qc = useQueryClient();
   const idForm = useId();
+  const pessoa = "clienteId" in escopo ? escopo : null;
+  const daViagem = "viagemId" in escopo ? escopo : null;
   // O chamador monta o modal só quando abre, então o estado inicial já é o "reset".
   const [titulo, setTitulo] = useState(pendencia?.titulo ?? "");
   const [dataPrevista, setDataPrevista] = useState(() => pendencia?.dataPrevista ?? hojeIso());
   const [responsavelId, setResponsavelId] = useState(pendencia?.responsavelId ?? "");
   const [prioridade, setPrioridade] = useState<Prioridade>(pendencia?.prioridade ?? "normal");
   const [clienteIds, setClienteIds] = useState<string[]>([]);
+  const [viagemId, setViagemId] = useState("");
   const [erroTitulo, setErroTitulo] = useState<string>();
   const [erroBloco, setErroBloco] = useState<string>();
   const [salvando, setSalvando] = useState(false);
+
+  const passageiros = daViagem?.passageiros ?? [];
+  const viagens = (pessoa?.viagens ?? []).filter((v) => v.faseOperacional !== "cancelada");
 
   function alternar(clienteId: string) {
     setClienteIds((atual) =>
@@ -72,7 +70,9 @@ export function NovaPendenciaModal({
     };
     try {
       if (pendencia) await pendenciasApi.atualizar(pendencia.id, { ...base, versao: pendencia.versao });
-      else await pendenciasApi.criar(viagemId, { ...base, clienteIds });
+      else if (pessoa)
+        await clientesApi.criarPendencia(pessoa.clienteId, { ...base, viagemId: viagemId === "" ? null : viagemId });
+      else if (daViagem) await pendenciasApi.criar(daViagem.viagemId, { ...base, clienteIds });
       onSalva();
       onClose();
     } catch (erro) {
@@ -80,13 +80,17 @@ export function NovaPendenciaModal({
       else setErroBloco(mensagemDeErro(erro));
       // 409: a `versao` em mãos morreu. Recarrega a lista atrás do modal para o próximo clique
       // usar a versão nova, senão o usuário fica preso em 409 para sempre.
-      if (erro instanceof ConflictError) void qc.invalidateQueries({ queryKey: chaveDasPendencias(viagemId) });
+      if (erro instanceof ConflictError) void qc.invalidateQueries({ queryKey: fontePendencias(escopo).prefixo });
       setSalvando(false);
     }
   }
 
   const quantidade = clienteIds.length === 0 ? 1 : clienteIds.length;
-  const rotulo = pendencia ? "Salvar" : `Criar ${quantidade} ${quantidade === 1 ? "pendência" : "pendências"}`;
+  const rotulo = pendencia
+    ? "Salvar"
+    : pessoa
+      ? "Criar pendência"
+      : `Criar ${quantidade} ${quantidade === 1 ? "pendência" : "pendências"}`;
 
   return (
     <Modal
@@ -149,7 +153,19 @@ export function NovaPendenciaModal({
             }}
           />
         </Field>
-        {!pendencia && (
+        {!pendencia && pessoa && (
+          <Field label="Viagem relacionada (opcional)">
+            <Select
+              value={viagemId}
+              placeholder="Sem viagem"
+              options={viagens.map((v) => ({ value: v.id, label: `${v.destino} · ${v.codigo}` }))}
+              onChange={(e) => {
+                setViagemId(e.target.value);
+              }}
+            />
+          </Field>
+        )}
+        {!pendencia && !pessoa && (
           <Field label="Para quem" helper="Uma pendência por passageiro selecionado; sem seleção, fica na viagem.">
             <div className={s.chips}>
               {passageiros.map((p) => (

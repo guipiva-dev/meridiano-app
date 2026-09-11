@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { ViagemDaPessoaDto } from "@/api/clientes";
 import type { PassageiroDto, VendedorDto } from "@/api/viagens";
 import { NovaPendenciaModal } from "./NovaPendenciaModal";
 
@@ -23,14 +24,53 @@ function resposta(status: number, body: unknown) {
   } as unknown as Response;
 }
 
+const VIAGENS: ViagemDaPessoaDto[] = [
+  {
+    id: "v9",
+    codigo: "VG-2026-0042",
+    destino: "Lisboa",
+    tipo: "internacional",
+    dataIda: "2026-04-18",
+    dataVolta: "2026-04-28",
+    titular: true,
+    faseOperacional: "confirmada",
+    faseFinanceira: "a_receber",
+  },
+  {
+    id: "v8",
+    codigo: "VG-2025-0007",
+    destino: "Bariloche",
+    tipo: "internacional",
+    dataIda: "2025-07-01",
+    dataVolta: "2025-07-10",
+    titular: false,
+    faseOperacional: "cancelada",
+    faseFinanceira: "nao_prevista",
+  },
+];
+
 function montar() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={qc}>
       <NovaPendenciaModal
         open
-        viagemId="v1"
-        passageiros={PASSAGEIROS}
+        escopo={{ viagemId: "v1", passageiros: PASSAGEIROS }}
+        vendedores={VENDEDORES}
+        onClose={() => undefined}
+        onSalva={() => undefined}
+      />
+    </QueryClientProvider>,
+  );
+}
+
+function montarPessoa() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={qc}>
+      <NovaPendenciaModal
+        open
+        escopo={{ clienteId: "c1", viagens: VIAGENS }}
         vendedores={VENDEDORES}
         onClose={() => undefined}
         onSalva={() => undefined}
@@ -86,6 +126,18 @@ test("Enter no formulário salva: o botão é o submit do form (que é o do moda
   await waitFor(() => {
     expect(chamadas.some((c) => c.method === "POST")).toBe(true);
   });
+});
+
+test('escopo pessoa troca os chips "Para quem" por "Viagem relacionada" (sem canceladas)', () => {
+  montarPessoa();
+
+  expect(screen.queryByText("Para quem")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Carlos Mendes" })).toBeNull();
+  const select = screen.getByLabelText(/Viagem relacionada/);
+  expect(select).toBeInTheDocument();
+  expect(screen.getByRole("option", { name: /VG-2026-0042/ })).toBeInTheDocument();
+  expect(screen.queryByRole("option", { name: /VG-2025-0007/ })).toBeNull();
+  expect(screen.getByRole("button", { name: "Criar pendência" })).toBeInTheDocument();
 });
 
 test("sem título mostra erro local e não chama a API", async () => {

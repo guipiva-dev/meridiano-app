@@ -1,3 +1,4 @@
+import { chavesClientes } from "@/api/clientes";
 import { chavesPendencias } from "@/api/pendencias";
 
 /**
@@ -6,4 +7,9 @@ import { chavesPendencias } from "@/api/pendencias";
  */
 export function chaveDasPendencias(viagemId: string) {
   return chavesPendencias.daViagem(viagemId, false).slice(0, 3);
+}
+
+/** Mesmo prefixo, no escopo pessoa: `["clientes", id, "pendencias"]`. */
+export function chaveDasPendenciasDaPessoa(clienteId: string) {
+  return chavesClientes.pendencias(clienteId, false).slice(0, 3);
 }

@@ -4,16 +4,15 @@ import { createMemoryRouter, createRoutesFromElements, RouterProvider } from "re
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
 import { RotasApp } from "./rotasModulos";
 
-const auth: AuthValue = {
-  me: { usuarioId: "1", agenciaId: "2", perfil: "dono", nome: "A", permissoes: [] },
-  carregando: false,
-  pode: () => true,
-  entrar: () => Promise.resolve(),
-  sair: () => Promise.resolve(),
-  recarregar: () => Promise.resolve(),
-};
-
-function montar(caminho: string) {
+function montar(caminho: string, pode: (p: string) => boolean = () => true) {
+  const auth: AuthValue = {
+    me: { usuarioId: "1", agenciaId: "2", perfil: "dono", nome: "A", permissoes: [] },
+    carregando: false,
+    pode,
+    entrar: () => Promise.resolve(),
+    sair: () => Promise.resolve(),
+    recarregar: () => Promise.resolve(),
+  };
   const router = createMemoryRouter(createRoutesFromElements(RotasApp()), { initialEntries: [caminho] });
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
@@ -26,13 +25,54 @@ function montar(caminho: string) {
 }
 
 // A busca global linka para /clientes/<id>; sem a rota o resultado caía no 404.
-test("/clientes/:id renderiza Cliente, não a página não encontrada", () => {
+test("/clientes/:id renderiza a pessoa, não a página não encontrada", async () => {
+  const pessoa = {
+    id: "abc",
+    versao: "1",
+    nome: "Marina Alves",
+    email: null,
+    telefone: null,
+    whatsapp: null,
+    dataNascimento: null,
+    cidade: null,
+    uf: null,
+    origemLead: null,
+    tags: [],
+    observacoes: null,
+    contatoEmergencia: null,
+    grupoId: null,
+    grupoNome: null,
+    criadoEm: "2026-01-01T00:00:00Z",
+    resumo: { viagens: 0, ultimaViagem: null, pendenciasAbertas: 0, pendenciasUrgentes: 0, clienteDesde: 2026 },
+  };
+  vi.stubGlobal("fetch", (url: string) =>
+    Promise.resolve({
+      ok: true,
+      status: 200,
+      headers: { get: () => "application/json" },
+      json: () => Promise.resolve(url.endsWith("/clientes/abc") ? pessoa : []),
+    } as unknown as Response),
+  );
+
   montar("/clientes/abc");
-  expect(screen.getByRole("heading", { name: "Cliente" })).toBeInTheDocument();
+
+  expect(await screen.findByRole("heading", { name: "Marina Alves" })).toBeInTheDocument();
   expect(screen.queryByText("Página não encontrada")).toBeNull();
+  vi.unstubAllGlobals();
 });
 
 test("/clientes/grupos continua ganhando da rota dinâmica", () => {
   montar("/clientes/grupos");
-  expect(screen.getByRole("heading", { name: "Grupos" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: /Grupos e empresas/ })).toBeInTheDocument();
+});
+
+// C7: o Contador só tem financeiro.ver_dre e precisa enxergar o módulo em leitura.
+test("/financeiro exige uma das três permissões do módulo", () => {
+  montar("/financeiro", (p) => p === "financeiro.ver_dre");
+  expect(screen.getByRole("heading", { name: "Comissões a receber" })).toBeInTheDocument();
+});
+
+test("/financeiro sem nenhuma permissão do módulo cai em Sem permissão", () => {
+  montar("/financeiro", (p) => p === "viagem.ver");
+  expect(screen.getByText("Sem permissão")).toBeInTheDocument();
 });

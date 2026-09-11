@@ -1,0 +1,127 @@
+.primary {
+  font: var(--type-component);
+  color: var(--color-text-heading);
+}
+.secondary {
+  font: var(--type-helper);
+  color: var(--color-text-secondary);
+}
+.secondary code {
+  font: var(--type-code);
+}
+
+/* Lista */
+.filtros {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.filtros > input {
+  flex: 1;
+  min-width: 0;
+}
+.situacao {
+  max-width: 200px;
+}
+
+/* Formulário de dados */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.span2 {
+  grid-column: 1 / -1;
+}
+.comSufixo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.comSufixo > input {
+  flex: 1;
+  min-width: 0;
+}
+.sufixo {
+  font: var(--type-body);
+  color: var(--color-text-secondary);
+}
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Regras de pagamento */
+.blocoRegras {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.meta {
+  font: var(--type-helper);
+  color: var(--color-text-secondary);
+}
+.janelas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.janela {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+.janelaTitulo {
+  font: var(--type-label);
+  color: var(--color-text-heading);
+}
+.anteriores > summary {
+  font: var(--type-label);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.versaoAntiga {
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--color-border);
+}
+
+/* Tabela editável de janelas (modal) */
+.formModal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.tabelaJanelas {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tabelaJanelas th {
+  font: var(--type-caption);
+  color: var(--color-text-secondary);
+  text-align: left;
+  padding-bottom: var(--space-2);
+}
+.tabelaJanelas td {
+  padding: var(--space-1) var(--space-1) var(--space-1) 0;
+}
+.tabelaJanelas input {
+  width: 100%;
+}
+.colRemover {
+  width: var(--icon-button);
+}
+
+@media (max-width: 700px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

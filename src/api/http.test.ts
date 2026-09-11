@@ -57,6 +57,16 @@ test("falha de rede vira NetworkError", async () => {
   expect(mensagemDeErro(e)).toMatch(/Sem conexão/);
 });
 
+// C2: o motivo viaja em header, percent-encoded (header HTTP não aceita acento nem quebra de linha).
+test("envia X-Motivo codificado quando opts.motivo vem", async () => {
+  const spy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 204 }));
+  await api.delete("/fechamento/2026-04", { motivo: "erro de lançamento ç" });
+  expect(spy.mock.calls[0]?.[1]?.headers).toMatchObject({ "X-Motivo": "erro%20de%20lan%C3%A7amento%20%C3%A7" });
+
+  await api.post("/x", { a: 1 });
+  expect(spy.mock.calls[1]?.[1]?.headers).not.toHaveProperty("X-Motivo");
+});
+
 test("JSON malformado vira ApiError resposta_invalida", async () => {
   vi.spyOn(globalThis, "fetch").mockResolvedValue(
     new Response("{", { status: 200, headers: { "content-type": "application/json" } }),

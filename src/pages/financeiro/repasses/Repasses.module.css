@@ -1,0 +1,123 @@
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+@media (min-width: 1366px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-heading);
+  font: var(--type-label);
+  flex-shrink: 0;
+}
+
+.identidade {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.nome {
+  font: var(--type-component);
+  color: var(--color-text-heading);
+}
+
+.secundario {
+  font: var(--type-helper);
+  color: var(--color-text-secondary);
+}
+.secundario code {
+  font: var(--type-code);
+}
+
+.total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  margin-left: auto;
+  text-align: right;
+}
+
+.itens {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border-top: 1px solid var(--card-border);
+  padding-top: var(--space-3);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-right: auto;
+}
+
+.titulo {
+  font: var(--type-body);
+  color: var(--color-text-primary);
+}
+
+.rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-top: 1px solid var(--card-border);
+  padding-top: var(--space-3);
+  font: var(--type-helper);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 1024px) {
+  .kpis {
+    grid-template-columns: 1fr;
+  }
+}

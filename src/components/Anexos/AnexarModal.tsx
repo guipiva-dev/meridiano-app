@@ -1,16 +1,15 @@
 import { type SubmitEvent, useId, useState } from "react";
 import { anexosApi, enviarArquivo, type NovoAnexoRequest, type TipoAnexo } from "@/api/anexos";
 import { mensagemDeErro } from "@/api/http";
-import type { ReservaDto } from "@/api/viagens";
 import { Button, Checkbox, DateInput, Field, Input, Select } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
 import s from "./Anexos.module.css";
+import type { EscopoAnexos } from "./ListaAnexos";
 
 interface AnexarModalProps {
   open: boolean;
-  viagemId: string;
-  reservas: ReservaDto[];
+  escopo: EscopoAnexos;
   onClose: () => void;
   onEnviado: () => void;
 }
@@ -30,12 +29,17 @@ function descartePadrao(): string {
   return new Date(Date.now() + 180 * 86_400_000).toLocaleDateString("en-CA");
 }
 
-export function AnexarModal({ open, viagemId, reservas, onClose, onEnviado }: AnexarModalProps) {
+export function AnexarModal({ open, escopo, onClose, onEnviado }: AnexarModalProps) {
   const idForm = useId();
+  const pessoa = "clienteId" in escopo;
+  // Vínculo padrão do escopo; no escopo viagem o Select pode trocá-lo por uma reserva.
+  const alvo: Pick<NovoAnexoRequest, "clienteId" | "viagemId"> =
+    "clienteId" in escopo ? { clienteId: escopo.clienteId } : { viagemId: escopo.viagemId };
+  const reservas = "reservas" in escopo ? escopo.reservas : [];
   const [arquivo, setArquivo] = useState<File | null>(null);
-  const [tipo, setTipo] = useState<TipoAnexo>("voucher");
+  const [tipo, setTipo] = useState<TipoAnexo>(pessoa ? "documento" : "voucher");
   const [reservaId, setReservaId] = useState("");
-  const [sensivel, setSensivel] = useState(false);
+  const [sensivel, setSensivel] = useState(pessoa);
   const [dataDescarte, setDataDescarte] = useState(descartePadrao);
   const [erroArquivo, setErroArquivo] = useState<string>();
   const [erroBloco, setErroBloco] = useState<string>();
@@ -55,7 +59,7 @@ export function AnexarModal({ open, viagemId, reservas, onClose, onEnviado }: An
     setErroArquivo(undefined);
     setEnviando(true);
     const req: NovoAnexoRequest = {
-      ...(reservaId === "" ? { viagemId } : { reservaId }),
+      ...(reservaId === "" ? alvo : { reservaId }),
       tipo,
       nomeArquivo: arquivo.name,
       mimeType: arquivo.type === "" ? null : arquivo.type,
@@ -126,18 +130,20 @@ export function AnexarModal({ open, viagemId, reservas, onClose, onEnviado }: An
             }}
           />
         </Field>
-        <Field label="Vínculo">
-          <Select
-            value={reservaId}
-            options={[
-              { value: "", label: "Viagem" },
-              ...reservas.map((r, i) => ({ value: r.id, label: `Reserva ${i + 1} · ${r.fornecedorNome}` })),
-            ]}
-            onChange={(e) => {
-              setReservaId(e.target.value);
-            }}
-          />
-        </Field>
+        {!pessoa && (
+          <Field label="Vínculo">
+            <Select
+              value={reservaId}
+              options={[
+                { value: "", label: "Viagem" },
+                ...reservas.map((r, i) => ({ value: r.id, label: `Reserva ${i + 1} · ${r.fornecedorNome}` })),
+              ]}
+              onChange={(e) => {
+                setReservaId(e.target.value);
+              }}
+            />
+          </Field>
+        )}
         <Checkbox
           label="Documento pessoal (sensível)"
           checked={sensivel}

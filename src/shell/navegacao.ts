@@ -45,7 +45,8 @@ export const itensSidebar: ItemSidebar[] = [
     icon: Wallet,
     path: "/financeiro",
     section: "Operação",
-    permission: ["financeiro.movimentar", "financeiro.conciliar"],
+    // C7: o Contador só tem `financeiro.ver_dre` e precisa enxergar o módulo em leitura.
+    permission: ["financeiro.movimentar", "financeiro.conciliar", "financeiro.ver_dre"],
   },
   {
     label: "Agenda",

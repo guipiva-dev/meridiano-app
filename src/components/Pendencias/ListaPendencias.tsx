@@ -1,27 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { mensagemDeErro } from "@/api/http";
-import { chavesPendencias, type PendenciaDto, pendenciasApi } from "@/api/pendencias";
-import type { PassageiroDto, VendedorDto } from "@/api/viagens";
+import { type PendenciaDto, pendenciasApi } from "@/api/pendencias";
+import type { VendedorDto } from "@/api/viagens";
 import { Button, Checkbox } from "@/components";
 import { Alert } from "@/components/display";
 import { ConfirmModal, EmptyState, Skeleton, toast } from "@/components/feedback";
 import { AdiarModal } from "./AdiarModal";
-import { chaveDasPendencias } from "./chave";
+import { type EscopoPendencias, fontePendencias } from "./escopo";
 import { LinhaPendencia } from "./LinhaPendencia";
 import { NovaPendenciaModal } from "./NovaPendenciaModal";
 import s from "./Pendencias.module.css";
 
-interface ListaPendenciasProps {
-  viagemId: string;
-  passageiros: PassageiroDto[];
+type ListaPendenciasProps = EscopoPendencias & {
   vendedores: VendedorDto[];
   podeEditar: boolean;
-}
+};
 
 const AJUDA = "Toda pendência tem data. Aparece aqui, na Agenda e na aba Pendências de cada passageiro.";
 
-export function ListaPendencias({ viagemId, passageiros, vendedores, podeEditar }: ListaPendenciasProps) {
+export function ListaPendencias(props: ListaPendenciasProps) {
+  const { vendedores, podeEditar } = props;
   const qc = useQueryClient();
   const [mostrarConcluidas, setMostrarConcluidas] = useState(false);
   const [editando, setEditando] = useState<PendenciaDto | undefined>();
@@ -29,14 +28,14 @@ export function ListaPendencias({ viagemId, passageiros, vendedores, podeEditar 
   const [adiando, setAdiando] = useState<PendenciaDto>();
   const [excluindo, setExcluindo] = useState<PendenciaDto>();
 
-  const chave = chavesPendencias.daViagem(viagemId, mostrarConcluidas);
+  const fonte = fontePendencias(props);
   const q = useQuery({
-    queryKey: chave,
-    queryFn: () => pendenciasApi.daViagem(viagemId, mostrarConcluidas),
+    queryKey: fonte.chave(mostrarConcluidas),
+    queryFn: () => fonte.buscar(mostrarConcluidas),
   });
 
   function invalidar() {
-    void qc.invalidateQueries({ queryKey: chaveDasPendencias(viagemId) });
+    void qc.invalidateQueries({ queryKey: fonte.prefixo });
   }
   function falhou(e: unknown) {
     toast.error(mensagemDeErro(e));
@@ -92,7 +91,11 @@ export function ListaPendencias({ viagemId, passageiros, vendedores, podeEditar 
       {!q.isPending && !q.isError && itens.length === 0 && (
         <EmptyState
           title="Nenhuma pendência"
-          description="Nada pendente nesta viagem. Crie uma quando precisar lembrar de algo com data."
+          description={
+            fonte.pessoa
+              ? "Nada pendente para esta pessoa. Crie uma quando precisar lembrar de algo com data."
+              : "Nada pendente nesta viagem. Crie uma quando precisar lembrar de algo com data."
+          }
         />
       )}
       {itens.length > 0 && (
@@ -102,6 +105,7 @@ export function ListaPendencias({ viagemId, passageiros, vendedores, podeEditar 
               key={p.id}
               p={p}
               podeEditar={podeEditar}
+              mostrarViagem={fonte.pessoa}
               onConcluir={() => {
                 concluir.mutate(p);
               }}
@@ -123,8 +127,7 @@ export function ListaPendencias({ viagemId, passageiros, vendedores, podeEditar 
       {criando && (
         <NovaPendenciaModal
           open
-          viagemId={viagemId}
-          passageiros={passageiros}
+          escopo={props}
           vendedores={vendedores}
           pendencia={editando}
           onClose={() => {

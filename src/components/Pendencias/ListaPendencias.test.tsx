@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { ViagemDaPessoaDto } from "@/api/clientes";
 import type { PendenciaDto } from "@/api/pendencias";
 import { ListaPendencias } from "./ListaPendencias";
 
@@ -42,11 +43,34 @@ function resposta(status: number, body: unknown) {
   } as unknown as Response;
 }
 
+const VIAGENS: ViagemDaPessoaDto[] = [
+  {
+    id: "v9",
+    codigo: "VG-2026-0042",
+    destino: "Lisboa",
+    tipo: "internacional",
+    dataIda: "2026-04-18",
+    dataVolta: "2026-04-28",
+    titular: true,
+    faseOperacional: "confirmada",
+    faseFinanceira: "a_receber",
+  },
+];
+
 function montar(podeEditar = true) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={qc}>
       <ListaPendencias viagemId="v1" passageiros={[]} vendedores={[]} podeEditar={podeEditar} />
+    </QueryClientProvider>,
+  );
+}
+
+function montarPessoa() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={qc}>
+      <ListaPendencias clienteId="c1" viagens={VIAGENS} vendedores={[]} podeEditar />
     </QueryClientProvider>,
   );
 }
@@ -111,4 +135,26 @@ test("pendência automática não oferece Editar nem Excluir no menu", async () 
   fireEvent.click(screen.getByRole("button", { name: "Mais ações de Confirmar apólice" }));
   expect(screen.getByRole("menuitem", { name: "Editar" })).toBeInTheDocument();
   expect(screen.getByRole("menuitem", { name: "Excluir" })).toBeInTheDocument();
+});
+
+test("escopo pessoa busca as pendências do cliente", async () => {
+  montarPessoa();
+  await screen.findByText("Renovar passaporte — Lúcia Mendes");
+  expect(chamadas[0]?.url).toContain("/clientes/c1/pendencias?incluirConcluidas=false");
+});
+
+test("escopo pessoa cria a pendência com a viagem relacionada", async () => {
+  montarPessoa();
+  await screen.findByText("Renovar passaporte — Lúcia Mendes");
+
+  fireEvent.click(screen.getByRole("button", { name: "+ Nova pendência" }));
+  fireEvent.change(screen.getByLabelText(/O que precisa ser feito/), { target: { value: "Renovar visto" } });
+  fireEvent.change(screen.getByLabelText(/Viagem relacionada/), { target: { value: "v9" } });
+  fireEvent.click(screen.getByRole("button", { name: "Criar pendência" }));
+
+  await waitFor(() => {
+    const c = chamadas.find((x) => x.method === "POST");
+    expect(c?.url).toContain("/clientes/c1/pendencias");
+    expect(c?.body).toMatchObject({ titulo: "Renovar visto", viagemId: "v9" });
+  });
 });

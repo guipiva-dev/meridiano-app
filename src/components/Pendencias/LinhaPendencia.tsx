@@ -13,9 +13,19 @@ interface LinhaPendenciaProps {
   onEditar: () => void;
   onExcluir: () => void;
   podeEditar: boolean;
+  /** Escopo pessoa: a viagem deixa de ser óbvia pelo contexto, então entra na meta. */
+  mostrarViagem?: boolean;
 }
 
-export function LinhaPendencia({ p, onConcluir, onAdiar, onEditar, onExcluir, podeEditar }: LinhaPendenciaProps) {
+export function LinhaPendencia({
+  p,
+  onConcluir,
+  onAdiar,
+  onEditar,
+  onExcluir,
+  podeEditar,
+  mostrarViagem = false,
+}: LinhaPendenciaProps) {
   const aberta = p.status === "aberta";
   const titulo = p.clienteNome ? `${p.titulo} — ${p.clienteNome}` : p.titulo;
   // R10: automática só aceita concluir/adiar; editar/excluir dariam 422 pendencia_automatica.
@@ -38,6 +48,7 @@ export function LinhaPendencia({ p, onConcluir, onAdiar, onEditar, onExcluir, po
         <b className={cx(s.titulo, !aberta && s.concluido)}>{titulo}</b>
         <span className={s.meta}>
           {formatarData(p.dataPrevista)} · {p.origem === "automatica" ? "automática" : "manual"}
+          {mostrarViagem && p.codigoViagem && ` · viagem ${p.codigoViagem}`}
           {p.responsavelNome && <span className={s.resp}>{p.responsavelNome}</span>}
         </span>
       </div>

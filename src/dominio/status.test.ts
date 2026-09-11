@@ -50,3 +50,22 @@ test("nfse_tomador e anexo_tipo rotulam em português", () => {
   expect(apresentacaoStatus("nfse_tomador", "operadora").texto).toBe("Operadora");
   expect(apresentacaoStatus("anexo_tipo", "comprovante").texto).toBe("Comprovante");
 });
+
+test("movimento_tipo: entrada é success, saída warning, estorno/reembolso danger", () => {
+  expect(apresentacaoStatus("movimento_tipo", "recebimento_operadora")).toEqual({
+    texto: "Recebimento da operadora",
+    tone: "success",
+  });
+  expect(apresentacaoStatus("movimento_tipo", "pagamento_fornecedor")).toEqual({
+    texto: "Pagamento ao fornecedor",
+    tone: "warning",
+  });
+  expect(apresentacaoStatus("movimento_tipo", "estorno_operadora").tone).toBe("danger");
+  expect(apresentacaoStatus("movimento_tipo", "reembolso_cliente").tone).toBe("danger");
+});
+
+test("período: aberto info, pendências warning, fechado success", () => {
+  expect(apresentacaoStatus("periodo", "aberto")).toEqual({ texto: "Aberto", tone: "info" });
+  expect(apresentacaoStatus("periodo", "pendencias")).toEqual({ texto: "Pendências", tone: "warning" });
+  expect(apresentacaoStatus("periodo", "fechado")).toEqual({ texto: "Fechado", tone: "success" });
+});

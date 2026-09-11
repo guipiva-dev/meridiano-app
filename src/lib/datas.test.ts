@@ -1,4 +1,17 @@
-import { diasAte, formatarCarimbo, formatarData, formatarDataHora, formatarPeriodo, hojeIso } from "./datas";
+import {
+  competenciaAtual,
+  competenciaDe,
+  diasAte,
+  formatarCarimbo,
+  formatarData,
+  formatarDataHora,
+  formatarMesAno,
+  formatarPeriodo,
+  hojeIso,
+  idade,
+  nomeMes,
+  somarMeses,
+} from "./datas";
 
 test("formatarData", () => {
   expect(formatarData("2026-04-18")).toBe("18/04/2026");
@@ -39,4 +52,25 @@ test("diasAte conta a partir de hoje, negativo se passado", () => {
   expect(diasAte(futuro.toISOString().slice(0, 10))).toBe(3);
   expect(diasAte(passado.toISOString().slice(0, 10))).toBe(-2);
   expect(diasAte(hojeIso())).toBe(0);
+});
+
+test("idade conta anos completos e ignora aniversário que ainda não chegou", () => {
+  const [ano, mes, dia] = hojeIso().split("-");
+  expect(idade(`${Number(ano) - 30}-${mes}-${dia}`)).toBe(30);
+  const amanha = new Date();
+  amanha.setDate(amanha.getDate() + 1);
+  const [anoA, mesA, diaA] = amanha.toLocaleDateString("en-CA").split("-");
+  expect(idade(`${Number(anoA) - 30}-${mesA}-${diaA}`)).toBe(29);
+  expect(idade(null)).toBeNull();
+  expect(idade(undefined)).toBeNull();
+});
+
+test("competências: formatação, extração, atual e soma que vira o ano", () => {
+  expect(formatarMesAno("2026-04-01")).toBe("abr/2026");
+  expect(formatarMesAno(null)).toBe("—");
+  expect(nomeMes("2026-04")).toBe("Abril de 2026");
+  expect(competenciaDe("2026-04-18")).toBe("2026-04");
+  expect(competenciaAtual()).toBe(hojeIso().slice(0, 7));
+  expect(somarMeses("2026-12", 1)).toBe("2027-01");
+  expect(somarMeses("2026-01", -1)).toBe("2025-12");
 });

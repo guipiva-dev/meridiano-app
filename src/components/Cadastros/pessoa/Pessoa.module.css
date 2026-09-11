@@ -1,0 +1,106 @@
+.painel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.bloco {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+}
+.cabecalho {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--card-border);
+}
+.titulo {
+  margin: 0;
+  font: var(--type-section);
+  color: var(--color-text-heading);
+}
+.meta {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+}
+.acaoTopo {
+  margin-left: auto;
+}
+.mono {
+  font: var(--type-code);
+}
+.validade {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.primary {
+  font: var(--type-component);
+  color: var(--color-text-heading);
+}
+.secondary {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+}
+
+/* Atendimentos */
+.topo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.contagem {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+.grupo {
+  display: flex;
+  flex-direction: column;
+}
+.grupoTitulo {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  font: var(--type-label);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  background: var(--color-bg-subtle);
+  border-bottom: 1px solid var(--card-border);
+  cursor: pointer;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--card-border);
+}
+.item:last-child {
+  border-bottom: 0;
+}
+.texto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.acoes {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.modalGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.link {
+  margin-left: auto;
+  font: var(--type-helper);
+  color: var(--color-text-link);
+}
