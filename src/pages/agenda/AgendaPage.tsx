@@ -15,10 +15,13 @@ import { DocumentosTab } from "./DocumentosTab";
 import { EmbarquesTab } from "./EmbarquesTab";
 import { PendenciasAgenda } from "./PendenciasAgenda";
 
-/** yyyy-mm-dd → "Terça-feira, 7 de abril" (Intl, capitalizado). */
+/** yyyy-mm-dd → "Terça, 7 de abril" (Intl com weekday "long" dá "terça-feira"; protótipo congelado
+ * usa a forma curta, então tiramos o sufixo "-feira" mantendo a capitalização). */
 function formatarCabecalhoData(iso: string): string {
   const data = new Date(Number(iso.slice(0, 4)), Number(iso.slice(5, 7)) - 1, Number(iso.slice(8, 10)));
-  const texto = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(data);
+  const texto = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" })
+    .format(data)
+    .replace("-feira", "");
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 

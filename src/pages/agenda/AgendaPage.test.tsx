@@ -192,9 +192,11 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test("renderiza o subtítulo com as contagens do cabeçalho", async () => {
+test("renderiza o subtítulo com a data do protótipo (sem '-feira') e as contagens do cabeçalho", async () => {
   montar();
-  expect(await screen.findByText(/3 pendências hoje · 2 atrasadas · 2 embarques esta semana/)).toBeInTheDocument();
+  expect(
+    await screen.findByText("Terça, 7 de abril · 3 pendências hoje · 2 atrasadas · 2 embarques esta semana"),
+  ).toBeInTheDocument();
 });
 
 test("tab Pendências mostra as três seções com contadores", async () => {
