@@ -41,7 +41,9 @@ export function TransferirModal({
     MAPA,
   );
 
-  const opcoes = vendedores.filter((v) => v.id !== viagem.agenteId).map((v) => ({ value: v.id, label: v.nome }));
+  const opcoes = vendedores
+    .filter((v) => v.id !== viagem.agenteId && (v.perfil === "dono" || v.perfil === "agente"))
+    .map((v) => ({ value: v.id, label: v.nome }));
 
   function fechar() {
     setAgenteId("");

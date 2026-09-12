@@ -19,7 +19,7 @@ test("sem resumo, com verValores, mostra a faixa reduzida (Receita da agência, 
   expect(screen.queryByText("Resultado da viagem")).toBeNull();
 });
 
-test("o bloco Reservas conta só as ativas", () => {
+test("o bloco Reservas conta só as ativas no título, mas mostra Ativas N · Total M quando há cancelada", () => {
   render(
     <ResumoTab
       viagem={{ ...VIAGEM, reservas: [RESERVA_1, { ...RESERVA_2, status: "cancelada" }] }}
@@ -29,7 +29,20 @@ test("o bloco Reservas conta só as ativas", () => {
       onVerPendencias={noop}
     />,
   );
-  expect(screen.getByText(/^1 · clique para abrir/)).toBeInTheDocument();
+  expect(screen.getByText(/^Ativas 1 · Total 2 · clique para abrir/)).toBeInTheDocument();
+});
+
+test("sem cancelada, o bloco Reservas mostra só a contagem", () => {
+  render(
+    <ResumoTab
+      viagem={{ ...VIAGEM, reservas: [RESERVA_1, RESERVA_2] }}
+      verValores={true}
+      pendencias={[]}
+      onAbrirReserva={noop}
+      onVerPendencias={noop}
+    />,
+  );
+  expect(screen.getByText(/^2 · clique para abrir/)).toBeInTheDocument();
 });
 
 test("faixa completa: Receita recebida e Comissão do vendedor", () => {

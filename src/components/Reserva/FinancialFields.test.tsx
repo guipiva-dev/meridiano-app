@@ -31,3 +31,17 @@ test("digitar em Comissão emite comissaoSugerida: false e some o selo", async (
   await user.type(input, "300");
   expect(screen.queryByText("Sugerido: 10 %")).not.toBeInTheDocument();
 });
+
+test("Comissão, Taxa de serviço e Fluxo têm tooltip explicando o cálculo com exemplo", () => {
+  render(<Harness />);
+  const tooltips = screen.getAllByTitle(/ex\.:/i);
+  const rotulos = tooltips.map((el) => el.closest("label")?.textContent);
+  expect(rotulos).toEqual(
+    expect.arrayContaining([
+      expect.stringContaining("Comissão"),
+      expect.stringContaining("Taxa de serviço"),
+      expect.stringContaining("Fluxo"),
+    ]),
+  );
+  expect(tooltips).toHaveLength(3);
+});

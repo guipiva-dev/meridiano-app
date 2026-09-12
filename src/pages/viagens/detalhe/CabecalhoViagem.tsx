@@ -3,11 +3,13 @@ import type { ViagemDto } from "@/api/viagens";
 import { Button } from "@/components";
 import { Alert, Badge, StatusBadge } from "@/components/display";
 import { PageHeader } from "@/components/shell";
+import { apresentacaoStatus } from "@/dominio/status";
 import { formatarCarimbo, formatarPeriodo } from "@/lib/datas";
 import { plural } from "@/lib/plural";
 import s from "./Viagem.module.css";
 
 const ROTULO_TIPO = { nacional: "Nacional", internacional: "Internacional" };
+const TOOLTIP_COMISSAO = "Situação da comissão dos fornecedores nas reservas ativas";
 
 function titularDa(viagem: ViagemDto): string {
   return viagem.passageiros.find((p) => p.titular)?.nome ?? viagem.passageiros[0]?.nome ?? "Sem titular";
@@ -22,6 +24,7 @@ interface CabecalhoViagemProps {
 
 export function CabecalhoViagem({ viagem, pode, onTransferir, onCancelar }: CabecalhoViagemProps) {
   const nav = useNavigate();
+  const comissao = apresentacaoStatus("comissao", viagem.faseFinanceira);
   const subtitle = [
     formatarPeriodo(viagem.dataIda, viagem.dataVolta),
     ROTULO_TIPO[viagem.tipo],
@@ -43,7 +46,9 @@ export function CabecalhoViagem({ viagem, pode, onTransferir, onCancelar }: Cabe
         status={
           <>
             <StatusBadge entidade="fase_viagem" valor={viagem.faseOperacional} />
-            <StatusBadge entidade="comissao" valor={viagem.faseFinanceira} />
+            <span title={TOOLTIP_COMISSAO}>
+              <Badge tone={comissao.tone}>{`Comissão: ${comissao.texto}`}</Badge>
+            </span>
           </>
         }
         actions={

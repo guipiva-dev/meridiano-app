@@ -59,9 +59,17 @@ export function ViagemPage() {
 
   const podeEditar = v.pode("viagem.editar");
   const abertas = (pendenciasQ.data ?? []).filter((p) => p.status === "aberta").length;
+  const reservasAtivas = viagem.reservas.filter((r) => r.status !== "cancelada").length;
+  const reservasTotal = viagem.reservas.length;
+  const rotuloReservas =
+    reservasTotal > reservasAtivas ? `Reservas (Ativas ${reservasAtivas} · Total ${reservasTotal})` : "Reservas";
   const tabs: Tab[] = [
     { id: "resumo", label: "Resumo" },
-    { id: "reservas", label: "Reservas", count: viagem.reservas.filter((r) => r.status !== "cancelada").length },
+    {
+      id: "reservas",
+      label: rotuloReservas,
+      count: reservasTotal > reservasAtivas ? undefined : reservasAtivas,
+    },
     ...(v.verValores ? [{ id: "financeiro", label: "Financeiro" }] : []),
     { id: "pendencias", label: "Pendências", count: abertas },
     { id: "documentos", label: "Documentos", count: anexosQ.data?.length },
