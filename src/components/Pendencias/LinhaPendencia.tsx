@@ -50,10 +50,10 @@ export function LinhaPendencia({
           {formatarData(p.dataPrevista)} · {p.origem === "automatica" ? "automática" : "manual"}
           {mostrarViagem && p.codigoViagem && ` · viagem ${p.codigoViagem}`}
           {p.responsavelNome && (
-            <>
-              {" · "}
-              <span className={s.resp}>{p.responsavelNome}</span>
-            </>
+            <span className={s.resp}>
+              <span className={s.sep}> · </span>
+              {p.responsavelNome}
+            </span>
           )}
         </span>
       </div>

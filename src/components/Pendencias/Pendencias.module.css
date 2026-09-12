@@ -108,10 +108,14 @@
   background: var(--color-bg-selected);
 }
 
-/* Contrato §4.5: abaixo de 1366 o responsável cai para a 2ª linha da descrição. */
+/* Contrato §4.5: abaixo de 1366 o responsável cai para a 2ª linha da descrição — sem o
+   " · " (que ficaria órfão no fim da 1ª linha), já que a quebra de linha já os separa. */
 @media (max-width: 1366px) {
   .resp {
     display: block;
+  }
+  .resp .sep {
+    display: none;
   }
 }
 

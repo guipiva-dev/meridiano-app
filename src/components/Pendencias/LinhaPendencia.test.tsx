@@ -27,14 +27,7 @@ function pendencia(over: Partial<PendenciaDto> = {}): PendenciaDto {
 
 function montar(p: PendenciaDto) {
   render(
-    <LinhaPendencia
-      p={p}
-      onConcluir={vi.fn()}
-      onAdiar={vi.fn()}
-      onEditar={vi.fn()}
-      onExcluir={vi.fn()}
-      podeEditar
-    />,
+    <LinhaPendencia p={p} onConcluir={vi.fn()} onAdiar={vi.fn()} onEditar={vi.fn()} onExcluir={vi.fn()} podeEditar />,
   );
 }
 
