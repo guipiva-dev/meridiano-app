@@ -52,6 +52,10 @@ export function GrupoPage() {
       void qc.invalidateQueries({ queryKey: ["grupos", "lista"] });
       void nav("/clientes/grupos");
     },
+    // Fecha o modal para o Alert de erro (abaixo do PageHeader) não ficar atrás do overlay.
+    onError: () => {
+      setConfirmarExclusao(false);
+    },
   });
 
   if (v.carregando) {

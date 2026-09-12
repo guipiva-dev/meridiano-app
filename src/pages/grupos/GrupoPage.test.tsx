@@ -220,10 +220,36 @@ test("Excluir grupo confirma, chama DELETE e volta para a lista", async () => {
 
   fireEvent.click(screen.getByRole("button", { name: "Excluir grupo" }));
   const dialogo = await screen.findByRole("dialog");
+  expect(chamadas.some((c) => c.method === "DELETE" && c.url === "/api/v1/grupos/g1")).toBe(false);
+
   fireEvent.click(within(dialogo).getByRole("button", { name: "Excluir" }));
 
   await waitFor(() => {
     expect(chamadas.some((c) => c.method === "DELETE" && c.url === "/api/v1/grupos/g1")).toBe(true);
   });
   expect(await screen.findByText("Lista de grupos")).toBeInTheDocument();
+});
+
+test("Excluir grupo com falha fecha o diálogo (Alert não fica atrás do overlay)", async () => {
+  montar();
+  await screen.findByDisplayValue("12.345.678/0001-99");
+
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    const method = init?.method ?? "GET";
+    chamadas.push({ method, url });
+    if (url === "/api/v1/grupos/g1" && method === "DELETE") {
+      return Promise.resolve(resposta(500, { codigo: "erro", detail: "Falha ao excluir" }));
+    }
+    if (url === "/api/v1/grupos/g1") return Promise.resolve(resposta(200, GRUPO));
+    return Promise.resolve(resposta(200, null));
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: "Excluir grupo" }));
+  const dialogo = await screen.findByRole("dialog");
+  fireEvent.click(within(dialogo).getByRole("button", { name: "Excluir" }));
+
+  await waitFor(() => {
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+  expect(await screen.findByText("Falha ao excluir")).toBeInTheDocument();
 });
