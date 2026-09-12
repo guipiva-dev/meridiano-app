@@ -82,6 +82,27 @@ test("clique com o mouse seleciona o texto todo: digitar 300 substitui, não con
   expect(screen.getByRole("status")).toHaveTextContent("300");
 });
 
+test("foco por Tab depois clique dentro do campo não suprime o reposicionamento do cursor", async () => {
+  const user = userEvent.setup();
+  render(<Harness inicial={10} />);
+  const input = screen.getByLabelText("Valor");
+  await user.tab();
+  expect(input).toHaveFocus();
+  const evento = new MouseEvent("mouseup", { bubbles: true, cancelable: true });
+  input.dispatchEvent(evento);
+  expect(evento.defaultPrevented).toBe(false);
+});
+
+test("clique que causa o foco ainda suprime o reposicionamento (select-all vence)", () => {
+  render(<Harness inicial={10} />);
+  const input = screen.getByLabelText("Valor");
+  input.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+  input.focus();
+  const evento = new MouseEvent("mouseup", { bubbles: true, cancelable: true });
+  input.dispatchEvent(evento);
+  expect(evento.defaultPrevented).toBe(true);
+});
+
 test("texto ambíguo (resto de digitação truncada tipo 0,00300) não vira 3.000 nem some: mantém valor anterior e marca erro", async () => {
   const user = userEvent.setup();
   render(<Harness inicial={12} />);

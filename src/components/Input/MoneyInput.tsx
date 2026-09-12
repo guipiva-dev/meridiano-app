@@ -38,7 +38,19 @@ function digitosParteInteira(t: string): number {
 }
 
 export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function MoneyInput(
-  { value, onChange, calculated, allowNegative = false, readOnly, className, onFocus, onBlur, onMouseUp, ...rest },
+  {
+    value,
+    onChange,
+    calculated,
+    allowNegative = false,
+    readOnly,
+    className,
+    onFocus,
+    onBlur,
+    onMouseDown,
+    onMouseUp,
+    ...rest
+  },
   ref,
 ) {
   const f = useField();
@@ -54,16 +66,21 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function
     ultimoEmitido.current = value;
     setEditando(true);
     setErro(null);
-    // Clique com mouse foca e, no mouseup nativo, reposiciona o cursor por cima da
-    // seleção abaixo — adia para o próximo frame e cancela esse reposicionamento.
-    acabouDeFocar.current = true;
     requestAnimationFrame(() => {
       e.target.select();
     });
     onFocus?.(e);
   }
+  function mouseDown(e: MouseEvent<HTMLInputElement>) {
+    // Só arma quando este clique é quem vai *causar* o foco (campo ainda não focado).
+    // Foco por Tab, ou clique num campo já focado (reposicionar o cursor à mão), não arma.
+    acabouDeFocar.current = document.activeElement !== e.currentTarget;
+    onMouseDown?.(e);
+  }
   function mouseUp(e: MouseEvent<HTMLInputElement>) {
     if (acabouDeFocar.current) {
+      // Mouseup nativo reposicionaria o cursor por cima da seleção agendada no focar() acima —
+      // cancela esse reposicionamento só para o clique que causou o foco.
       acabouDeFocar.current = false;
       e.preventDefault();
     }
@@ -118,6 +135,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function
         onChange={mudar}
         onFocus={focar}
         onBlur={sair}
+        onMouseDown={mouseDown}
         onMouseUp={mouseUp}
         className={cx(s.control, s.money, calculated && s.calculated, readOnly && s.readOnly, className)}
         {...rest}
