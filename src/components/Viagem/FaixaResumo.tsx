@@ -14,7 +14,13 @@ export interface ItemFaixa {
 }
 
 /** Versão de leitura da faixa de resumo (protótipo: "summary-strip"); TripSummary continua para o formulário. */
-export function FaixaResumo({ itens, extra }: { itens: ItemFaixa[]; extra?: { label: string; value: number } }) {
+export function FaixaResumo({
+  itens,
+  extra,
+}: {
+  itens: ItemFaixa[];
+  extra?: { label: string; value: number; tooltip?: string };
+}) {
   return (
     <div className={s.summaryStrip}>
       {itens.map((item, i) => (
@@ -38,7 +44,14 @@ export function FaixaResumo({ itens, extra }: { itens: ItemFaixa[]; extra?: { la
         <>
           <span className={s.sep} aria-hidden />
           <div className={cx(s.item, s.extra)}>
-            <small>{extra.label}</small>
+            <small>
+              {extra.label}
+              {extra.tooltip && (
+                <Tooltip text={extra.tooltip}>
+                  <CircleHelp size={16} aria-hidden />
+                </Tooltip>
+              )}
+            </small>
             <MoneyValue value={extra.value} />
           </div>
         </>
