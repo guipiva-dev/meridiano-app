@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { chavesAuditoria } from "@/api/auditoria";
@@ -9,6 +9,17 @@ import { chaveDasPendencias } from "@/components/Pendencias/chave";
 export type ModalViagem =
   | { tipo: "cancelarReserva" | "remarcar" | "nfse"; reserva: ReservaDto }
   | { tipo: "cancelarViagem" | "transferir" | "usarCredito" };
+
+/** Resposta de uma operação sobre a viagem: substitui a viagem em cache e derruba o que depende dela. */
+export function aplicarViagem(qc: QueryClient, id: string, dto: ViagemDto) {
+  qc.setQueryData(chaves.viagem(id), dto);
+  void qc.invalidateQueries({ queryKey: ["viagens", "lista"] });
+  void qc.invalidateQueries({ queryKey: chaveDasPendencias(id) });
+  void qc.invalidateQueries({ queryKey: chavesAuditoria.daViagem(id) });
+  void qc.invalidateQueries({ queryKey: chaves.creditos(id) });
+  // Histórico de alterações e serviços das reservas: chaves ["reservas", <id>, ...].
+  void qc.invalidateQueries({ queryKey: ["reservas"] });
+}
 
 /** Estado da página de detalhe: dados, permissões, tab (na URL) e modal aberto. */
 export function useViagem(id: string) {
@@ -56,15 +67,8 @@ export function useViagem(id: string) {
     });
   }
 
-  /** Resposta de uma operação: substitui a viagem em cache e derruba o que depende dela. */
   function aplicar(dto: ViagemDto) {
-    qc.setQueryData(chaves.viagem(id), dto);
-    void qc.invalidateQueries({ queryKey: ["viagens", "lista"] });
-    void qc.invalidateQueries({ queryKey: chaveDasPendencias(id) });
-    void qc.invalidateQueries({ queryKey: chavesAuditoria.daViagem(id) });
-    void qc.invalidateQueries({ queryKey: chaves.creditos(id) });
-    // Histórico de alterações e serviços das reservas: chaves ["reservas", <id>, ...].
-    void qc.invalidateQueries({ queryKey: ["reservas"] });
+    aplicarViagem(qc, id, dto);
   }
 
   async function recarregar() {

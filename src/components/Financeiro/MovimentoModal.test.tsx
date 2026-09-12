@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ValidationError } from "@/api/errors";
 import type * as FinanceiroApi from "@/api/financeiro";
 import type { MovimentoDto, MovimentoRequest } from "@/api/financeiro";
 import type { ReservaDto, ViagemDto } from "@/api/viagens";
@@ -160,4 +161,22 @@ test("reserva cancelada entra na lista quando o tipo é estorno/reembolso (viage
   await user.selectOptions(screen.getAllByLabelText(/^Tipo/)[1]!, "reembolso_cliente");
   expect(within(semRestricao!).getAllByRole("option")).toHaveLength(1);
   expect(semRestricao).toHaveValue("r1");
+});
+
+test("422 recebimento_acima_esperado mostra o aviso e a checkbox manda confirmarExcedente", async () => {
+  const user = userEvent.setup();
+  lancar
+    .mockRejectedValueOnce(
+      new ValidationError(422, "recebimento_acima_esperado", "Valor acima do esperado", { excedente: 30 }),
+    )
+    .mockResolvedValueOnce(movimento());
+  render(<MovimentoModal open viagem={viagem()} onClose={vi.fn()} onSalvo={vi.fn()} />);
+
+  await user.click(screen.getByRole("button", { name: "Lançar movimento" }));
+
+  expect(await screen.findByText("R$ 30,00 acima do esperado")).toBeInTheDocument();
+  await user.click(screen.getByRole("checkbox", { name: "Registrar mesmo assim" }));
+  await user.click(screen.getByRole("button", { name: "Lançar movimento" }));
+
+  expect(lancar).toHaveBeenLastCalledWith(expect.objectContaining({ confirmarExcedente: true }), undefined);
 });

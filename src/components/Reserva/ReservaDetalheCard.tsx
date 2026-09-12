@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useId, useState } from "react";
 import { useParams } from "react-router";
-import { chavesAuditoria } from "@/api/auditoria";
 import { mensagemDeErro } from "@/api/http";
 import {
   chaves,
@@ -15,11 +14,11 @@ import {
 import { Button, MoneyValue } from "@/components";
 import { Alert, StatusBadge } from "@/components/display";
 import { Skeleton } from "@/components/feedback";
-import { chaveDasPendencias } from "@/components/Pendencias/chave";
 import { ListaServicos } from "@/components/servicos";
 import { useOperacao } from "@/components/ViagemOperacoes/useOperacao";
 import { formatarCarimbo, formatarData } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
+import { aplicarViagem } from "@/pages/viagens/detalhe/useViagem";
 import r from "./Reserva.module.css";
 import s from "./ReservaDetalhe.module.css";
 import { ResultSummary } from "./ResultSummary";
@@ -112,13 +111,7 @@ export function ReservaDetalheCard({
     setErroStatusLocal(null);
     const dto = await status.enviar({ status: emitida ? "pendente" : "emitida", versao: viagem.versao });
     if (!dto) return;
-    // Mesmo conjunto que `useViagem.aplicar` derruba (fonte da lista): manter os dois em sincronia.
-    qc.setQueryData(chaves.viagem(viagemId), dto);
-    void qc.invalidateQueries({ queryKey: ["viagens", "lista"] });
-    void qc.invalidateQueries({ queryKey: chaveDasPendencias(viagemId) });
-    void qc.invalidateQueries({ queryKey: chavesAuditoria.daViagem(viagemId) });
-    void qc.invalidateQueries({ queryKey: chaves.creditos(viagemId) });
-    void qc.invalidateQueries({ queryKey: ["reservas"] });
+    aplicarViagem(qc, viagemId, dto);
   }
   const servicos = reserva.tiposServico.map((t) => ROTULO_SERVICO[t]).join(" · ");
   const formas = reserva.formasPagamento.map((f) => ROTULO_FORMA[f]).join(" · ");

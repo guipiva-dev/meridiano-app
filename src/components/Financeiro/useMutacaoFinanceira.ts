@@ -64,7 +64,8 @@ export function useMutacaoFinanceira<TArgs, TRes>(
           setErroBloco(ERRO_PERIODO_FECHADO);
         } else if (erro.codigo === "recebimento_acima_esperado") {
           const valor = erro.extensions.excedente;
-          setExcedente(typeof valor === "number" ? valor : 0);
+          if (typeof valor === "number" && valor > 0) setExcedente(valor);
+          else setErroBloco(erro.detalhe);
         } else if (erro.codigo === "motivo_obrigatorio") {
           // Primeira recusa só revela o campo; erro embaixo dele só depois que o usuário tentou com motivo.
           if (precisaMotivo) setErros({ motivo: erro.detalhe });

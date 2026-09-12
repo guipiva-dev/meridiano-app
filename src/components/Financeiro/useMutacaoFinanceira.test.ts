@@ -87,3 +87,17 @@ test("409 vira conflito e limpar reseta tudo", async () => {
   expect(result.current.motivo).toBe("");
   expect(result.current.excedente).toBeNull();
 });
+
+test("422 recebimento_acima_esperado sem excedente numérico vira erro de bloco, nunca silêncio", async () => {
+  const executar = vi
+    .fn()
+    .mockRejectedValue(new ValidationError(422, "recebimento_acima_esperado", "Valor acima do esperado", {}));
+  const { result } = renderHook(() => useMutacaoFinanceira(executar, CAMPO_POR_CODIGO_FIN));
+
+  await act(async () => {
+    await result.current.enviar({});
+  });
+
+  expect(result.current.excedente).toBeNull();
+  expect(result.current.erroBloco).toBe("Valor acima do esperado");
+});

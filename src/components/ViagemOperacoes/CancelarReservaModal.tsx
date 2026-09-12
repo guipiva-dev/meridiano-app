@@ -23,6 +23,7 @@ const MAPA: Record<string, string> = {
   valor_invalido: "valorReembolso",
   credito_valor_invalido: "credito.valor",
   credito_cliente_invalido: "credito.clienteId",
+  credito_validade_passada: "credito.validade",
 };
 
 const DESFECHO_PADRAO: DesfechoValue = {

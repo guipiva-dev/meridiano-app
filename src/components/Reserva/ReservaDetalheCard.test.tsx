@@ -2,9 +2,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
+import { chavesAuditoria } from "@/api/auditoria";
 import { ConflictError, ValidationError } from "@/api/errors";
 import type * as ViagensApi from "@/api/viagens";
-import { chavesAuditoria } from "@/api/auditoria";
 import { chaves, type ReservaDto, type StatusReservaRequest, type ViagemDto } from "@/api/viagens";
 import { chaveDasPendencias } from "@/components/Pendencias/chave";
 import { ReservaDetalheCard } from "./ReservaDetalheCard";
@@ -252,7 +252,7 @@ test("422 ao mudar status aparece no card", async () => {
   expect(await screen.findByText("Reserva cancelada")).toBeInTheDocument();
 });
 
-test("mudança de status invalida o mesmo conjunto que useViagem.aplicar", async () => {
+test("mudança de status aplica a viagem devolvida (aplicarViagem)", async () => {
   const user = userEvent.setup();
   const r = reservaDto({ status: "pendente" });
   definirStatusReserva.mockResolvedValue(viagemDto({ ...r, status: "emitida" }));

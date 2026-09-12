@@ -19,6 +19,7 @@
 }
 .linha1 {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
 }
@@ -44,10 +45,4 @@
 /* PessoaPage / DadosPessoaForm */
 .mono {
   font: var(--type-code);
-}
-
-@media (max-width: 1024px) {
-  .linha1 {
-    flex-wrap: wrap;
-  }
 }

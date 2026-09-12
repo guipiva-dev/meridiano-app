@@ -131,7 +131,9 @@ test("login autenticado entra numa rota protegida por RequireAuth sem cair de vo
 
 // Homologação: submit vazio mostrava "Campos obrigatórios ausentes" (genérico da API).
 test("campos vazios: erro por campo, sem chamar a API", async () => {
-  const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(() => Promise.resolve(new Response(null, { status: 401 })));
+  const fetchSpy = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() => Promise.resolve(new Response(null, { status: 401 })));
   montar();
   const user = userEvent.setup();
   await user.click(await screen.findByRole("button", { name: "Entrar" }));
@@ -143,10 +145,13 @@ test("campos vazios: erro por campo, sem chamar a API", async () => {
 test("429 conta_bloqueada mostra 'Muitas tentativas. Tente em N min.'", async () => {
   vi.spyOn(globalThis, "fetch").mockImplementation(() =>
     Promise.resolve(
-      new Response(JSON.stringify({ status: 429, codigo: "conta_bloqueada", detail: "Conta bloqueada", tenteEm: 300 }), {
-        status: 429,
-        headers: { "content-type": "application/problem+json" },
-      }),
+      new Response(
+        JSON.stringify({ status: 429, codigo: "conta_bloqueada", detail: "Conta bloqueada", tenteEm: 300 }),
+        {
+          status: 429,
+          headers: { "content-type": "application/problem+json" },
+        },
+      ),
     ),
   );
   montar();

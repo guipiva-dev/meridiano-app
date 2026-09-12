@@ -7,6 +7,7 @@ import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
 import { apresentacaoStatus } from "@/dominio/status";
 import { hojeIso } from "@/lib/datas";
+import { AvisoExcedente } from "./AvisoExcedente";
 import s from "./Financeiro.module.css";
 import { MotivoField } from "./MotivoField";
 import { CAMPO_POR_CODIGO_FIN, OPCOES_FORMA } from "./mapaErrosFinanceiro";
@@ -44,6 +45,7 @@ export function MovimentoModal({
   const [data, setData] = useState(movimento?.dataMovimento ?? hojeIso());
   const [forma, setForma] = useState<FormaPagamentoFin | "">(movimento?.formaPagamento ?? "");
   const [observacao, setObservacao] = useState(movimento?.observacao ?? "");
+  const [confirmarExcedente, setConfirmarExcedente] = useState(false);
   const m = useMutacaoFinanceira<MovimentoRequest, MovimentoDto>(
     (req, motivo) =>
       movimento ? financeiroApi.corrigir(movimento.id, req, motivo) : financeiroApi.lancar(req, motivo),
@@ -51,6 +53,7 @@ export function MovimentoModal({
   );
 
   function fechar() {
+    setConfirmarExcedente(false);
     m.limpar();
     onClose();
   }
@@ -64,6 +67,7 @@ export function MovimentoModal({
       formaPagamento: forma === "" ? null : forma,
       observacao: observacao.trim() || null,
       versao: movimento?.versao,
+      ...(confirmarExcedente && { confirmarExcedente: true }),
     });
     if (dto) {
       onSalvo(dto);
@@ -124,6 +128,7 @@ export function MovimentoModal({
         <Field label="Valor" required helper="Saídas são gravadas como negativo" error={m.erros.valor}>
           <MoneyInput value={valor} onChange={setValor} />
         </Field>
+        <AvisoExcedente excedente={m.excedente} confirmado={confirmarExcedente} onChange={setConfirmarExcedente} />
         <Field label="Data" required error={m.erros.data}>
           <DateInput
             value={data}
