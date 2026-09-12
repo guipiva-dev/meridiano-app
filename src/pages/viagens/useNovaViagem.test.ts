@@ -1,12 +1,7 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, renderHook, waitFor } from "@testing-library/react";
-import { createElement, type ReactNode } from "react";
+import { act, waitFor } from "@testing-library/react";
 import type * as ReactRouter from "react-router";
-import { MemoryRouter } from "react-router";
-import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
-import { useNovaViagem } from "./useNovaViagem";
+import { adiarRespostas, chamadas, montar, navegou, reiniciar, stubs, viagemDto } from "./useNovaViagem.harness";
 
-const navegou: string[] = [];
 vi.mock("react-router", async (original) => {
   const mod = await original<typeof ReactRouter>();
   return {
@@ -18,121 +13,7 @@ vi.mock("react-router", async (original) => {
   };
 });
 
-const FORNECEDORES = [
-  { id: "f1", nome: "CVC", tipo: "operadora", percentualComissaoPadrao: 10, prazoComissaoDias: 30, ativo: true },
-];
-const VENDEDORES = [{ id: "u1", nome: "Ana", perfil: "vendedor_externo", geraRepasse: true, percentualPadrao: 20 }];
-const AGENCIA = { nome: "Viva", taxaServicoPadrao: 0 };
-
-function viagemDto(versao: string) {
-  return {
-    id: "v9",
-    codigo: "VG-2026-0042",
-    versao,
-    destino: "Lisboa",
-    tipo: "internacional",
-    dataIda: "2026-04-18",
-    dataVolta: null,
-    vendedorId: "u1",
-    vendedorNome: "Ana",
-    agenteId: "u1",
-    ocasiao: null,
-    observacoes: null,
-    cancelada: false,
-    faseOperacional: "em_emissao",
-    faseFinanceira: "a_receber",
-    passageiros: [{ clienteId: "c1", nome: "Carlos", titular: true }],
-    reservas: [
-      {
-        id: "r1",
-        versao: "3",
-        fornecedorId: "f1",
-        fornecedorNome: "CVC",
-        localizador: "K7X2PQ",
-        dataCompra: "2026-03-14",
-        status: "pendente",
-        tiposServico: [],
-        formasPagamento: [],
-        ravClienteModo: "retido_agencia",
-        fluxoPagamento: "cliente_paga_operadora",
-        nfseStatus: "nao_precisa",
-        observacoes: null,
-        dataPrevistaComissao: null,
-        valorTotal: 3000,
-        valorCliente: 3200,
-      },
-    ],
-  };
-}
-
-interface Chamada {
-  url: string;
-  metodo: string;
-  corpo: unknown;
-}
-const chamadas: Chamada[] = [];
-let respostaPost: { status: number; body: unknown } = { status: 201, body: null };
-let respostaGetViagem: () => unknown = () => viagemDto("7");
-
-function resposta(status: number, body: unknown) {
-  return {
-    ok: status < 300,
-    status,
-    headers: { get: () => "application/json" },
-    json: () => Promise.resolve(body),
-  } as unknown as Response;
-}
-
-function instalarFetch() {
-  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
-    const metodo = init?.method ?? "GET";
-    const corpo: unknown = typeof init?.body === "string" ? JSON.parse(init.body) : undefined;
-    chamadas.push({ url, metodo, corpo });
-    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
-    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, VENDEDORES));
-    if (url.includes("/agencia")) return Promise.resolve(resposta(200, AGENCIA));
-    if (url.includes("/reservas/duplicada")) return Promise.resolve(resposta(200, null));
-    if (url.includes("/viagens/semelhantes")) return Promise.resolve(resposta(200, []));
-    if (metodo === "POST" && url.endsWith("/viagens")) {
-      return Promise.resolve(resposta(respostaPost.status, respostaPost.body));
-    }
-    if (metodo === "PUT") return Promise.resolve(resposta(200, viagemDto("8")));
-    if (metodo === "GET" && /\/viagens\/[^/?]+$/.test(url)) return Promise.resolve(resposta(200, respostaGetViagem()));
-    return Promise.resolve(resposta(404, { codigo: "nao_encontrado", detail: "?" }));
-  });
-}
-
-const auth: AuthValue = {
-  me: { usuarioId: "u1", agenciaId: "a1", perfil: "dono", nome: "Ana", permissoes: ["viagem.ver_resultado"] },
-  carregando: false,
-  pode: () => true,
-  entrar: () => Promise.resolve(),
-  sair: () => Promise.resolve(),
-  recarregar: () => Promise.resolve(),
-};
-
-function montar(id?: string, caminho = "/") {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const wrapper = ({ children }: { children: ReactNode }) =>
-    createElement(
-      QueryClientProvider,
-      { client: qc },
-      createElement(
-        AuthContext.Provider,
-        { value: auth },
-        createElement(MemoryRouter, { initialEntries: [caminho] }, children),
-      ),
-    );
-  return renderHook(() => useNovaViagem(id), { wrapper });
-}
-
-beforeEach(() => {
-  chamadas.length = 0;
-  navegou.length = 0;
-  respostaPost = { status: 201, body: null };
-  respostaGetViagem = () => viagemDto("7");
-  instalarFetch();
-});
+beforeEach(reiniciar);
 
 afterEach(() => {
   vi.useRealTimers();
@@ -173,7 +54,10 @@ test("editar a comissão desliga a sugestão e mudar o total não a sobrescreve"
     result.current.atualizarReserva(0, { fornecedorId: "f1" });
   });
   act(() => {
-    result.current.atualizarReserva(0, { valorComissao: 250, comissaoSugerida: false });
+    result.current.atualizarReserva(0, {
+      valorComissao: 250,
+      comissaoSugerida: false,
+    });
   });
   act(() => {
     result.current.atualizarReserva(0, { valorTotal: 4000 });
@@ -185,7 +69,7 @@ test("editar a comissão desliga a sugestão e mudar o total não a sobrescreve"
 });
 
 test("salvar cria a viagem com o request certo e navega para a edição", async () => {
-  respostaPost = {
+  stubs.respostaPost = {
     status: 201,
     body: {
       id: "v9",
@@ -221,7 +105,10 @@ test("salvar cria a viagem com o request certo e navega para a edição", async 
     result.current.adicionarReserva();
   });
   act(() => {
-    result.current.atualizarReserva(0, { fornecedorId: "f1", valorCliente: 3200 });
+    result.current.atualizarReserva(0, {
+      fornecedorId: "f1",
+      valorCliente: 3200,
+    });
   });
 
   let ok = false;
@@ -239,13 +126,27 @@ test("salvar cria a viagem com o request certo e navega para a edição", async 
     agenteId: "u1",
     ocasiao: null,
     passageiros: [{ clienteId: "c1", titular: true }],
-    reservas: [{ fornecedorId: "f1", localizador: null, valorCliente: 3200, valorTotal: 0, valorComissao: 0 }],
+    reservas: [
+      {
+        fornecedorId: "f1",
+        localizador: null,
+        valorCliente: 3200,
+        valorTotal: 0,
+        valorComissao: 0,
+      },
+    ],
   });
   expect(navegou).toContain("/viagens/v9/editar");
 });
 
 test("422 titular_obrigatorio vira erro do campo passageiros", async () => {
-  respostaPost = { status: 422, body: { codigo: "titular_obrigatorio", detail: "Marque o passageiro titular" } };
+  stubs.respostaPost = {
+    status: 422,
+    body: {
+      codigo: "titular_obrigatorio",
+      detail: "Marque o passageiro titular",
+    },
+  };
   const { result } = montar();
   await waitFor(() => {
     expect(result.current.agencia).not.toBeNull();
@@ -317,7 +218,11 @@ test("R2: reserva cancelada não é enviada no PUT, só a emitida", async () => 
     result.current.adicionarReserva();
   });
   act(() => {
-    result.current.atualizarReserva(1, { fornecedorId: "f1", status: "emitida", valorCliente: 500 });
+    result.current.atualizarReserva(1, {
+      fornecedorId: "f1",
+      status: "emitida",
+      valorCliente: 500,
+    });
   });
 
   await act(async () => {
@@ -331,7 +236,7 @@ test("R2: reserva cancelada não é enviada no PUT, só a emitida", async () => 
 });
 
 test("?reserva=<id> abre só aquele card na carga inicial da edição", async () => {
-  respostaGetViagem = () => {
+  stubs.respostaGetViagem = () => {
     const base = viagemDto("7");
     return {
       ...base,
@@ -349,21 +254,6 @@ test("?reserva=<id> abre só aquele card na carga inicial da edição", async ()
   expect(reservas.find((r) => r.id === "r2")?.aberta).toBe(true);
 });
 
-/** Segura as respostas de `padrao` até o teste resolvê-las, na ordem que quiser. */
-function adiarRespostas(padrao: string) {
-  const base = globalThis.fetch;
-  const pendentes: ((body: unknown) => void)[] = [];
-  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
-    if (!url.includes(padrao)) return base(url, init);
-    return new Promise<Response>((res) => {
-      pendentes.push((body) => {
-        res(resposta(200, body));
-      });
-    });
-  });
-  return pendentes;
-}
-
 test("resposta antiga que chega depois não sobrescreve semelhante nem duplicada da entrada atual", async () => {
   vi.useFakeTimers();
   const semelhantes = adiarRespostas("/viagens/semelhantes");
@@ -375,7 +265,10 @@ test("resposta antiga que chega depois não sobrescreve semelhante nem duplicada
   for (const n of [1, 2]) {
     act(() => {
       result.current.form.setValue("passageiros", [{ clienteId: `c${n}`, nome: "X", titular: true }]);
-      result.current.atualizarReserva(0, { fornecedorId: "f1", localizador: `LOC${n}` });
+      result.current.atualizarReserva(0, {
+        fornecedorId: "f1",
+        localizador: `LOC${n}`,
+      });
     });
     await act(() => vi.advanceTimersByTimeAsync(500));
   }
@@ -388,4 +281,114 @@ test("resposta antiga que chega depois não sobrescreve semelhante nem duplicada
   });
   expect(result.current.semelhante?.id).toBe("vB");
   expect(result.current.duplicadas[0]).toBeNull();
+});
+
+test("erro local some ao corrigir o campo; erro da API some ao alterar o campo", async () => {
+  stubs.respostaPost = {
+    status: 422,
+    body: {
+      codigo: "titular_obrigatorio",
+      detail: "Marque o passageiro titular",
+    },
+  };
+  const { result } = montar();
+  await waitFor(() => {
+    expect(result.current.agencia).not.toBeNull();
+  });
+
+  await act(async () => {
+    await result.current.salvar();
+  });
+  expect(result.current.erros.passageiros).toBe("Adicione ao menos um passageiro");
+  expect(result.current.erros.destino).toBe("Informe o destino");
+
+  act(() => {
+    result.current.form.setValue("passageiros", [{ clienteId: "c1", nome: "Carlos", titular: false }]);
+  });
+  expect(result.current.erros.passageiros).toBeUndefined();
+  expect(result.current.erros.destino).toBe("Informe o destino");
+
+  act(() => {
+    result.current.form.setValue("destino", "Lisboa");
+  });
+  await act(async () => {
+    await result.current.salvar();
+  });
+  expect(result.current.erros.passageiros).toBe("Marque o passageiro titular");
+
+  act(() => {
+    result.current.form.setValue("passageiros", [{ clienteId: "c1", nome: "Carlos", titular: true }]);
+  });
+  expect(result.current.erros.passageiros).toBeUndefined();
+});
+
+test("volta antes da ida falha localmente, sem chamar a API", async () => {
+  const { result } = montar();
+  await waitFor(() => {
+    expect(result.current.agencia).not.toBeNull();
+  });
+  act(() => {
+    result.current.form.setValue("destino", "Lisboa");
+    result.current.form.setValue("passageiros", [{ clienteId: "c1", nome: "Carlos", titular: true }]);
+    result.current.form.setValue("dataIda", "2026-04-18");
+    result.current.form.setValue("dataVolta", "2026-04-10");
+  });
+
+  let ok = true;
+  await act(async () => {
+    ok = await result.current.salvar();
+  });
+
+  expect(ok).toBe(false);
+  expect(result.current.erros.dataVolta).toBe("Volta antes da ida");
+  expect(chamadas.some((c) => c.metodo === "POST")).toBe(false);
+});
+
+test("aviso dispensado volta quando as datas passam a se sobrepor, mas não sem sobreposição", async () => {
+  vi.useFakeTimers();
+  const semelhantes = adiarRespostas("/viagens/semelhantes");
+  const { result } = montar();
+  const item = {
+    id: "vA",
+    codigo: "VG-A",
+    destino: "Lisboa",
+    dataIda: null,
+    dataVolta: null,
+    faseOperacional: "em_emissao",
+  };
+
+  act(() => {
+    result.current.form.setValue("passageiros", [{ clienteId: "c1", nome: "X", titular: true }]);
+  });
+  await act(() => vi.advanceTimersByTimeAsync(500));
+  await act(async () => {
+    semelhantes[0]!([{ ...item, sobrepoe: false }]);
+    await vi.advanceTimersByTimeAsync(0);
+  });
+  expect(result.current.semelhante?.id).toBe("vA");
+
+  act(() => {
+    result.current.dispensarSemelhante();
+  });
+  expect(result.current.semelhante).toBeNull();
+
+  act(() => {
+    result.current.form.setValue("dataIda", "2026-04-18");
+  });
+  await act(() => vi.advanceTimersByTimeAsync(500));
+  await act(async () => {
+    semelhantes[1]!([{ ...item, sobrepoe: false }]);
+    await vi.advanceTimersByTimeAsync(0);
+  });
+  expect(result.current.semelhante).toBeNull();
+
+  act(() => {
+    result.current.form.setValue("dataVolta", "2026-04-25");
+  });
+  await act(() => vi.advanceTimersByTimeAsync(500));
+  await act(async () => {
+    semelhantes[2]!([{ ...item, sobrepoe: true }]);
+    await vi.advanceTimersByTimeAsync(0);
+  });
+  expect(result.current.semelhante?.sobrepoe).toBe(true);
 });

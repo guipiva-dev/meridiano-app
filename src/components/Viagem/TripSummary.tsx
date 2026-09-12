@@ -75,7 +75,7 @@ export function TripSummary({
       {mostrarResultado ? (
         <>
           <div className={s.item}>
-            <small>Comissão da vendedora</small>
+            <small>Comissão do vendedor</small>
             <MoneyValue value={repasseValor} />
           </div>
           <span className={s.sep} aria-hidden />
@@ -87,7 +87,7 @@ export function TripSummary({
           <div className={s.item}>
             <small>
               Resultado da viagem{" "}
-              <Tooltip text="Receita das reservas − comissão da vendedora − despesas vinculadas">
+              <Tooltip text="Receita das reservas − comissão do vendedor − despesas vinculadas">
                 <CircleHelp size={16} aria-hidden />
               </Tooltip>
             </small>

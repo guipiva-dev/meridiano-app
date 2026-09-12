@@ -26,6 +26,7 @@ export function NovaViagemPage() {
   const reservas = v.form.watch("reservas");
   const repasseValor = v.form.watch("repasseValor");
   const titular = v.form.watch("passageiros").find((p) => p.titular);
+  const destino = v.form.watch("destino");
   const modalAberto = pessoaAberta || fornecedorPara !== null;
   const abertaIndice = reservas.reduce((acc, r, i) => (r.aberta ? i : acc), -1);
   const verResultado = pode("viagem.ver_resultado");
@@ -35,7 +36,10 @@ export function NovaViagemPage() {
   const vendedorNome = v.vendedorSelecionado?.nome ?? v.viagem?.vendedorNome;
   const partes: string[] = [];
   if (titular) partes.push(`Titular: ${titular.nome}`);
-  if (vendedorNome) partes.push(`Vendedor(a): ${vendedorNome}`);
+  if (vendedorNome) partes.push(`Vendedor: ${vendedorNome}`);
+
+  const titulo =
+    id && v.viagem ? [titular?.nome, destino.trim()].filter(Boolean).join(" · ") || v.viagem.codigo : "Nova viagem";
 
   useAtalho("ctrl+s", () => {
     void v.salvar();
@@ -60,7 +64,7 @@ export function NovaViagemPage() {
   return (
     <Page dirty={dirty} titulo={v.viagem?.codigo ?? "Nova viagem"} onSalvarESair={v.salvar}>
       <PageHeader
-        title="Nova viagem"
+        title={titulo}
         subtitle={partes.length > 0 ? partes.join(" · ") : undefined}
         meta={v.viagem ? <Badge tone="neutral">{v.viagem.codigo}</Badge> : undefined}
         status={<StatusBadge entidade="fase_viagem" valor={v.viagem?.faseOperacional ?? "sem_reserva"} />}

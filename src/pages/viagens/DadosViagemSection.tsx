@@ -86,7 +86,7 @@ export function DadosViagemSection({
       </Field>
       {mostrarRepasse && (
         <Field
-          label="Comissão da vendedora"
+          label="Comissão do vendedor"
           className="span-2"
           tooltip="Valor definido pelo dono. Só aparece para vendedor que gera repasse."
           helper={repasseSugerido === null ? undefined : `Sugerido: ${formatarDinheiro(repasseSugerido)}`}
