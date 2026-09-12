@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
 import { reservaVazia } from "@/components/reserva";
@@ -138,6 +138,38 @@ test("ALT-01: salvar com reserva sem fornecedor não chama a API e mostra o erro
 
   expect(await screen.findByText("Escolha o fornecedor")).toBeInTheDocument();
   expect(urls.some((u) => u.startsWith("POST"))).toBe(false);
+});
+
+test("ALT-01: com duas reservas, só a que está sem fornecedor mostra o erro após salvar", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+
+  fireEvent.keyDown(window, { key: "Enter", ctrlKey: true });
+  await screen.findByRole("region", { name: /Reserva 1/ });
+  fireEvent.keyDown(window, { key: "Enter", ctrlKey: true });
+  const reserva2 = await screen.findByRole("region", { name: /Reserva 2/ });
+  fireEvent.change(within(reserva2).getByLabelText("Fornecedor"), { target: { value: "f1" } });
+
+  fireEvent.click(screen.getByRole("button", { name: "Salvar viagem" }));
+
+  expect(await screen.findAllByText("Escolha o fornecedor")).toHaveLength(1);
+  expect(within(reserva2).queryByText("Escolha o fornecedor")).toBeNull();
+});
+
+test("ALT-01: erro do fornecedor some ao escolher o fornecedor na reserva que estava com erro", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+
+  fireEvent.keyDown(window, { key: "Enter", ctrlKey: true });
+  const reserva1 = await screen.findByRole("region", { name: /Reserva 1/ });
+  fireEvent.click(screen.getByRole("button", { name: "Salvar viagem" }));
+  await screen.findByText("Escolha o fornecedor");
+
+  fireEvent.change(within(reserva1).getByLabelText("Fornecedor"), { target: { value: "f1" } });
+
+  await waitFor(() => {
+    expect(screen.queryByText("Escolha o fornecedor")).toBeNull();
+  });
 });
 
 test("ALT-13: Fechar sem viagem existente navega para a lista de viagens", async () => {

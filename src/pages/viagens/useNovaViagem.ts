@@ -313,18 +313,22 @@ export function useNovaViagem(id: string | undefined) {
     if (isDirty) marcarSujo();
   }, [isDirty, marcarSujo]);
 
+  // ALT-01: computado uma vez a partir do valor ao vivo do form; reusado tanto para o bloqueio de `salvar` quanto para a exibição.
+  const problemasPorReserva = useMemo(
+    () => reservas.map((r) => (r.status === "cancelada" ? {} : validarReserva(r))),
+    [reservas],
+  );
+
   const salvar = useCallback(async () => {
     const dados = form.getValues();
     const problemas = validar(dados);
-    const temErroReserva = dados.reservas.some(
-      (r) => r.status !== "cancelada" && Object.keys(validarReserva(r)).length > 0,
-    );
+    const temErroReserva = problemasPorReserva.some((p) => Object.keys(p).length > 0);
     setLocais(problemas);
     setValoresAoSalvar(dados);
     setTentouSalvarReserva(true);
     if (Object.keys(problemas).length > 0 || temErroReserva) return false;
     return executar(dados);
-  }, [form, executar]);
+  }, [form, executar, problemasPorReserva]);
 
   // Recarregar (botão do 409) troca o form pela versão do servidor: o erro exibido morre junto.
   const recarregar = useCallback(async () => {
@@ -352,10 +356,7 @@ export function useNovaViagem(id: string | undefined) {
   );
   const erroCarga = viagemQ.isError ? mensagemDeErro(viagemQ.error) : null;
   // ALT-01: ao vivo a partir da 1ª tentativa de salvar — soma sozinha ao corrigir o campo, sem precisar salvar de novo.
-  const errosReservas = useMemo(
-    () => (tentouSalvarReserva ? reservas.map((r) => (r.status === "cancelada" ? {} : validarReserva(r))) : []),
-    [tentouSalvarReserva, reservas],
-  );
+  const errosReservas = tentouSalvarReserva ? problemasPorReserva : [];
 
   const receitaPrevista = somarReservas(reservas).receitaPrevista;
   const repasseSugerido =
