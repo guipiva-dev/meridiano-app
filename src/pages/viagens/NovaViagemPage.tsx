@@ -36,7 +36,7 @@ export function NovaViagemPage() {
   const vendedorNome = v.vendedorSelecionado?.nome ?? v.viagem?.vendedorNome;
   const editando = Boolean(id && v.viagem);
   const titulo = editando
-    ? [titular?.nome, destino.trim()].filter(Boolean).join(" · ") || v.viagem?.codigo
+    ? [titular?.nome, destino.trim()].filter(Boolean).join(" · ") || (v.viagem?.codigo ?? "Nova viagem")
     : "Nova viagem";
   const partes: string[] = [];
   if (titular && !editando) partes.push(`Titular: ${titular.nome}`);
