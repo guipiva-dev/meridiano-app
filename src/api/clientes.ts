@@ -180,6 +180,7 @@ export const clientesApi = {
   obter: (id: string) => api.get<ClienteDto>(`/clientes/${id}`),
   criar: (c: ClienteRequest) => api.post<ClienteDto>("/clientes", c),
   atualizar: (id: string, c: ClienteRequest) => api.put<ClienteDto>(`/clientes/${id}`, c),
+  excluir: (id: string) => api.delete(`/clientes/${id}`),
   viagens: (id: string) => api.get<ViagemDaPessoaDto[]>(`/clientes/${id}/viagens`),
   documentos: (id: string) => api.get<DocumentoDto[]>(`/clientes/${id}/documentos`),
   criarDocumento: (id: string, d: DocumentoRequest) => api.post<DocumentoDto>(`/clientes/${id}/documentos`, d),
