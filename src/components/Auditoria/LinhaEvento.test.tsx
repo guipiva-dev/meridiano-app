@@ -61,3 +61,9 @@ test("evento de acesso usa o ícone de olho (via classe/role acessível não vis
   expect(screen.getByText(/Ana Paula — Visualizou o passaporte de Lúcia Mendes/)).toBeInTheDocument();
   expect(screen.getByText("documento sensível · LGPD")).toBeInTheDocument();
 });
+
+test("subtítulo com enum cru sai traduzido", () => {
+  montar(evento({ tabela: "movimento_financeiro", titulo: "Movimento lançado", subtitulo: "pagamento_fornecedor" }));
+  expect(screen.getByText("Pagamento ao fornecedor")).toBeInTheDocument();
+  expect(screen.queryByText("pagamento_fornecedor")).toBeNull();
+});

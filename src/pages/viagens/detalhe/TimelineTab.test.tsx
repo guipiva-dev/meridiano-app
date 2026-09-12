@@ -77,3 +77,26 @@ test("evento sem alterações não mostra Ver detalhes", async () => {
   await screen.findByText("Viagem criada");
   expect(screen.queryByText("Ver detalhes")).toBeNull();
 });
+
+test("subtítulo e campos com enum cru saem traduzidos; `valor` sai em reais", async () => {
+  montar([
+    {
+      id: 3,
+      tabela: "movimento_financeiro",
+      registroId: "m1",
+      acao: "INSERT",
+      titulo: "Movimento lançado",
+      subtitulo: "pagamento_fornecedor",
+      alteracoes: { tipo: { de: null, para: "pagamento_fornecedor" }, valor: { de: null, para: -1550 } },
+      motivo: null,
+      usuarioNome: "Ana Paula",
+      criadoEm: "2026-03-14T09:30:00+00:00",
+    },
+  ]);
+  await screen.findByText("Movimento lançado");
+  fireEvent.click(screen.getByText("Ver detalhes"));
+  expect(screen.getAllByText("Pagamento ao fornecedor")).toHaveLength(2); // subtítulo + tabela
+  expect(screen.getByRole("rowheader", { name: "tipo" }).closest("tr")).toHaveTextContent("Pagamento ao fornecedor");
+  expect(screen.getByRole("rowheader", { name: "valor" }).closest("tr")).toHaveTextContent("−R$ 1.550,00");
+  expect(screen.queryByText("pagamento_fornecedor")).toBeNull();
+});

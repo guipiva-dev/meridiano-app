@@ -8,7 +8,7 @@ import { FaixaResumo, type ItemFaixa } from "@/components/viagem";
 import { formatarData } from "@/lib/datas";
 import s from "./Viagem.module.css";
 
-const TOOLTIP_RESULTADO = "Receita das reservas − comissão da vendedora − despesas vinculadas";
+const TOOLTIP_RESULTADO = "Receita das reservas − comissão do vendedor − despesas vinculadas";
 
 export function Bloco({ titulo, meta, children }: { titulo: string; meta?: ReactNode; children: ReactNode }) {
   return (
@@ -34,14 +34,14 @@ function faixaDaViagem(
         { label: "Venda total", value: r.vendaTotal },
         { label: "Custo dos fornecedores", value: r.custoFornecedores },
         {
-          label: "Comissão da vendedora",
+          label: "Comissão do vendedor",
           value: r.repasseValor,
           badge: r.repasseStatus ? <StatusBadge entidade="repasse" valor={r.repasseStatus} /> : undefined,
         },
         { label: "Despesas da viagem", value: r.despesasViagem },
         { label: "Resultado da viagem", value: r.resultado, destaque: true, tooltip: TOOLTIP_RESULTADO },
       ],
-      extra: { label: "Comissões recebidas", value: r.receitaRecebida },
+      extra: { label: "Receita recebida", value: r.receitaRecebida },
     };
   }
   if (!verValores) return null;

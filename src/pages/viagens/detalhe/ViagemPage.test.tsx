@@ -65,7 +65,7 @@ test("cabeçalho traz titular · destino, código e período", async () => {
   expect(await screen.findByRole("heading", { name: /Carlos Mendes · Lisboa/ })).toBeInTheDocument();
   expect(screen.getByText("VG-2026-0042")).toBeInTheDocument();
   expect(
-    screen.getByText("18–28/04/2026 · Internacional · 2 passageiros · Vendedor(a): Ana Paula · Agente: Guilherme"),
+    screen.getByText("18–28/04/2026 · Internacional · 2 passageiros · Vendedor: Ana Paula · Agente: Guilherme"),
   ).toBeInTheDocument();
 });
 
@@ -107,4 +107,11 @@ test("viagem cancelada esconde Editar e mostra o alerta", async () => {
   const carimbo = formatarCarimbo("2026-03-01T10:00:00Z");
   expect(await screen.findByText(`Viagem cancelada em ${carimbo}: Cliente desistiu`)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Editar" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Transferir" })).toBeNull();
+});
+
+test("um passageiro no singular", async () => {
+  viagem = { ...VIAGEM, passageiros: [VIAGEM.passageiros[0]!] };
+  montar();
+  expect(await screen.findByText(/· 1 passageiro ·/)).toBeInTheDocument();
 });

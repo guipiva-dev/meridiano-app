@@ -27,9 +27,9 @@ export function FinanceiroTab({ viagem }: { viagem: ViagemDto }) {
   const itens: ItemFaixa[] = r
     ? [
         { label: "Receita prevista", value: r.receitaPrevista },
-        { label: "Comissões recebidas", value: r.receitaRecebida },
+        { label: "Receita recebida", value: r.receitaRecebida, tooltip: "Soma de todos os movimentos da viagem" },
         {
-          label: "Comissão da vendedora",
+          label: "Comissão do vendedor",
           value: r.repasseValor,
           badge: r.repasseStatus ? <StatusBadge entidade="repasse" valor={r.repasseStatus} /> : undefined,
         },

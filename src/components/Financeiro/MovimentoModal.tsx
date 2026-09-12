@@ -17,17 +17,26 @@ interface MovimentoModalProps {
   viagem: ViagemDto;
   movimento?: MovimentoDto;
   reservaFixa?: string;
+  /** Restringe o Select de tipo (ex.: viagem cancelada só aceita estorno/reembolso). */
+  tiposPermitidos?: TipoMovimento[];
   onClose: () => void;
   onSalvo: (m: MovimentoDto) => void;
 }
 
-const OPCOES_TIPO = TIPOS_MOVIMENTO.map((t) => ({ value: t, label: apresentacaoStatus("movimento_tipo", t).texto }));
-
-export function MovimentoModal({ open, viagem, movimento, reservaFixa, onClose, onSalvo }: MovimentoModalProps) {
+export function MovimentoModal({
+  open,
+  viagem,
+  movimento,
+  reservaFixa,
+  tiposPermitidos = TIPOS_MOVIMENTO,
+  onClose,
+  onSalvo,
+}: MovimentoModalProps) {
+  const opcoesTipo = tiposPermitidos.map((t) => ({ value: t, label: apresentacaoStatus("movimento_tipo", t).texto }));
   // Canceladas só entram quando a comissão foi mantida — as demais não recebem mais movimento.
   const reservas = viagem.reservas.filter((r) => r.status !== "cancelada" || r.comissaoMantida);
   const [reservaId, setReservaId] = useState(movimento?.reservaId ?? reservaFixa ?? reservas[0]?.id ?? "");
-  const [tipo, setTipo] = useState<TipoMovimento>(movimento?.tipo ?? "recebimento_operadora");
+  const [tipo, setTipo] = useState<TipoMovimento>(movimento?.tipo ?? tiposPermitidos[0] ?? "recebimento_operadora");
   const [valor, setValor] = useState<number | null>(movimento ? Math.abs(movimento.valor) : null);
   const [data, setData] = useState(movimento?.dataMovimento ?? hojeIso());
   const [forma, setForma] = useState<FormaPagamentoFin | "">(movimento?.formaPagamento ?? "");
@@ -101,7 +110,7 @@ export function MovimentoModal({ open, viagem, movimento, reservaFixa, onClose, 
         </Field>
         <Field label="Tipo" required error={m.erros.tipo}>
           <Select
-            options={OPCOES_TIPO}
+            options={opcoesTipo}
             value={tipo}
             disabled={Boolean(movimento)}
             onChange={(e) => {

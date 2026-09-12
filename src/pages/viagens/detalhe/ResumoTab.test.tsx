@@ -31,3 +31,10 @@ test("o bloco Reservas conta só as ativas", () => {
   );
   expect(screen.getByText(/^1 · clique para abrir/)).toBeInTheDocument();
 });
+
+test("faixa completa: Receita recebida e Comissão do vendedor", () => {
+  render(<ResumoTab viagem={VIAGEM} verValores={true} pendencias={[]} onAbrirReserva={noop} onVerPendencias={noop} />);
+  expect(screen.getByText("Receita recebida")).toBeInTheDocument();
+  expect(screen.getByText("Comissão do vendedor")).toBeInTheDocument();
+  expect(screen.queryByText(/Comissões recebidas|vendedora/)).toBeNull();
+});

@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { MovimentoDto } from "@/api/financeiro";
-import { chaves } from "@/api/viagens";
+import { chaves, type ViagemDto } from "@/api/viagens";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
 import { FinanceiroTab } from "./FinanceiroTab";
 import { VIAGEM } from "./fixtures";
@@ -69,7 +69,7 @@ function stubFetch(extra?: (url: string, init?: RequestInit) => Response | undef
   });
 }
 
-function montar(pode: (p: string) => boolean = () => true) {
+function montar(pode: (p: string) => boolean = () => true, viagem: ViagemDto = VIAGEM) {
   const auth: AuthValue = {
     me: { usuarioId: "u1", agenciaId: "a1", perfil: "dono", nome: "Ana", permissoes: [] },
     carregando: false,
@@ -82,7 +82,7 @@ function montar(pode: (p: string) => boolean = () => true) {
   render(
     <QueryClientProvider client={qc}>
       <AuthContext.Provider value={auth}>
-        <FinanceiroTab viagem={VIAGEM} />
+        <FinanceiroTab viagem={viagem} />
       </AuthContext.Provider>
     </QueryClientProvider>,
   );
@@ -143,4 +143,45 @@ test("confirmar o recebimento invalida a viagem no cache", async () => {
       ),
     ).toBe(true);
   });
+});
+
+test("faixa: Receita recebida (soma de todos os movimentos) e Comissão do vendedor, sem 'Comissões recebidas'", async () => {
+  montar();
+  await screen.findByText("CVC Operadora");
+  expect(screen.getByText("Receita recebida")).toBeInTheDocument();
+  expect(screen.getByRole("tooltip")).toHaveTextContent(/soma de todos os movimentos/i);
+  expect(screen.getByText("Comissão do vendedor")).toBeInTheDocument();
+  expect(screen.queryByText(/Comissões recebidas|vendedora/)).toBeNull();
+});
+
+test("movimento sem localizador identifica a reserva pelo fornecedor", async () => {
+  stubFetch((url) =>
+    url.includes("/viagens/v1/movimentos") ? resposta(200, [{ ...MOVIMENTO, localizador: null }]) : undefined,
+  );
+  montar();
+  expect(await screen.findByText(/reserva CVC Operadora/)).toBeInTheDocument();
+  expect(screen.queryByText(/reserva —/)).toBeNull();
+});
+
+test("Excluir… fica visível ao lado de Editar e abre o modal com motivo obrigatório", async () => {
+  montar();
+  await screen.findByText("R$ 1.100,00");
+  // primeiro Excluir… é o do movimento (bloco Movimentos vem antes de Despesas)
+  fireEvent.click(screen.getAllByRole("button", { name: "Excluir…" })[0]!);
+  const dialogo = await screen.findByRole("dialog");
+  expect(dialogo).toHaveTextContent("Excluir movimento");
+  fireEvent.click(within(dialogo).getByRole("button", { name: "Excluir movimento" }));
+  expect(await within(dialogo).findByText("Motivo é obrigatório")).toBeInTheDocument();
+});
+
+test("viagem cancelada: sem + Despesa; Lançar movimento só oferece estorno e reembolso", async () => {
+  montar(() => true, { ...VIAGEM, cancelada: true, faseOperacional: "cancelada" });
+  await screen.findByText("R$ 1.100,00");
+  expect(screen.queryByRole("button", { name: "+ Despesa" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "+ Lançar movimento" }));
+  const select = within(screen.getByRole("dialog")).getByLabelText(/^Tipo/);
+  expect(within(select).getAllByRole("option").map((o) => o.textContent)).toEqual([
+    "Estorno da operadora",
+    "Reembolso ao cliente",
+  ]);
 });
