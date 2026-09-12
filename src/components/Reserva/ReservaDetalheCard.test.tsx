@@ -2,9 +2,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
-import { ValidationError } from "@/api/errors";
+import { ConflictError, ValidationError } from "@/api/errors";
 import type * as ViagensApi from "@/api/viagens";
+import { chavesAuditoria } from "@/api/auditoria";
 import { chaves, type ReservaDto, type StatusReservaRequest, type ViagemDto } from "@/api/viagens";
+import { chaveDasPendencias } from "@/components/Pendencias/chave";
 import { ReservaDetalheCard } from "./ReservaDetalheCard";
 
 const definirStatusReserva = vi.fn<(reservaId: string, r: StatusReservaRequest) => Promise<ViagemDto>>();
@@ -91,10 +93,10 @@ function viagemDto(reserva: ReservaDto): ViagemDto {
 }
 
 /** Monta o card na rota da viagem (`/viagens/:id`) com a viagem já no cache, como na página real. */
-function montar(props: Partial<Parameters<typeof ReservaDetalheCard>[0]> = {}) {
+function montar(props: Partial<Parameters<typeof ReservaDetalheCard>[0]> = {}, { semViagem = false } = {}) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const reserva = props.reserva ?? reservaDto();
-  qc.setQueryData(chaves.viagem("v1"), viagemDto(reserva));
+  if (!semViagem) qc.setQueryData(chaves.viagem("v1"), viagemDto(reserva));
   render(
     <QueryClientProvider client={qc}>
       <MemoryRouter initialEntries={["/viagens/v1"]}>
@@ -248,6 +250,46 @@ test("422 ao mudar status aparece no card", async () => {
   await user.click(screen.getByRole("button", { name: "Marcar emitida" }));
 
   expect(await screen.findByText("Reserva cancelada")).toBeInTheDocument();
+});
+
+test("mudança de status invalida o mesmo conjunto que useViagem.aplicar", async () => {
+  const user = userEvent.setup();
+  const r = reservaDto({ status: "pendente" });
+  definirStatusReserva.mockResolvedValue(viagemDto({ ...r, status: "emitida" }));
+  const qc = montar({ reserva: r });
+  const invalidar = vi.spyOn(qc, "invalidateQueries");
+
+  await user.click(screen.getByRole("button", { name: "Marcar emitida" }));
+
+  await waitFor(() => {
+    expect(invalidar.mock.calls.map((c) => c[0]?.queryKey)).toEqual([
+      ["viagens", "lista"],
+      chaveDasPendencias("v1"),
+      chavesAuditoria.daViagem("v1"),
+      chaves.creditos("v1"),
+      ["reservas"],
+    ]);
+  });
+});
+
+test("409 ao mudar status pede para recarregar", async () => {
+  const user = userEvent.setup();
+  definirStatusReserva.mockRejectedValue(new ConflictError(409, "conflito", "Conflito"));
+  montar({ reserva: reservaDto({ status: "pendente" }) });
+
+  await user.click(screen.getByRole("button", { name: "Marcar emitida" }));
+
+  expect(await screen.findByText(/Alguém alterou/)).toBeInTheDocument();
+});
+
+test("sem a viagem no cache mostra erro em vez de silêncio", async () => {
+  const user = userEvent.setup();
+  montar({ reserva: reservaDto({ status: "pendente" }) }, { semViagem: true });
+
+  await user.click(screen.getByRole("button", { name: "Marcar emitida" }));
+
+  expect(await screen.findByText(/Viagem não carregada/)).toBeInTheDocument();
+  expect(definirStatusReserva).not.toHaveBeenCalled();
 });
 
 test("sem podeEditar não mostra o botão de status", () => {

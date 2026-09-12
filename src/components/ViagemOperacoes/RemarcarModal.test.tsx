@@ -142,6 +142,12 @@ test("nova venda alterada é enviada como novoValorCliente", async () => {
   expect(remarcar).toHaveBeenCalledWith("r1", expect.objectContaining({ novoValorCliente: 3900 }));
 });
 
+test("sem valorCliente (sem verValores) não mostra o campo de nova venda", () => {
+  const r = reserva();
+  render(<RemarcarModal open reserva={r} viagem={viagem(r)} onClose={vi.fn()} onRemarcada={vi.fn()} />);
+  expect(screen.queryByLabelText("Nova venda ao cliente")).toBeNull();
+});
+
 test("avisa quando o novo custo fica acima da venda ao cliente", () => {
   const r = { ...reserva(), valorCliente: 3200 };
   const v = viagem(r);
