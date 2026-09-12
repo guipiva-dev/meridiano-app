@@ -188,7 +188,9 @@ export function ReservaDetalheCard({
           {podeEditar && !cancelada && (
             <>
               {status.conflito && (
-                <Alert tone="danger">Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.</Alert>
+                <Alert tone="danger">
+                  Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.
+                </Alert>
               )}
               {status.erroBloco && <Alert tone="danger">{status.erroBloco}</Alert>}
               <div className={s.acoes}>

@@ -180,8 +180,9 @@ test("viagem cancelada: sem + Despesa; Lançar movimento só oferece estorno e r
   expect(screen.queryByRole("button", { name: "+ Despesa" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "+ Lançar movimento" }));
   const select = within(screen.getByRole("dialog")).getByLabelText(/^Tipo/);
-  expect(within(select).getAllByRole("option").map((o) => o.textContent)).toEqual([
-    "Estorno da operadora",
-    "Reembolso ao cliente",
-  ]);
+  expect(
+    within(select)
+      .getAllByRole("option")
+      .map((o) => o.textContent),
+  ).toEqual(["Estorno da operadora", "Reembolso ao cliente"]);
 });

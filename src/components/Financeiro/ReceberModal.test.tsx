@@ -96,10 +96,7 @@ test("valor acima do saldo avisa o excedente e só manda confirmarExcedente ao m
   await user.click(screen.getByRole("checkbox", { name: "Registrar mesmo assim" }));
   await user.click(screen.getByRole("button", { name: "Confirmar recebimento" }));
 
-  expect(lancar).toHaveBeenCalledWith(
-    expect.objectContaining({ valor: 1200, confirmarExcedente: true }),
-    undefined,
-  );
+  expect(lancar).toHaveBeenCalledWith(expect.objectContaining({ valor: 1200, confirmarExcedente: true }), undefined);
 });
 
 test("422 recebimento_acima_esperado do servidor mostra o aviso com o excedente devolvido", async () => {
