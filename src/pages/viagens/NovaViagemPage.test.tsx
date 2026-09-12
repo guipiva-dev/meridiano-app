@@ -57,8 +57,10 @@ function montar(entrada = "/viagens/nova") {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createMemoryRouter(
     [
+      { path: "/viagens", element: <p>Lista de viagens</p> },
       { path: "/viagens/nova", element: <NovaViagemPage /> },
       { path: "/viagens/:id/editar", element: <NovaViagemPage /> },
+      { path: "/viagens/:id", element: <p>Detalhe da viagem</p> },
     ],
     { initialEntries: [entrada] },
   );
@@ -123,6 +125,52 @@ test("falha ao carregar a viagem mostra o erro no topo e sai do esqueleto", asyn
   expect(await screen.findByText("Falha ao carregar a viagem")).toBeInTheDocument();
   expect(screen.queryByLabelText("Carregando")).toBeNull();
   expect(screen.getByRole("heading", { name: /Nova viagem/ })).toBeInTheDocument();
+});
+
+test("ALT-01: salvar com reserva sem fornecedor não chama a API e mostra o erro no campo", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+
+  fireEvent.keyDown(window, { key: "Enter", ctrlKey: true });
+  await screen.findByRole("region", { name: /Reserva 1/ });
+
+  fireEvent.click(screen.getByRole("button", { name: "Salvar viagem" }));
+
+  expect(await screen.findByText("Escolha o fornecedor")).toBeInTheDocument();
+  expect(urls.some((u) => u.startsWith("POST"))).toBe(false);
+});
+
+test("ALT-13: Fechar sem viagem existente navega para a lista de viagens", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+
+  fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
+
+  expect(await screen.findByText("Lista de viagens")).toBeInTheDocument();
+});
+
+test("ALT-13: Fechar após salvar navega para a página da viagem, nunca nav(-1)", async () => {
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    const metodo = init?.method ?? "GET";
+    urls.push(`${metodo} ${url}`);
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
+    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, VENDEDORES));
+    if (url.includes("/agencia")) return Promise.resolve(resposta(200, AGENCIA));
+    if (/\/viagens\/[^/?]+$/.test(url)) return Promise.resolve(resposta(200, viagemEdicao()));
+    return Promise.resolve(resposta(200, null));
+  });
+
+  montar("/viagens/v9/editar");
+  await screen.findByRole("heading", { name: /Lisboa/ });
+
+  fireEvent.click(screen.getByRole("button", { name: "Salvar viagem" }));
+  await waitFor(() => {
+    expect(urls.some((u) => u.startsWith("PUT"))).toBe(true);
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
+
+  expect(await screen.findByText("Detalhe da viagem")).toBeInTheDocument();
 });
 
 test("reservaVazia gera chaveLocal distinta a cada chamada (key estável do card sem id)", () => {
