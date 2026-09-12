@@ -1,6 +1,15 @@
-import { act, waitFor } from "@testing-library/react";
+import { act } from "@testing-library/react";
 import type * as ReactRouter from "react-router";
-import { adiarRespostas, chamadas, montar, navegou, reiniciar, stubs, viagemDto } from "./useNovaViagem.harness";
+import {
+  adiarRespostas,
+  chamadas,
+  esperar,
+  montar,
+  navegou,
+  reiniciar,
+  stubs,
+  viagemDto,
+} from "./useNovaViagem.harness";
 
 vi.mock("react-router", async (original) => {
   const mod = await original<typeof ReactRouter>();
@@ -13,6 +22,11 @@ vi.mock("react-router", async (original) => {
   };
 });
 
+const RESP_TITULAR_OBRIGATORIO = {
+  status: 422,
+  body: { codigo: "titular_obrigatorio", detail: "Marque o passageiro titular" },
+};
+
 beforeEach(reiniciar);
 
 afterEach(() => {
@@ -22,9 +36,7 @@ afterEach(() => {
 
 test("escolher fornecedor com 10% e total 3000 pré-preenche a comissão em 300", async () => {
   const { result } = montar();
-  await waitFor(() => {
-    expect(result.current.fornecedores).toHaveLength(1);
-  });
+  await esperar.fornecedores(result);
 
   act(() => {
     result.current.adicionarReserva();
@@ -43,9 +55,7 @@ test("escolher fornecedor com 10% e total 3000 pré-preenche a comissão em 300"
 
 test("editar a comissão desliga a sugestão e mudar o total não a sobrescreve", async () => {
   const { result } = montar();
-  await waitFor(() => {
-    expect(result.current.fornecedores).toHaveLength(1);
-  });
+  await esperar.fornecedores(result);
 
   act(() => {
     result.current.adicionarReserva();
@@ -92,9 +102,7 @@ test("salvar cria a viagem com o request certo e navega para a edição", async 
     },
   };
   const { result } = montar();
-  await waitFor(() => {
-    expect(result.current.agencia).not.toBeNull();
-  });
+  await esperar.agencia(result);
 
   act(() => {
     result.current.form.setValue("destino", " Lisboa ");
@@ -140,17 +148,9 @@ test("salvar cria a viagem com o request certo e navega para a edição", async 
 });
 
 test("422 titular_obrigatorio vira erro do campo passageiros", async () => {
-  stubs.respostaPost = {
-    status: 422,
-    body: {
-      codigo: "titular_obrigatorio",
-      detail: "Marque o passageiro titular",
-    },
-  };
+  stubs.respostaPost = RESP_TITULAR_OBRIGATORIO;
   const { result } = montar();
-  await waitFor(() => {
-    expect(result.current.agencia).not.toBeNull();
-  });
+  await esperar.agencia(result);
 
   act(() => {
     result.current.form.setValue("destino", "Lisboa");
@@ -168,9 +168,7 @@ test("422 titular_obrigatorio vira erro do campo passageiros", async () => {
 
 test("salvar sem passageiros nem destino falha localmente, sem chamar a API", async () => {
   const { result } = montar();
-  await waitFor(() => {
-    expect(result.current.agencia).not.toBeNull();
-  });
+  await esperar.agencia(result);
 
   let ok = true;
   await act(async () => {
@@ -183,11 +181,27 @@ test("salvar sem passageiros nem destino falha localmente, sem chamar a API", as
   expect(result.current.erros.destino).toBeTruthy();
 });
 
+test("salvar com reserva recolhida sem fornecedor abre o card para o erro ficar visível", async () => {
+  const { result } = montar();
+  await esperar.agencia(result);
+
+  act(() => {
+    result.current.adicionarReserva();
+    result.current.alternarReserva(0);
+  });
+  expect(result.current.form.getValues("reservas")[0]?.aberta).toBe(false);
+
+  let ok = true;
+  await act(async () => {
+    ok = await result.current.salvar();
+  });
+  expect(ok).toBe(false);
+  expect(result.current.form.getValues("reservas")[0]?.aberta).toBe(true);
+});
+
 test("salvar não recolhe os cards que estavam abertos", async () => {
   const { result } = montar("v9");
-  await waitFor(() => {
-    expect(result.current.viagem).not.toBeNull();
-  });
+  await esperar.viagem(result);
   expect(result.current.form.getValues("reservas")[0]?.aberta).toBe(false);
 
   act(() => {
@@ -206,9 +220,7 @@ test("salvar não recolhe os cards que estavam abertos", async () => {
 
 test("R2: reserva cancelada não é enviada no PUT, só a emitida", async () => {
   const { result } = montar("v9");
-  await waitFor(() => {
-    expect(result.current.viagem).not.toBeNull();
-  });
+  await esperar.viagem(result);
 
   act(() => {
     const atuais = result.current.form.getValues("reservas");
@@ -245,9 +257,7 @@ test("?reserva=<id> abre só aquele card na carga inicial da edição", async ()
   };
 
   const { result } = montar("v9", "/viagens/v9/editar?reserva=r2");
-  await waitFor(() => {
-    expect(result.current.viagem).not.toBeNull();
-  });
+  await esperar.viagem(result);
 
   const reservas = result.current.form.getValues("reservas");
   expect(reservas.find((r) => r.id === "r1")?.aberta).toBe(false);
@@ -284,17 +294,9 @@ test("resposta antiga que chega depois não sobrescreve semelhante nem duplicada
 });
 
 test("erro local some ao corrigir o campo; erro da API some ao alterar o campo", async () => {
-  stubs.respostaPost = {
-    status: 422,
-    body: {
-      codigo: "titular_obrigatorio",
-      detail: "Marque o passageiro titular",
-    },
-  };
+  stubs.respostaPost = RESP_TITULAR_OBRIGATORIO;
   const { result } = montar();
-  await waitFor(() => {
-    expect(result.current.agencia).not.toBeNull();
-  });
+  await esperar.agencia(result);
 
   await act(async () => {
     await result.current.salvar();
@@ -324,9 +326,7 @@ test("erro local some ao corrigir o campo; erro da API some ao alterar o campo",
 
 test("volta antes da ida falha localmente, sem chamar a API", async () => {
   const { result } = montar();
-  await waitFor(() => {
-    expect(result.current.agencia).not.toBeNull();
-  });
+  await esperar.agencia(result);
   act(() => {
     result.current.form.setValue("destino", "Lisboa");
     result.current.form.setValue("passageiros", [{ clienteId: "c1", nome: "Carlos", titular: true }]);

@@ -8,6 +8,7 @@ import { Button, Input } from "@/components";
 import { Alert } from "@/components/display";
 import { ConfirmModal } from "@/components/feedback";
 import { cx } from "@/lib/cx";
+import { formatarTelefone } from "@/lib/documentos";
 import s from "./Grupos.module.css";
 
 const DEBOUNCE_MS = 250;
@@ -173,7 +174,7 @@ export function PessoasDoGrupo({ grupo, podeEditar, onMudou }: PessoasDoGrupoPro
                     }}
                   >
                     {c.nome}
-                    {c.telefone && <span className={s.optionMeta}> · {c.telefone}</span>}
+                    {c.telefone && <span className={s.optionMeta}> · {formatarTelefone(c.telefone)}</span>}
                   </li>
                 ))}
               </ul>

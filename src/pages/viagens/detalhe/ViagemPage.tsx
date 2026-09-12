@@ -61,14 +61,12 @@ export function ViagemPage() {
   const abertas = (pendenciasQ.data ?? []).filter((p) => p.status === "aberta").length;
   const reservasAtivas = viagem.reservas.filter((r) => r.status !== "cancelada").length;
   const reservasTotal = viagem.reservas.length;
-  const rotuloReservas =
-    reservasTotal > reservasAtivas ? `Reservas (Ativas ${reservasAtivas} · Total ${reservasTotal})` : "Reservas";
   const tabs: Tab[] = [
     { id: "resumo", label: "Resumo" },
     {
       id: "reservas",
-      label: rotuloReservas,
-      count: reservasTotal > reservasAtivas ? undefined : reservasAtivas,
+      label: "Reservas",
+      count: reservasTotal > reservasAtivas ? `Ativas ${reservasAtivas} · Total ${reservasTotal}` : reservasAtivas,
     },
     ...(v.verValores ? [{ id: "financeiro", label: "Financeiro" }] : []),
     { id: "pendencias", label: "Pendências", count: abertas },

@@ -330,6 +330,11 @@ test("sem cliente.editar não mostra Excluir cliente", async () => {
   expect(screen.queryByRole("button", { name: "Excluir cliente" })).toBeNull();
 });
 
+test("telefone/whatsapp carregam formatados (back guarda só dígitos)", async () => {
+  montar();
+  expect(await screen.findByDisplayValue("(11) 99876-5678")).toBeInTheDocument();
+});
+
 test("sem cliente.ver_documento o campo CPF não é renderizado", async () => {
   const semCpf: Record<string, unknown> = { ...LUCIA };
   delete semCpf.cpf;

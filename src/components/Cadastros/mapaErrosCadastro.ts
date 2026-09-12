@@ -27,6 +27,7 @@ export const CAMPO_POR_CODIGO: Record<string, string> = {
   prioridade_invalida: "prioridade",
   passageiro_invalido: "viagemId",
   telefone_invalido: "telefone",
+  telefone_emergencia_invalido: "telefoneEmergencia",
   numero_obrigatorio: "numero",
   site_invalido: "site",
   whatsapp_invalido: "whatsapp",

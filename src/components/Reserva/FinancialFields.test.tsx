@@ -32,6 +32,11 @@ test("digitar em Comissão emite comissaoSugerida: false e some o selo", async (
   expect(screen.queryByText("Sugerido: 10 %")).not.toBeInTheDocument();
 });
 
+test("Observações da reserva tem maxLength 2000", () => {
+  render(<Harness />);
+  expect(screen.getByLabelText("Observações")).toHaveAttribute("maxLength", "2000");
+});
+
 test("Comissão, Taxa de serviço e Fluxo têm tooltip explicando o cálculo com exemplo", () => {
   render(<Harness />);
   const tooltips = screen.getAllByTitle(/ex\.:/i);

@@ -46,6 +46,7 @@ function Observacoes({
       aria-describedby={f?.describedBy}
       aria-invalid={f?.invalid ? true : undefined}
       rows={4}
+      maxLength={2000}
       className={s.control}
       value={value}
       readOnly={readOnly}
@@ -166,7 +167,7 @@ export function FinancialFields({
       <Field
         label="Fluxo"
         className="span-2"
-        tooltip="Quem recebe o pagamento do cliente primeiro (ex.: cliente paga pix à agência, que repassa ao fornecedor)."
+        tooltip="Quem recebe o pagamento do cliente: a agência ou a operadora (ex.: pix à agência, que repassa)."
       >
         <Select
           options={OPCOES_FLUXO}

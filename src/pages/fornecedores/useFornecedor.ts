@@ -7,6 +7,7 @@ import {
   type TipoFornecedor,
 } from "@/api/fornecedores";
 import { useFormularioCadastro } from "@/components/cadastros";
+import { formatarTelefone } from "@/lib/documentos";
 
 /** Tudo texto: o form espelha os inputs; a conversão para o request acontece em `paraRequest`. */
 export interface FormFornecedor {
@@ -40,8 +41,9 @@ function paraForm(d: FornecedorDetalheDto): FormFornecedor {
     cnpj: d.cnpj ?? "",
     site: d.site ?? "",
     contato: d.contato ?? "",
-    telefone: d.telefone ?? "",
-    telefoneEmergencia: d.telefoneEmergencia ?? "",
+    // Back guarda só dígitos; formata para exibir (o envio manda de volta com máscara, o back normaliza).
+    telefone: formatarTelefone(d.telefone),
+    telefoneEmergencia: formatarTelefone(d.telefoneEmergencia),
     percentualComissaoPadrao: d.percentualComissaoPadrao === null ? "" : String(d.percentualComissaoPadrao),
     prazoComissaoDias: d.prazoComissaoDias === null ? "" : String(d.prazoComissaoDias),
     ativo: d.ativo ? "true" : "false",

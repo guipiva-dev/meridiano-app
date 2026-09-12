@@ -59,6 +59,11 @@ test("422 telefone_invalido mapeia para o campo telefone", () => {
   expect(errosDeCadastro(erro).campos).toEqual({ telefone: "Telefone inválido" });
 });
 
+test("422 telefone_emergencia_invalido mapeia para o campo telefoneEmergencia", () => {
+  const erro = new ValidationError(422, "telefone_emergencia_invalido", "Telefone inválido");
+  expect(errosDeCadastro(erro).campos).toEqual({ telefoneEmergencia: "Telefone inválido" });
+});
+
 test("422 numero_obrigatorio mapeia para o campo numero", () => {
   const erro = new ValidationError(422, "numero_obrigatorio", "Número é obrigatório");
   expect(errosDeCadastro(erro).campos).toEqual({ numero: "Número é obrigatório" });

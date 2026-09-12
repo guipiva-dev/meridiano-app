@@ -181,7 +181,7 @@ test("ALT-13: Fechar sem viagem existente navega para a lista de viagens", async
   expect(await screen.findByText("Lista de viagens")).toBeInTheDocument();
 });
 
-test("ALT-13: Fechar após salvar navega para a página da viagem, nunca nav(-1)", async () => {
+test("ALT-13: Fechar após salvar edição navega para a página da viagem, nunca nav(-1)", async () => {
   vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
     const metodo = init?.method ?? "GET";
     urls.push(`${metodo} ${url}`);

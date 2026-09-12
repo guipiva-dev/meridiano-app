@@ -326,9 +326,17 @@ export function useNovaViagem(id: string | undefined) {
     setLocais(problemas);
     setValoresAoSalvar(dados);
     setTentouSalvarReserva(true);
+    if (temErroReserva) {
+      // Reserva recolhida com erro: abre o card para o erro ficar visível sem precisar procurá-lo.
+      setReservas(
+        dados.reservas.map((r, i) =>
+          Object.keys(problemasPorReserva[i] ?? {}).length > 0 ? { ...r, aberta: true } : r,
+        ),
+      );
+    }
     if (Object.keys(problemas).length > 0 || temErroReserva) return false;
     return executar(dados);
-  }, [form, executar, problemasPorReserva]);
+  }, [form, executar, problemasPorReserva, setReservas]);
 
   // Recarregar (botão do 409) troca o form pela versão do servidor: o erro exibido morre junto.
   const recarregar = useCallback(async () => {

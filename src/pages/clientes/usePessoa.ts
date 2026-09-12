@@ -5,7 +5,7 @@ import { type ClienteDto, type ClienteRequest, chavesClientes, clientesApi } fro
 import { chavesGrupos, gruposApi } from "@/api/grupos";
 import { chaves, viagensApi } from "@/api/viagens";
 import { useFormularioCadastro } from "@/components/cadastros";
-import { formatarCpf, somenteDigitos } from "@/lib/documentos";
+import { formatarCpf, formatarTelefone, somenteDigitos } from "@/lib/documentos";
 
 export interface FormPessoa {
   nome: string;
@@ -45,8 +45,9 @@ function paraForm(c: ClienteDto): FormPessoa {
     // Sem `cliente.ver_documento` o DTO nem traz `cpf`; o campo some do formulário.
     cpf: formatarCpf(c.cpf),
     email: c.email ?? "",
-    telefone: c.telefone ?? "",
-    whatsapp: c.whatsapp ?? "",
+    // Back guarda só dígitos; formata para exibir (o envio manda de volta com máscara, o back normaliza).
+    telefone: formatarTelefone(c.telefone),
+    whatsapp: formatarTelefone(c.whatsapp),
     dataNascimento: c.dataNascimento ?? "",
     cidade: c.cidade ?? "",
     uf: c.uf ?? "",

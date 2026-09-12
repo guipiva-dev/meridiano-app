@@ -35,9 +35,13 @@ export function DadosFornecedorForm({ form, erros }: DadosFornecedorFormProps) {
   const erroNome = erros.nome ?? (formState.touchedFields.nome && !nome.trim() ? "Nome é obrigatório" : undefined);
   const erroCnpj = erros.cnpj ?? (cnpj && !cnpjValido(cnpj) ? "CNPJ inválido" : undefined);
   const telefone = watch("telefone");
+  const telefoneEmergencia = watch("telefoneEmergencia");
   const site = watch("site");
   const observacoes = (watch("observacoes") as string | undefined) ?? "";
   const erroTelefone = erros.telefone ?? (telefone && !telefoneValido(telefone) ? "Telefone inválido" : undefined);
+  const erroTelefoneEmergencia =
+    erros.telefoneEmergencia ??
+    (telefoneEmergencia && !telefoneValido(telefoneEmergencia) ? "Telefone inválido" : undefined);
   const erroSite = erros.site ?? (site && !siteValido(site) ? "Site inválido" : undefined);
   return (
     <div className={s.grid}>
@@ -62,7 +66,7 @@ export function DadosFornecedorForm({ form, erros }: DadosFornecedorFormProps) {
           <span className={s.sufixo}>%</span>
         </div>
       </Field>
-      <Field label="Telefone de emergência" error={erros.telefoneEmergencia}>
+      <Field label="Telefone de emergência" error={erroTelefoneEmergencia}>
         <Input {...register("telefoneEmergencia")} />
       </Field>
 

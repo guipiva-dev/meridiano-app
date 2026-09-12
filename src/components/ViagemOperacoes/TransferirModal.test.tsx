@@ -40,6 +40,5 @@ test("só oferece vendedores com perfil dono ou agente, sem o agente atual", () 
   const select = screen.getByLabelText(/Novo agente/);
   const rotulos = Array.from(select.querySelectorAll("option")).map((o) => o.textContent);
 
-  expect(rotulos).toEqual(expect.arrayContaining(["Bia", "Carlos"]));
-  expect(rotulos).not.toEqual(expect.arrayContaining(["Ana", "Duda", "Eva"]));
+  expect(rotulos).toEqual(["Selecionar", "Bia", "Carlos"]);
 });

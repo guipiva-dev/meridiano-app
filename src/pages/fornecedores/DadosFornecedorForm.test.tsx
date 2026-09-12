@@ -95,6 +95,20 @@ test("telefone válido não mostra erro", async () => {
   expect(screen.queryByText("Telefone inválido")).not.toBeInTheDocument();
 });
 
+test("telefone de emergência com letras mostra erro local", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  await user.type(screen.getByLabelText("Telefone de emergência"), "11a99876567");
+
+  expect(await screen.findByText("Telefone inválido")).toBeInTheDocument();
+});
+
+test("erro telefone_emergencia_invalido vindo da API aparece no campo", () => {
+  render(<Wrapper erros={{ telefoneEmergencia: "Telefone inválido" }} />);
+  expect(screen.getByLabelText("Telefone de emergência")).toBeInvalid();
+});
+
 test("site sem domínio válido mostra erro local", async () => {
   const user = userEvent.setup();
   render(<Wrapper />);
