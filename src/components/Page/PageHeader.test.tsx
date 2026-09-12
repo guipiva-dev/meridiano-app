@@ -17,3 +17,11 @@ test("sem dirty e sem salvoEm não mostra nenhum dos dois", () => {
   expect(screen.queryByText(/✓ Salvo/)).toBeNull();
   expect(screen.queryByText(/Alterações não salvas/)).toBeNull();
 });
+
+test("título de 150 caracteres mantém a classe que permite quebra (ALT-12)", () => {
+  const titulo = "A".repeat(150);
+  render(<PageHeader title={titulo} />);
+  const h1 = screen.getByRole("heading", { level: 1 });
+  expect(h1.className).toContain("titulo");
+  expect(h1).toHaveTextContent(titulo);
+});

@@ -45,6 +45,12 @@ const CONTADORES_VAZIOS: ContadoresDto = {
   concluidas: 0,
 };
 
+// MED-07: "0" enquanto ainda não carregou pareceria um dado real (zero viagens); "—" deixa claro
+// que a contagem está pendente.
+function fmtContador(n: number, carregando: boolean): string {
+  return carregando ? "—" : String(n);
+}
+
 export function ViagensPage() {
   const nav = useNavigate();
   const { pode } = useAuth();
@@ -107,7 +113,7 @@ export function ViagensPage() {
     <Page>
       <PageHeader
         title="Viagens"
-        subtitle={`${contadores.todas} viagens · ${contadores.emEmissao} em emissão · ${contadores.comissaoAtrasada} com comissão atrasada`}
+        subtitle={`${fmtContador(contadores.todas, listaQ.isLoading)} viagens · ${fmtContador(contadores.emEmissao, listaQ.isLoading)} em emissão · ${fmtContador(contadores.comissaoAtrasada, listaQ.isLoading)} com comissão atrasada`}
         actions={
           pode("viagem.criar") && (
             <Button
@@ -125,7 +131,11 @@ export function ViagensPage() {
       <Subnav items={subnavs["/viagens"] ?? []} />
 
       <Tabs
-        tabs={TABS.map((t) => ({ id: t.id, label: t.label, count: contadores[CAMPO_CONTADOR[t.id]] }))}
+        tabs={TABS.map((t) => ({
+          id: t.id,
+          label: t.label,
+          count: fmtContador(contadores[CAMPO_CONTADOR[t.id]], listaQ.isLoading),
+        }))}
         active={filtro.aba ?? "todas"}
         onChange={(id) => {
           definir({ aba: id as AbaViagens });

@@ -8,7 +8,7 @@ import { Alert, Tooltip } from "@/components/display";
 import { Skeleton } from "@/components/Skeleton/Skeleton";
 import { Page, PageHeader, Section } from "@/components/shell";
 import { formatarDinheiro } from "@/lib/dinheiro";
-import { baixar } from "@/lib/download";
+import { baixarComFeedback } from "@/lib/download";
 import { BarrasMensais } from "./BarrasMensais";
 import s from "./Relatorios.module.css";
 import { ServicosVendidos } from "./ServicosVendidos";
@@ -24,6 +24,8 @@ function pctTeto(v: number): string {
 export function RelatoriosPage() {
   const [anoSelecionado, setAnoSelecionado] = useState<number | null>(null);
   const [vendedorId, setVendedorId] = useState<string | null>(null);
+  const [exportando, setExportando] = useState(false);
+  const [erroExportacao, setErroExportacao] = useState<string | null>(null);
 
   const resumoQ = useQuery({
     queryKey: chavesRelatorios.resumo(anoSelecionado, vendedorId),
@@ -36,6 +38,18 @@ export function RelatoriosPage() {
   const anoAnterior = anoEfetivo - 1;
   const internacional = dto?.nacionalInternacional.find((t) => t.tipo === "internacional");
   const nacional = dto?.nacionalInternacional.find((t) => t.tipo === "nacional");
+
+  async function exportarCsv() {
+    setErroExportacao(null);
+    setExportando(true);
+    try {
+      await baixarComFeedback(urlCsv(anoEfetivo, vendedorId), `relatorio-${anoEfetivo}.csv`);
+    } catch (e) {
+      setErroExportacao(mensagemDeErro(e));
+    } finally {
+      setExportando(false);
+    }
+  }
 
   return (
     <Page>
@@ -65,15 +79,35 @@ export function RelatoriosPage() {
             />
             <Button
               variant="secondary"
+              disabled={exportando}
               onClick={() => {
-                baixar(urlCsv(anoEfetivo, vendedorId), `relatorio-${anoEfetivo}.csv`);
+                void exportarCsv();
               }}
             >
-              Exportar CSV
+              {exportando ? "Gerando…" : "Exportar CSV"}
             </Button>
           </div>
         }
       />
+
+      {erroExportacao && (
+        <Alert
+          tone="danger"
+          action={
+            <Button
+              variant="tertiary"
+              size="sm"
+              onClick={() => {
+                setErroExportacao(null);
+              }}
+            >
+              Fechar
+            </Button>
+          }
+        >
+          {erroExportacao}
+        </Alert>
+      )}
 
       {resumoQ.isError ? (
         <Alert

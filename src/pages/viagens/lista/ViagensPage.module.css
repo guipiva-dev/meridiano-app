@@ -25,6 +25,10 @@
   flex: 1;
   min-width: 0;
 }
+.linha1 > select,
+.linha1 > button {
+  flex: none;
+}
 .avancados {
   display: flex;
   flex-wrap: wrap;
