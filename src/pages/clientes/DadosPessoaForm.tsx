@@ -3,7 +3,7 @@ import type { ListaGrupoDto } from "@/api/grupos";
 import { DateInput, Field, Input, Select, Textarea } from "@/components";
 import { TagsInput } from "@/components/cadastros";
 import { Section } from "@/components/shell";
-import { cpfValido, formatarCpf, UFS } from "@/lib/documentos";
+import { cpfValido, formatarCpf, telefoneValido, UFS } from "@/lib/documentos";
 import s from "./Clientes.module.css";
 import type { FormPessoa } from "./usePessoa";
 
@@ -26,6 +26,10 @@ export function DadosPessoaForm({ form, grupos, erros, verDocumento, onNovoGrupo
   const tags = (form.watch("tags") as string[] | undefined) ?? [];
   const cpf = form.watch("cpf");
   const erroCpf = erros.cpf ?? (cpf && !cpfValido(cpf) ? "CPF inválido" : undefined);
+  const whatsapp = form.watch("whatsapp");
+  const telefone = form.watch("telefone");
+  const erroWhatsapp = erros.whatsapp ?? (whatsapp && !telefoneValido(whatsapp) ? "Telefone inválido" : undefined);
+  const erroTelefone = erros.telefone ?? (telefone && !telefoneValido(telefone) ? "Telefone inválido" : undefined);
 
   const opcoesGrupo = [
     ...grupos.map((g) => ({ value: g.id, label: g.nome })),
@@ -83,10 +87,10 @@ export function DadosPessoaForm({ form, grupos, erros, verDocumento, onNovoGrupo
 
       <Section title="Contato">
         <div className="grid-form">
-          <Field label="WhatsApp" className="span-3">
+          <Field label="WhatsApp" className="span-3" error={erroWhatsapp}>
             <Input autoComplete="off" {...form.register("whatsapp")} />
           </Field>
-          <Field label="Telefone" className="span-3">
+          <Field label="Telefone" className="span-3" error={erroTelefone}>
             <Input autoComplete="off" {...form.register("telefone")} />
           </Field>
           <Field label="E-mail" className="span-6" error={erros.email}>

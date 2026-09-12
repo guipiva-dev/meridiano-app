@@ -28,11 +28,19 @@ export function DocumentoModal({ open, clienteId, documento, onClose, onSalvo }:
   const [erros, setErros] = useState<Record<string, string>>({});
   const [erroBloco, setErroBloco] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [numeroTocado, setNumeroTocado] = useState(false);
+
+  const numeroVazio = numero.trim() === "";
+  const erroNumero = erros.numero ?? (numeroTocado && numeroVazio ? "Número é obrigatório" : undefined);
 
   async function enviar(e?: SubmitEvent<HTMLFormElement>) {
     e?.preventDefault();
     setErros({});
     setErroBloco(null);
+    if (numeroVazio) {
+      setNumeroTocado(true);
+      return;
+    }
     setSalvando(true);
     const req = {
       tipo,
@@ -68,7 +76,7 @@ export function DocumentoModal({ open, clienteId, documento, onClose, onSalvo }:
           <Button variant="tertiary" onClick={onClose}>
             Fechar
           </Button>
-          <Button variant="primary" type="submit" form={idForm} loading={salvando}>
+          <Button variant="primary" type="submit" form={idForm} loading={salvando} disabled={numeroVazio}>
             Salvar
           </Button>
         </>
@@ -92,12 +100,15 @@ export function DocumentoModal({ open, clienteId, documento, onClose, onSalvo }:
             }}
           />
         </Field>
-        <Field label="Número" error={erros.numero}>
+        <Field label="Número" error={erroNumero}>
           <Input
             className={s.mono}
             value={numero}
             onChange={(e) => {
               setNumero(e.target.value);
+            }}
+            onBlur={() => {
+              setNumeroTocado(true);
             }}
           />
         </Field>

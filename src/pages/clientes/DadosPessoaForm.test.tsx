@@ -47,3 +47,30 @@ test("erro vindo da API (422 cpf_invalido) prevalece sobre o local", () => {
   render(<Wrapper erros={{ cpf: "CPF inválido" }} />);
   expect(screen.getByText("CPF inválido")).toBeInTheDocument();
 });
+
+test("telefone com letras mostra erro local", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  await user.type(screen.getByLabelText("Telefone"), "11a99876567");
+
+  expect(await screen.findByText("Telefone inválido")).toBeInTheDocument();
+});
+
+test("telefone só com dígitos, espaços e símbolos não mostra erro", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  await user.type(screen.getByLabelText("Telefone"), "(11) 99876-5678");
+
+  expect(screen.queryByText("Telefone inválido")).not.toBeInTheDocument();
+});
+
+test("whatsapp com letras mostra erro local", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  await user.type(screen.getByLabelText("WhatsApp"), "abc9988877");
+
+  expect(await screen.findByText("Telefone inválido")).toBeInTheDocument();
+});

@@ -76,3 +76,39 @@ test("form sem defaultValues (novo fornecedor) não quebra ao renderizar nem ao 
 
   expect(await screen.findByText("Nome é obrigatório")).toBeInTheDocument();
 });
+
+test("telefone com letras mostra erro local", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  await user.type(screen.getByLabelText("Telefone"), "11a99876567");
+
+  expect(await screen.findByText("Telefone inválido")).toBeInTheDocument();
+});
+
+test("telefone válido não mostra erro", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  await user.type(screen.getByLabelText("Telefone"), "(11) 99876-5678");
+
+  expect(screen.queryByText("Telefone inválido")).not.toBeInTheDocument();
+});
+
+test("site sem domínio válido mostra erro local", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  await user.type(screen.getByLabelText("Site / portal"), "não é site");
+
+  expect(await screen.findByText("Site inválido")).toBeInTheDocument();
+});
+
+test("site como domínio simples sem esquema não mostra erro (mesma tolerância do back)", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  await user.type(screen.getByLabelText("Site / portal"), "exemplo.com.br");
+
+  expect(screen.queryByText("Site inválido")).not.toBeInTheDocument();
+});

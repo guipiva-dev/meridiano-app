@@ -93,6 +93,25 @@ export function formatarTelefone(s: string | null | undefined): string {
   return s;
 }
 
+const TELEFONE_REGEX = /^[0-9 ()+\-.]{10,}$/;
+
+/** Mesma tolerância do backend (ALT-04/ALT-07): dígitos, espaço, parênteses, `+`, `-` e `.`, com pelo menos 10 caracteres após trim. */
+export function telefoneValido(v: string | null | undefined): boolean {
+  return TELEFONE_REGEX.test((v ?? "").trim());
+}
+
+/** URL http/https ou domínio simples (`exemplo.com.br`) — mesma tolerância do backend (B1), que prefixa `https://`. */
+export function siteValido(v: string | null | undefined): boolean {
+  const s = (v ?? "").trim();
+  if (s === "") return false;
+  const comEsquema = /^https?:\/\//i.test(s) ? s : `https://${s}`;
+  try {
+    return new URL(comEsquema).hostname.includes(".");
+  } catch {
+    return false;
+  }
+}
+
 /** Situação de vencimento de um documento a partir de `diasParaVencer` (DocumentoDto). */
 export function situacaoValidade(dias: number | null): { texto: string; tone: Tone } {
   if (dias === null) return { texto: "—", tone: "neutral" };
