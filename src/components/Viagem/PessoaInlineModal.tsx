@@ -1,5 +1,5 @@
 import { type SubmitEvent, useState } from "react";
-import { ConflictError, mensagemDeErro, ValidationError } from "@/api/errors";
+import { ApiError, ConflictError, mensagemDeErro, ValidationError } from "@/api/errors";
 import type { ClienteBuscaDto } from "@/api/viagens";
 import { Button, Field, Input } from "@/components";
 import { Alert } from "@/components/display";
@@ -13,6 +13,14 @@ interface NovaPessoa {
   cpf?: string;
 }
 
+const CAMPO_POR_CODIGO: Record<string, keyof NovaPessoa | undefined> = {
+  nome_obrigatorio: "nome",
+  cpf_invalido: "cpf",
+  cpf_duplicado: "cpf",
+  email_invalido: "email",
+  telefone_invalido: "telefone",
+};
+
 interface PessoaInlineModalProps {
   open: boolean;
   onClose: () => void;
@@ -25,8 +33,7 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
   const [telefone, setTelefone] = useState("");
   const [email, setEmail] = useState("");
   const [cpf, setCpf] = useState("");
-  const [erroNome, setErroNome] = useState<string>();
-  const [erroCpf, setErroCpf] = useState<string>();
+  const [erros, setErros] = useState<Partial<Record<keyof NovaPessoa, string>>>({});
   const [erroBloco, setErroBloco] = useState<string>();
   const [salvando, setSalvando] = useState(false);
 
@@ -35,8 +42,7 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
     setTelefone("");
     setEmail("");
     setCpf("");
-    setErroNome(undefined);
-    setErroCpf(undefined);
+    setErros({});
     setErroBloco(undefined);
     setSalvando(false);
   }
@@ -49,11 +55,10 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
     e?.preventDefault();
     setErroBloco(undefined);
     if (!nome.trim()) {
-      setErroNome("Nome é obrigatório");
+      setErros({ nome: "Nome é obrigatório" });
       return;
     }
-    setErroNome(undefined);
-    setErroCpf(undefined);
+    setErros({});
     setSalvando(true);
     try {
       const criada = await criar({
@@ -65,15 +70,15 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
       onCriada(criada);
       fechar();
     } catch (erroCriar) {
-      if (erroCriar instanceof ValidationError && erroCriar.codigo === "cpf_invalido") {
-        setErroCpf(erroCriar.detalhe);
-      } else if (erroCriar instanceof ValidationError && erroCriar.codigo === "nome_obrigatorio") {
-        setErroNome(erroCriar.detalhe);
-      } else if (erroCriar instanceof ConflictError) {
-        setErroBloco(erroCriar.detalhe);
-      } else {
-        setErroBloco(mensagemDeErro(erroCriar));
-      }
+      // 409 no criar só acontece por CPF já cadastrado (unique).
+      const campo =
+        erroCriar instanceof ConflictError
+          ? "cpf"
+          : erroCriar instanceof ValidationError
+            ? CAMPO_POR_CODIGO[erroCriar.codigo]
+            : undefined;
+      if (campo && erroCriar instanceof ApiError) setErros({ [campo]: erroCriar.detalhe });
+      else setErroBloco(mensagemDeErro(erroCriar));
       setSalvando(false);
     }
   }
@@ -108,15 +113,17 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
         }}
       >
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
-        <Field label="Nome" required error={erroNome}>
+        <Field label="Nome" required error={erros.nome}>
           <Input
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- modal de cadastro rápido: o Modal focaria o botão Fechar, o campo Nome é o destino útil
+            autoFocus
             value={nome}
             onChange={(e) => {
               setNome(e.target.value);
             }}
           />
         </Field>
-        <Field label="Telefone">
+        <Field label="Telefone" error={erros.telefone}>
           <Input
             value={telefone}
             onChange={(e) => {
@@ -124,7 +131,7 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
             }}
           />
         </Field>
-        <Field label="E-mail">
+        <Field label="E-mail" error={erros.email}>
           <Input
             type="email"
             value={email}
@@ -133,7 +140,7 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
             }}
           />
         </Field>
-        <Field label="CPF" error={erroCpf}>
+        <Field label="CPF" error={erros.cpf}>
           <Input
             value={cpf}
             onChange={(e) => {

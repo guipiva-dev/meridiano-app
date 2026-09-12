@@ -24,7 +24,11 @@
 }
 .linha1 > input {
   flex: 1;
-  min-width: 0;
+  min-width: 240px;
+}
+.linha1 > select {
+  max-width: 280px;
+  text-overflow: ellipsis;
 }
 .avancados {
   display: flex;
