@@ -34,12 +34,13 @@ export function NovaViagemPage() {
   const semelhante = v.semelhante;
 
   const vendedorNome = v.vendedorSelecionado?.nome ?? v.viagem?.vendedorNome;
+  const editando = Boolean(id && v.viagem);
+  const titulo = editando
+    ? [titular?.nome, destino.trim()].filter(Boolean).join(" · ") || v.viagem?.codigo
+    : "Nova viagem";
   const partes: string[] = [];
-  if (titular) partes.push(`Titular: ${titular.nome}`);
+  if (titular && !editando) partes.push(`Titular: ${titular.nome}`);
   if (vendedorNome) partes.push(`Vendedor: ${vendedorNome}`);
-
-  const titulo =
-    id && v.viagem ? [titular?.nome, destino.trim()].filter(Boolean).join(" · ") || v.viagem.codigo : "Nova viagem";
 
   useAtalho("ctrl+s", () => {
     void v.salvar();

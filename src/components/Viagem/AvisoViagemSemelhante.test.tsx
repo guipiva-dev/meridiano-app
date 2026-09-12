@@ -89,3 +89,27 @@ test("os três botões chamam seus callbacks", async () => {
   expect(onAbrir).toHaveBeenCalledTimes(1);
   expect(onContinuar).toHaveBeenCalledTimes(1);
 });
+
+test("sobrepoe: título avisa que as datas se sobrepõem; sem sobreposição, título padrão", () => {
+  const { rerender } = render(
+    <AvisoViagemSemelhante
+      item={item({ sobrepoe: true })}
+      titularNome="Carlos Mendes"
+      onAdicionarNaExistente={vi.fn()}
+      onAbrir={vi.fn()}
+      onContinuar={vi.fn()}
+    />,
+  );
+  expect(screen.getByText("Esta pessoa já tem viagem com datas que se sobrepõem")).toBeInTheDocument();
+
+  rerender(
+    <AvisoViagemSemelhante
+      item={item({ sobrepoe: false })}
+      titularNome="Carlos Mendes"
+      onAdicionarNaExistente={vi.fn()}
+      onAbrir={vi.fn()}
+      onContinuar={vi.fn()}
+    />,
+  );
+  expect(screen.getByText("Encontramos uma viagem semelhante para Carlos Mendes")).toBeInTheDocument();
+});

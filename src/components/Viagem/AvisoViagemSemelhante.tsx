@@ -46,7 +46,11 @@ export function AvisoViagemSemelhante({
   return (
     <Alert
       tone={item.sobrepoe ? "warning" : "info"}
-      title={`Encontramos uma viagem semelhante para ${titularNome}`}
+      title={
+        item.sobrepoe
+          ? "Esta pessoa já tem viagem com datas que se sobrepõem"
+          : `Encontramos uma viagem semelhante para ${titularNome}`
+      }
       action={
         <div className={s.avisoAcoes}>
           <Button variant="primary" size="sm" onClick={onAdicionarNaExistente}>
