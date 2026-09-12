@@ -127,3 +127,21 @@ test("despesa com viagem fixa (lançada na aba da viagem) já abre com 'Repete t
   expect(screen.getByLabelText("Repete todo mês")).toBeDisabled();
   expect(screen.getByText("Despesa ligada a viagem não repete")).toBeInTheDocument();
 });
+
+test("descrição tem maxLength 200", () => {
+  render(<DespesaModal open fornecedores={[]} onClose={vi.fn()} onSalva={vi.fn()} />);
+  expect(screen.getByLabelText(/^Descrição/)).toHaveAttribute("maxLength", "200");
+});
+
+test("observação tem maxLength 2000 e mostra contador N/2000", async () => {
+  const user = userEvent.setup();
+  render(<DespesaModal open fornecedores={[]} onClose={vi.fn()} onSalva={vi.fn()} />);
+
+  const observacao = screen.getByLabelText("Observação");
+  expect(observacao).toHaveAttribute("maxLength", "2000");
+  expect(screen.getByText("0/2000")).toBeInTheDocument();
+
+  await user.type(observacao, "abc");
+
+  expect(screen.getByText("3/2000")).toBeInTheDocument();
+});

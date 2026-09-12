@@ -36,12 +36,13 @@ export function DadosFornecedorForm({ form, erros }: DadosFornecedorFormProps) {
   const erroCnpj = erros.cnpj ?? (cnpj && !cnpjValido(cnpj) ? "CNPJ inválido" : undefined);
   const telefone = watch("telefone");
   const site = watch("site");
+  const observacoes = (watch("observacoes") as string | undefined) ?? "";
   const erroTelefone = erros.telefone ?? (telefone && !telefoneValido(telefone) ? "Telefone inválido" : undefined);
   const erroSite = erros.site ?? (site && !siteValido(site) ? "Site inválido" : undefined);
   return (
     <div className={s.grid}>
       <Field label="Nome" required error={erroNome} className={s.span2}>
-        <Input {...register("nome")} />
+        <Input maxLength={150} {...register("nome")} />
       </Field>
 
       <Field label="Tipo" error={erros.tipo}>
@@ -92,8 +93,8 @@ export function DadosFornecedorForm({ form, erros }: DadosFornecedorFormProps) {
       </Field>
       <div />
 
-      <Field label="Observações" error={erros.observacoes} className={s.span2}>
-        <Textarea {...register("observacoes")} />
+      <Field label="Observações" helper={`${observacoes.length}/2000`} error={erros.observacoes} className={s.span2}>
+        <Textarea maxLength={2000} {...register("observacoes")} />
       </Field>
     </div>
   );

@@ -28,6 +28,7 @@ export function DadosPessoaForm({ form, grupos, erros, verDocumento, onNovoGrupo
   const erroCpf = erros.cpf ?? (cpf && !cpfValido(cpf) ? "CPF inválido" : undefined);
   const whatsapp = form.watch("whatsapp");
   const telefone = form.watch("telefone");
+  const observacoes = (form.watch("observacoes") as string | undefined) ?? "";
   const erroWhatsapp = erros.whatsapp ?? (whatsapp && !telefoneValido(whatsapp) ? "Telefone inválido" : undefined);
   const erroTelefone = erros.telefone ?? (telefone && !telefoneValido(telefone) ? "Telefone inválido" : undefined);
 
@@ -41,7 +42,7 @@ export function DadosPessoaForm({ form, grupos, erros, verDocumento, onNovoGrupo
       <Section title="Dados pessoais">
         <div className="grid-form">
           <Field label="Nome completo" required className="span-6" error={erros.nome}>
-            <Input autoComplete="off" {...form.register("nome")} />
+            <Input autoComplete="off" maxLength={150} {...form.register("nome")} />
           </Field>
           {verDocumento && (
             <Field label="CPF" className="span-3" error={erroCpf}>
@@ -74,7 +75,7 @@ export function DadosPessoaForm({ form, grupos, erros, verDocumento, onNovoGrupo
             />
           </Field>
           <Field label="Cidade" className="span-3">
-            <Input autoComplete="off" {...form.register("cidade")} />
+            <Input autoComplete="off" maxLength={80} {...form.register("cidade")} />
           </Field>
           <Field label="UF" className="span-3" error={erros.uf}>
             <Select placeholder="—" options={OPCOES_UF} {...form.register("uf")} />
@@ -111,7 +112,8 @@ export function DadosPessoaForm({ form, grupos, erros, verDocumento, onNovoGrupo
       </Section>
 
       <Section title="Observações e preferências">
-        <Textarea rows={4} aria-label="Observações" {...form.register("observacoes")} />
+        <Textarea rows={4} aria-label="Observações" maxLength={2000} {...form.register("observacoes")} />
+        <span className={s.secondary}>{observacoes.length}/2000</span>
       </Section>
     </>
   );

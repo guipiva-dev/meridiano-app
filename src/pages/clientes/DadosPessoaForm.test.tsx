@@ -74,3 +74,26 @@ test("whatsapp com letras mostra erro local", async () => {
 
   expect(await screen.findByText("Telefone inválido")).toBeInTheDocument();
 });
+
+test("nome tem maxLength 150", () => {
+  render(<Wrapper />);
+  expect(screen.getByLabelText(/^Nome completo/)).toHaveAttribute("maxLength", "150");
+});
+
+test("cidade tem maxLength 80", () => {
+  render(<Wrapper />);
+  expect(screen.getByLabelText("Cidade")).toHaveAttribute("maxLength", "80");
+});
+
+test("observações tem maxLength 2000 e mostra contador N/2000", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  const observacoes = screen.getByLabelText("Observações");
+  expect(observacoes).toHaveAttribute("maxLength", "2000");
+  expect(screen.getByText("0/2000")).toBeInTheDocument();
+
+  await user.type(observacoes, "abc");
+
+  expect(screen.getByText("3/2000")).toBeInTheDocument();
+});

@@ -1,10 +1,12 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { chavesGrupos, type TipoGrupo } from "@/api/grupos";
+import { mensagemDeErro } from "@/api/errors";
+import { chavesGrupos, gruposApi, type TipoGrupo } from "@/api/grupos";
 import { useAuth } from "@/auth/useAuth";
 import { Button, Field, Input, Select, Textarea } from "@/components";
 import { Alert } from "@/components/display";
-import { Skeleton } from "@/components/feedback";
+import { ConfirmModal, Skeleton } from "@/components/feedback";
 import { Page, PageHeader, Section } from "@/components/shell";
 import { apresentacaoStatus } from "@/dominio/status";
 import { cnpjValido } from "@/lib/documentos";
@@ -23,11 +25,13 @@ export function GrupoPage() {
   const { pode } = useAuth();
   const v = useGrupo(id);
   const podeEditar = pode("cliente.editar");
+  const [confirmarExclusao, setConfirmarExclusao] = useState(false);
 
   // "Novo grupo" começa sem tipo selecionado; o form tipa como obrigatório, mas o runtime começa undefined.
   const tipo = v.form.watch("tipo") as TipoGrupo | undefined;
   const nome = v.form.watch("nome");
   const cnpj = v.form.watch("cnpj");
+  const observacoes = (v.form.watch("observacoes") as string | undefined) ?? "";
   const dirty = v.salvamento.estado === "dirty" || v.salvamento.estado === "error";
   // Só mostra "obrigatório" depois que o usuário passou pelo campo (evita erro no form em branco recém-aberto).
   const erroNome =
@@ -41,6 +45,14 @@ export function GrupoPage() {
     },
     podeEditar,
   );
+
+  const excluir = useMutation({
+    mutationFn: () => gruposApi.excluir(id ?? ""),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["grupos", "lista"] });
+      void nav("/clientes/grupos");
+    },
+  });
 
   if (v.carregando) {
     return (
@@ -63,6 +75,16 @@ export function GrupoPage() {
         salvoEm={v.salvamento.salvoEm}
         actions={
           <>
+            {podeEditar && v.dto && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setConfirmarExclusao(true);
+                }}
+              >
+                Excluir grupo
+              </Button>
+            )}
             <Button
               variant="tertiary"
               onClick={() => {
@@ -86,6 +108,7 @@ export function GrupoPage() {
         }
       />
 
+      {excluir.isError && <Alert tone="danger">{mensagemDeErro(excluir.error)}</Alert>}
       {v.conflito && (
         <Alert
           tone="warning"
@@ -110,7 +133,7 @@ export function GrupoPage() {
       <Section>
         <div className="grid-form">
           <Field label="Nome" required className="span-6" error={erroNome}>
-            <Input autoComplete="off" {...v.form.register("nome")} />
+            <Input autoComplete="off" maxLength={150} {...v.form.register("nome")} />
           </Field>
           <Field label="Tipo" className="span-3" error={v.erros.tipo}>
             <Select options={OPCOES_TIPO} {...v.form.register("tipo")} />
@@ -118,8 +141,8 @@ export function GrupoPage() {
           <Field label="CNPJ" className="span-3" helper={tipo === "empresa" ? undefined : "(empresa)"} error={erroCnpj}>
             <Input className={s.mono} disabled={tipo !== "empresa"} {...v.form.register("cnpj")} />
           </Field>
-          <Field label="Observações" className="span-12">
-            <Textarea {...v.form.register("observacoes")} />
+          <Field label="Observações" helper={`${observacoes.length}/2000`} className="span-12">
+            <Textarea maxLength={2000} {...v.form.register("observacoes")} />
           </Field>
         </div>
       </Section>
@@ -135,6 +158,23 @@ export function GrupoPage() {
             }}
           />
         </Section>
+      )}
+
+      {confirmarExclusao && (
+        <ConfirmModal
+          open
+          title={`Excluir ${v.dto?.nome ?? "grupo"}?`}
+          impact="Esta ação não pode ser desfeita. As pessoas do grupo não são excluídas."
+          confirmLabel="Excluir"
+          tone="danger"
+          loading={excluir.isPending}
+          onConfirm={() => {
+            excluir.mutate();
+          }}
+          onCancel={() => {
+            setConfirmarExclusao(false);
+          }}
+        />
       )}
     </Page>
   );

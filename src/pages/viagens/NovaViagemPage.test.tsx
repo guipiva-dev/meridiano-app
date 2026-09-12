@@ -233,6 +233,23 @@ test("rótulo 'Comissão do vendedor' no resumo", async () => {
   expect(screen.queryByText(/vendedora/)).toBeNull();
 });
 
+test("destino tem maxLength 120", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+  expect(screen.getByLabelText(/^Destino/)).toHaveAttribute("maxLength", "120");
+});
+
+test("observações tem maxLength 2000 e mostra contador N/2000", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+  const observacoes = screen.getByLabelText("Observações");
+  expect(observacoes).toHaveAttribute("maxLength", "2000");
+
+  fireEvent.change(observacoes, { target: { value: "abc" } });
+
+  expect(screen.getByText("3/2000")).toBeInTheDocument();
+});
+
 test("edição não repete 'Titular:' no subtítulo", async () => {
   vi.stubGlobal("fetch", (url: string) => {
     if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));

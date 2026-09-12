@@ -29,6 +29,7 @@ export const CAMPO_POR_CODIGO: Record<string, string> = {
   telefone_invalido: "telefone",
   numero_obrigatorio: "numero",
   site_invalido: "site",
+  whatsapp_invalido: "whatsapp",
   // Nome duplicado de fornecedor/grupo: 422 (RegraDeNegocioException) é o caminho normal.
   fornecedor_duplicado: "nome",
   grupo_duplicado: "nome",
@@ -59,6 +60,11 @@ export function errosDeCadastro(erro: unknown): ErrosApi {
     return { campos: {}, bloco: null, conflito: true };
   }
   if (erro instanceof ValidationError) {
+    // texto_longo (B4) é genérico: o campo vem em extensions.campo, não em CAMPO_POR_CODIGO (um código, N campos).
+    if (erro.codigo === "texto_longo") {
+      const campo = erro.extensions.campo;
+      if (typeof campo === "string") return { campos: { [campo]: erro.detalhe }, bloco: null, conflito: false };
+    }
     const campo = CAMPO_POR_CODIGO[erro.codigo];
     if (campo) return { campos: { [campo]: erro.detalhe }, bloco: null, conflito: false };
   }

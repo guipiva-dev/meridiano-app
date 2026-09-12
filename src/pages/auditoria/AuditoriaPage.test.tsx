@@ -2,11 +2,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import type { AuditoriaDto, EventoAuditoriaDto } from "@/api/auditoria";
+import { NetworkError } from "@/api/errors";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
-import { baixar } from "@/lib/download";
 import { AuditoriaPage } from "./AuditoriaPage";
 
-vi.mock("@/lib/download", () => ({ baixar: vi.fn() }));
+vi.mock("@/lib/download");
 
 function evento(over: Partial<EventoAuditoriaDto>): EventoAuditoriaDto {
   return {
@@ -152,7 +152,9 @@ test("datas de/até filtram por ?de=&ate=", async () => {
   });
 });
 
-test("Exportar CSV chama baixar com os filtros ativos", async () => {
+test("Exportar CSV chama baixarComFeedback com os filtros ativos", async () => {
+  const { baixarComFeedback } = await import("@/lib/download");
+  vi.mocked(baixarComFeedback).mockResolvedValue(undefined);
   montar();
   await screen.findByText("1–7 de 412");
   fireEvent.click(screen.getByRole("button", { name: "Recebimentos" }));
@@ -160,7 +162,36 @@ test("Exportar CSV chama baixar com os filtros ativos", async () => {
     expect(ultimaUrl).toContain("oque=recebimentos");
   });
   fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
-  expect(baixar).toHaveBeenCalledWith("/api/v1/auditoria/csv?oque=recebimentos", "auditoria.csv");
+  await waitFor(() => {
+    expect(baixarComFeedback).toHaveBeenCalledWith("/api/v1/auditoria/csv?oque=recebimentos", "auditoria.csv");
+  });
+});
+
+test("Exportar CSV mostra Gerando… enquanto a exportação está em andamento (MED-04)", async () => {
+  const { baixarComFeedback } = await import("@/lib/download");
+  let resolver: () => void = () => undefined;
+  vi.mocked(baixarComFeedback).mockReturnValue(
+    new Promise((resolve) => {
+      resolver = () => {
+        resolve();
+      };
+    }),
+  );
+  montar();
+  await screen.findByText("1–7 de 412");
+  fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
+  expect(await screen.findByRole("button", { name: "Gerando…" })).toBeDisabled();
+  resolver();
+  expect(await screen.findByRole("button", { name: "Exportar CSV" })).toBeInTheDocument();
+});
+
+test("Exportar CSV com falha mostra Alert com a mensagem de erro (MED-04)", async () => {
+  const { baixarComFeedback } = await import("@/lib/download");
+  vi.mocked(baixarComFeedback).mockRejectedValue(new NetworkError());
+  montar();
+  await screen.findByText("1–7 de 412");
+  fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("Sem conexão. Verifique a internet e tente de novo.");
 });
 
 test("proximoAntesDe null esconde o botão Mais antigas", async () => {

@@ -9,7 +9,7 @@ import { DetalhesEventoModal, LinhaEvento } from "@/components/auditoria";
 import { Alert } from "@/components/display";
 import { EmptyState, Skeleton } from "@/components/feedback";
 import { Page, PageHeader } from "@/components/shell";
-import { baixar } from "@/lib/download";
+import { baixarComFeedback } from "@/lib/download";
 import s from "./Auditoria.module.css";
 import { FiltrosAuditoria } from "./FiltrosAuditoria";
 
@@ -21,8 +21,22 @@ export function AuditoriaPage() {
   const de = params.get("de") ?? undefined;
   const ate = params.get("ate") ?? undefined;
   const [detalhe, setDetalhe] = useState<EventoAuditoriaDto | null>(null);
+  const [exportando, setExportando] = useState(false);
+  const [erroExportacao, setErroExportacao] = useState<string | null>(null);
 
   const filtroBase: FiltroAuditoria = { usuarioId, oque, de, ate };
+
+  async function exportarCsv() {
+    setErroExportacao(null);
+    setExportando(true);
+    try {
+      await baixarComFeedback(urlCsv(filtroBase), "auditoria.csv");
+    } catch (e) {
+      setErroExportacao(mensagemDeErro(e));
+    } finally {
+      setExportando(false);
+    }
+  }
 
   function definirFiltro(chave: string) {
     return (valor: string | undefined) => {
@@ -63,14 +77,17 @@ export function AuditoriaPage() {
         actions={
           <Button
             variant="secondary"
+            disabled={exportando}
             onClick={() => {
-              baixar(urlCsv(filtroBase), "auditoria.csv");
+              void exportarCsv();
             }}
           >
-            Exportar CSV
+            {exportando ? "Gerando…" : "Exportar CSV"}
           </Button>
         }
       />
+
+      {erroExportacao && <Alert tone="danger">{erroExportacao}</Alert>}
 
       <FiltrosAuditoria
         usuarios={usuarios}

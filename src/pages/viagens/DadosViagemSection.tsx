@@ -52,6 +52,7 @@ export function DadosViagemSection({
 }: DadosViagemSectionProps) {
   const passageiros = form.watch("passageiros");
   const repasseValor = form.watch("repasseValor");
+  const observacoes = (form.watch("observacoes") as string | undefined) ?? "";
   return (
     <div className="grid-form">
       <div className="span-6">
@@ -66,7 +67,7 @@ export function DadosViagemSection({
         />
       </div>
       <Field label="Destino" required className="span-3" error={erros.destino}>
-        <Input autoComplete="off" {...form.register("destino")} />
+        <Input autoComplete="off" maxLength={120} {...form.register("destino")} />
       </Field>
       <Field label="Tipo" className="span-3">
         <Select options={TIPOS} {...form.register("tipo")} />
@@ -106,8 +107,8 @@ export function DadosViagemSection({
           <Field label="Ocasião" className="span-4">
             <Input autoComplete="off" placeholder="Lua de mel, aniversário…" {...form.register("ocasiao")} />
           </Field>
-          <Field label="Observações" className="span-8">
-            <Observacoes {...form.register("observacoes")} />
+          <Field label="Observações" helper={`${observacoes.length}/2000`} className="span-8">
+            <Observacoes maxLength={2000} {...form.register("observacoes")} />
           </Field>
         </div>
       </details>

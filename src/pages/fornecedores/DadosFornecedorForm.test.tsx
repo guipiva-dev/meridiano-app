@@ -112,3 +112,21 @@ test("site como domínio simples sem esquema não mostra erro (mesma tolerância
 
   expect(screen.queryByText("Site inválido")).not.toBeInTheDocument();
 });
+
+test("nome tem maxLength 150", () => {
+  render(<Wrapper />);
+  expect(screen.getByLabelText(/^Nome/)).toHaveAttribute("maxLength", "150");
+});
+
+test("observações tem maxLength 2000 e mostra contador N/2000", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  const observacoes = screen.getByLabelText("Observações");
+  expect(observacoes).toHaveAttribute("maxLength", "2000");
+  expect(screen.getByText("0/2000")).toBeInTheDocument();
+
+  await user.type(observacoes, "abc");
+
+  expect(screen.getByText("3/2000")).toBeInTheDocument();
+});
