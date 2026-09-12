@@ -128,3 +128,33 @@ test("login autenticado entra numa rota protegida por RequireAuth sem cair de vo
   });
   expect(router.state.location.pathname).toBe("/viagens");
 });
+
+// Homologação: submit vazio mostrava "Campos obrigatórios ausentes" (genérico da API).
+test("campos vazios: erro por campo, sem chamar a API", async () => {
+  const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(() => Promise.resolve(new Response(null, { status: 401 })));
+  montar();
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Entrar" }));
+  expect(screen.getByLabelText(/E-mail/)).toHaveAccessibleDescription("Informe o e-mail");
+  expect(screen.getByLabelText(/Senha/)).toHaveAccessibleDescription("Informe a senha");
+  expect(fetchSpy.mock.calls.some(([u]) => typeof u === "string" && u.includes("/auth/login"))).toBe(false);
+});
+
+test("429 conta_bloqueada mostra 'Muitas tentativas. Tente em N min.'", async () => {
+  vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+    Promise.resolve(
+      new Response(JSON.stringify({ status: 429, codigo: "conta_bloqueada", detail: "Conta bloqueada", tenteEm: 300 }), {
+        status: 429,
+        headers: { "content-type": "application/problem+json" },
+      }),
+    ),
+  );
+  montar();
+  const user = userEvent.setup();
+  await user.type(await screen.findByLabelText(/E-mail/), "a@b.com");
+  await user.type(screen.getByLabelText(/Senha/), "errada");
+  await user.click(screen.getByRole("button", { name: "Entrar" }));
+  await waitFor(() => {
+    expect(screen.getByRole("alert")).toHaveTextContent("Muitas tentativas. Tente em 5 min.");
+  });
+});

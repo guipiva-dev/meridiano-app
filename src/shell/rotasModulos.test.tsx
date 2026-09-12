@@ -102,3 +102,20 @@ test("/auditoria abre com auditoria.ver", () => {
   montar("/auditoria", (p) => p === "auditoria.ver");
   expect(screen.getByRole("heading", { name: "Auditoria" })).toBeInTheDocument();
 });
+
+// Homologação: 404 mostrava "Página não encontrada" + "Em construção" (contraditório).
+test("rota inexistente mostra só 'Página não encontrada' com link para Viagens", async () => {
+  vi.stubGlobal("fetch", () =>
+    Promise.resolve({
+      ok: true,
+      status: 200,
+      headers: { get: () => "application/json" },
+      json: () => Promise.resolve({}),
+    } as unknown as Response),
+  );
+  montar("/nao-existe");
+  expect(await screen.findByRole("heading", { name: "Página não encontrada" })).toBeInTheDocument();
+  expect(screen.getByText("Confira o endereço ou volte para Viagens.")).toBeInTheDocument();
+  expect(screen.queryByText("Em construção")).toBeNull();
+  expect(screen.getByRole("link", { name: "Ir para Viagens" })).toHaveAttribute("href", "/viagens");
+});

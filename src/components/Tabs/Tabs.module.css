@@ -7,6 +7,8 @@
   display: flex;
   gap: var(--space-1);
   border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 .tab {
   background: none;
@@ -19,6 +21,8 @@
   display: inline-flex;
   gap: var(--space-2);
   align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .ativo {
   color: var(--color-text-heading);

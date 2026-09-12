@@ -16,11 +16,14 @@
 .busca {
   position: relative;
   flex: 1;
+  min-width: 0;
   max-width: 460px;
   display: flex;
   align-items: center;
 }
 .busca input {
+  width: 100%;
+  min-width: 0;
   padding-left: var(--space-8);
   padding-right: var(--space-12);
 }
@@ -41,6 +44,7 @@
 }
 .user {
   margin-left: auto;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -50,6 +54,9 @@
   color: var(--color-text-secondary);
 }
 @media (max-width: 1024px) {
+  .top {
+    padding: 0 var(--space-4);
+  }
   .menu {
     display: inline-flex;
   }

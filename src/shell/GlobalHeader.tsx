@@ -1,4 +1,4 @@
-import { Bell, CircleHelp, LogOut, Menu, Plus, Search } from "lucide-react";
+import { LogOut, Menu, Plus, Search } from "lucide-react";
 import { useRef } from "react";
 import { useNavigate } from "react-router";
 import { mensagemDeErro } from "@/api/http";
@@ -35,8 +35,6 @@ export function GlobalHeader({ onMenu, menuAberto }: { onMenu: () => void; menuA
           Nova viagem
         </Button>
       )}
-      <IconButton label="Notificações" icon={<Bell size={20} />} />
-      <IconButton label="Ajuda" icon={<CircleHelp size={20} />} />
       <div className={s.user}>
         <span className={s.nome}>{me?.nome}</span>
         <IconButton

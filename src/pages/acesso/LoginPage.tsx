@@ -1,6 +1,6 @@
 import { type SubmitEvent, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import { UnauthenticatedError } from "@/api/errors";
+import { ApiError, UnauthenticatedError } from "@/api/errors";
 import { mensagemDeErro } from "@/api/http";
 import { destinoSeguro } from "@/auth/destinoSeguro";
 import { useAuth } from "@/auth/useAuth";
@@ -16,17 +16,24 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
+  const [erroCampo, setErroCampo] = useState<{ email?: string; senha?: string }>({});
   const [enviando, setEnviando] = useState(false);
 
   async function submeter(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setErro(null);
+    const faltando = {
+      email: email.trim() ? undefined : "Informe o e-mail",
+      senha: senha ? undefined : "Informe a senha",
+    };
+    setErroCampo(faltando);
+    if (faltando.email || faltando.senha) return;
     setEnviando(true);
     try {
       await entrar(email.trim(), senha);
       await nav(destinoSeguro(params.get("voltar")), { replace: true });
     } catch (ex) {
-      setErro(ex instanceof UnauthenticatedError ? "E-mail ou senha incorretos." : mensagemDeErro(ex));
+      setErro(mensagemDeLogin(ex));
     } finally {
       setEnviando(false);
     }
@@ -43,7 +50,7 @@ export function LoginPage() {
       >
         <h1 className={s.title}>Entrar</h1>
         {erro && <Alert tone="danger">{erro}</Alert>}
-        <Field label="E-mail" required>
+        <Field label="E-mail" required error={erroCampo.email}>
           <Input
             type="email"
             autoComplete="username"
@@ -55,7 +62,7 @@ export function LoginPage() {
             }}
           />
         </Field>
-        <Field label="Senha" required>
+        <Field label="Senha" required error={erroCampo.senha}>
           <Input
             type="password"
             autoComplete="current-password"
@@ -74,4 +81,14 @@ export function LoginPage() {
       </form>
     </AuthLayout>
   );
+}
+
+function mensagemDeLogin(ex: unknown): string {
+  if (ex instanceof UnauthenticatedError) return "E-mail ou senha incorretos.";
+  if (ex instanceof ApiError && ex.codigo === "conta_bloqueada") {
+    const segundos = Number(ex.extensions.tenteEm);
+    const min = Math.max(1, Math.ceil((Number.isFinite(segundos) ? segundos : 60) / 60));
+    return `Muitas tentativas. Tente em ${String(min)} min.`;
+  }
+  return mensagemDeErro(ex);
 }

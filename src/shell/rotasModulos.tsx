@@ -3,7 +3,7 @@ import { ViagemPage } from "@/pages/viagens/detalhe/ViagemPage";
 import { ViagensPage } from "@/pages/viagens/lista/ViagensPage";
 import { NovaViagemPage } from "@/pages/viagens/NovaViagemPage";
 import { AppShell } from "./AppShell";
-import { EmConstrucao } from "./EmConstrucao";
+import { NaoEncontrada } from "./NaoEncontrada";
 import { RotaProtegida } from "./RotaProtegida";
 import { RotasAgenda } from "./rotasAgenda";
 import { RotasAuditoria } from "./rotasAuditoria";
@@ -28,15 +28,7 @@ export function RotasApp() {
       {RotasRelatorios()}
       {RotasEquipe()}
       {RotasAuditoria()}
-      <Route
-        path="*"
-        element={
-          <EmConstrucao
-            titulo="Página não encontrada"
-            descricao="Endereço não existe. Confira o link ou volte para Viagens."
-          />
-        }
-      />
+      <Route path="*" element={<NaoEncontrada />} />
     </Route>
   );
 }

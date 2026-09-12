@@ -70,3 +70,11 @@ test("abrir o menu marca aria-expanded e foca o primeiro link; Escape e o backdr
   await user.click(screen.getByRole("button", { name: "Fechar menu" }));
   expect(menu).toHaveAttribute("aria-expanded", "false");
 });
+
+// Homologação: Notificações e Ajuda não faziam nada — header não pode ter botão morto.
+test("header não tem botões sem função (Notificações, Ajuda)", () => {
+  montar();
+  expect(screen.queryByRole("button", { name: "Notificações" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Ajuda" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Sair" })).toBeInTheDocument();
+});
