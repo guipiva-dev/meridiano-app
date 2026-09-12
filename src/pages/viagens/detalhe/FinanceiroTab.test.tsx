@@ -175,14 +175,22 @@ test("Excluir… fica visível ao lado de Editar e abre o modal com motivo obrig
 });
 
 test("viagem cancelada: sem + Despesa; Lançar movimento só oferece estorno e reembolso", async () => {
-  montar(() => true, { ...VIAGEM, cancelada: true, faseOperacional: "cancelada" });
+  montar(() => true, {
+    ...VIAGEM,
+    cancelada: true,
+    faseOperacional: "cancelada",
+    reservas: VIAGEM.reservas.map((r) => ({ ...r, status: "cancelada" as const })),
+  });
   await screen.findByText("R$ 1.100,00");
   expect(screen.queryByRole("button", { name: "+ Despesa" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "+ Lançar movimento" }));
-  const select = within(screen.getByRole("dialog")).getByLabelText(/^Tipo/);
+  const dialogo = screen.getByRole("dialog");
+  const tipo = within(dialogo).getByLabelText(/^Tipo/);
   expect(
-    within(select)
+    within(tipo)
       .getAllByRole("option")
       .map((o) => o.textContent),
   ).toEqual(["Estorno da operadora", "Reembolso ao cliente"]);
+  // as reservas canceladas continuam elegíveis para estorno/reembolso
+  expect(within(within(dialogo).getByLabelText(/^Reserva/)).getAllByRole("option")).toHaveLength(2);
 });

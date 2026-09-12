@@ -33,10 +33,13 @@ export function MovimentoModal({
   onSalvo,
 }: MovimentoModalProps) {
   const opcoesTipo = tiposPermitidos.map((t) => ({ value: t, label: apresentacaoStatus("movimento_tipo", t).texto }));
-  // Canceladas só entram quando a comissão foi mantida — as demais não recebem mais movimento.
-  const reservas = viagem.reservas.filter((r) => r.status !== "cancelada" || r.comissaoMantida);
-  const [reservaId, setReservaId] = useState(movimento?.reservaId ?? reservaFixa ?? reservas[0]?.id ?? "");
   const [tipo, setTipo] = useState<TipoMovimento>(movimento?.tipo ?? tiposPermitidos[0] ?? "recebimento_operadora");
+  // Reserva cancelada só recebe estorno/reembolso (§4.7); fora disso entra apenas se a comissão foi mantida.
+  const devolucao = tipo === "estorno_operadora" || tipo === "reembolso_cliente";
+  const reservas = viagem.reservas.filter((r) => devolucao || r.status !== "cancelada" || r.comissaoMantida);
+  const [reservaEscolhida, setReservaId] = useState(movimento?.reservaId ?? reservaFixa ?? "");
+  // A lista muda com o tipo: se a escolha saiu dela (ou nunca houve), cai na primeira.
+  const reservaId = reservas.some((r) => r.id === reservaEscolhida) ? reservaEscolhida : (reservas[0]?.id ?? "");
   const [valor, setValor] = useState<number | null>(movimento ? Math.abs(movimento.valor) : null);
   const [data, setData] = useState(movimento?.dataMovimento ?? hojeIso());
   const [forma, setForma] = useState<FormaPagamentoFin | "">(movimento?.formaPagamento ?? "");

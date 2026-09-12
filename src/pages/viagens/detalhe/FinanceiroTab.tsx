@@ -11,7 +11,7 @@ import { FaixaResumo, type ItemFaixa } from "@/components/viagem";
 import { formatarData } from "@/lib/datas";
 import { DespesasViagem } from "./DespesasViagem";
 import { MovimentosViagem } from "./MovimentosViagem";
-import { Bloco } from "./ResumoTab";
+import { Bloco, TOOLTIP_RECEBIDA } from "./ResumoTab";
 import s from "./Viagem.module.css";
 
 /** Financeiro da viagem (R10): faixa de resumo, atalho de recebimento, movimentos de caixa e
@@ -27,7 +27,7 @@ export function FinanceiroTab({ viagem }: { viagem: ViagemDto }) {
   const itens: ItemFaixa[] = r
     ? [
         { label: "Receita prevista", value: r.receitaPrevista },
-        { label: "Receita recebida", value: r.receitaRecebida, tooltip: "Soma de todos os movimentos da viagem" },
+        { label: "Receita recebida", value: r.receitaRecebida, tooltip: TOOLTIP_RECEBIDA },
         {
           label: "Comissão do vendedor",
           value: r.repasseValor,

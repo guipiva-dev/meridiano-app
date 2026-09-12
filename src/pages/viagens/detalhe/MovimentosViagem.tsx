@@ -90,7 +90,7 @@ export function MovimentosViagem({ viagem, podeMovimentar, verValores, onMudou }
                 Editar
               </Button>
               <Button
-                variant="tertiary"
+                variant="danger"
                 size="sm"
                 onClick={() => {
                   setModal({ tipo: "excluir", movimento: mv });

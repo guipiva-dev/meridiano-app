@@ -97,7 +97,7 @@ export function DespesasViagem({ viagem, podeMovimentar, onMudou }: DespesasViag
                 Editar
               </Button>
               <Button
-                variant="tertiary"
+                variant="danger"
                 size="sm"
                 onClick={() => {
                   setModal({ tipo: "excluir", despesa: d });

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type * as FinanceiroApi from "@/api/financeiro";
 import type { MovimentoDto, MovimentoRequest } from "@/api/financeiro";
@@ -135,4 +135,29 @@ test("edição trava reserva e tipo e manda a versão", async () => {
     expect.objectContaining({ valor: 500, tipo: "pagamento_fornecedor", versao: "7" }),
     undefined,
   );
+});
+
+test("reserva cancelada entra na lista quando o tipo é estorno/reembolso (viagem cancelada)", async () => {
+  const user = userEvent.setup();
+  const cancelada = { ...reserva(), status: "cancelada" as const };
+  render(
+    <MovimentoModal
+      open
+      viagem={{ ...viagem(), cancelada: true, reservas: [cancelada] }}
+      tiposPermitidos={["estorno_operadora", "reembolso_cliente"]}
+      onClose={vi.fn()}
+      onSalvo={vi.fn()}
+    />,
+  );
+  const select = screen.getByLabelText(/^Reserva/);
+  expect(within(select).getAllByRole("option")).toHaveLength(1);
+  expect(select).toHaveValue("r1");
+
+  // sem restrição, trocar o tipo para reembolso também libera a reserva cancelada
+  render(<MovimentoModal open viagem={{ ...viagem(), reservas: [cancelada] }} onClose={vi.fn()} onSalvo={vi.fn()} />);
+  const [, semRestricao] = screen.getAllByLabelText(/^Reserva/);
+  expect(within(semRestricao!).queryAllByRole("option")).toHaveLength(0);
+  await user.selectOptions(screen.getAllByLabelText(/^Tipo/)[1]!, "reembolso_cliente");
+  expect(within(semRestricao!).getAllByRole("option")).toHaveLength(1);
+  expect(semRestricao).toHaveValue("r1");
 });
