@@ -12,6 +12,7 @@ interface TabelaConciliacaoProps {
   carregando?: boolean;
   selecionados: ReadonlySet<string>;
   alternar: (reservaId: string) => void;
+  alternarTodas: (idsElegiveis: string[]) => void;
   podeMovimentar: boolean;
   podeConciliar: boolean;
   onReceber: (i: ConciliacaoItemDto) => void;
@@ -29,6 +30,7 @@ export function TabelaConciliacao({
   carregando,
   selecionados,
   alternar,
+  alternarTodas,
   podeMovimentar,
   podeConciliar,
   onReceber,
@@ -65,9 +67,20 @@ export function TabelaConciliacao({
 
   const colunas: Coluna<ConciliacaoItemDto>[] = [];
   if (comSelecao) {
+    const idsElegiveis = itens.filter((i) => i.elegivelLote).map((i) => i.reservaId);
+    const todasLigadas = idsElegiveis.length > 0 && idsElegiveis.every((id) => selecionados.has(id));
     colunas.push({
       id: "sel",
-      titulo: "",
+      titulo: (
+        <Checkbox
+          label=""
+          aria-label="Selecionar todas elegíveis"
+          checked={todasLigadas}
+          onChange={() => {
+            alternarTodas(idsElegiveis);
+          }}
+        />
+      ),
       largura: "40px",
       render: (i) =>
         i.elegivelLote && (

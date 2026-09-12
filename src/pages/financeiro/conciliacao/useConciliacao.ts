@@ -70,6 +70,19 @@ export function useConciliacao() {
     });
   }
 
+  /** Checkbox de cabeçalho: liga todas as elegíveis se faltar alguma, desliga todas se já estiverem todas ligadas. */
+  function alternarTodas(idsElegiveis: string[]) {
+    setSelecionados((atual) => {
+      const todasLigadas = idsElegiveis.length > 0 && idsElegiveis.every((id) => atual.has(id));
+      if (todasLigadas) {
+        const proximos = new Set(atual);
+        for (const id of idsElegiveis) proximos.delete(id);
+        return proximos;
+      }
+      return new Set([...atual, ...idsElegiveis]);
+    });
+  }
+
   function abrir(m: ModalConciliacao) {
     setModal(m);
   }
@@ -85,5 +98,17 @@ export function useConciliacao() {
     void qc.invalidateQueries({ queryKey: ["viagens"] });
   }
 
-  return { filtro, definir, limpar, selecionados, alternar, limparSelecao, modal, abrir, fechar, aplicarMovimento };
+  return {
+    filtro,
+    definir,
+    limpar,
+    selecionados,
+    alternar,
+    alternarTodas,
+    limparSelecao,
+    modal,
+    abrir,
+    fechar,
+    aplicarMovimento,
+  };
 }

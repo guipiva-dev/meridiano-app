@@ -12,7 +12,8 @@ export function Paginacao({
   total: number;
   onPagina: (p: number) => void;
 }) {
-  const inicio = total === 0 ? 0 : (pagina - 1) * tamanho + 1;
+  if (total === 0) return null;
+  const inicio = (pagina - 1) * tamanho + 1;
   const fim = Math.min(pagina * tamanho, total);
   return (
     <div className={s.paginacao}>

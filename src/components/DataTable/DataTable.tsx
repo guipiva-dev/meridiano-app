@@ -6,7 +6,8 @@ import s from "./DataTable.module.css";
 
 export interface Coluna<T> {
   id: string;
-  titulo: string;
+  /** Normalmente um texto; a coluna de seleção em lote usa um checkbox de "selecionar todas". */
+  titulo: ReactNode;
   alinhar?: "right";
   ordenavel?: boolean;
   render: (linha: T) => ReactNode;

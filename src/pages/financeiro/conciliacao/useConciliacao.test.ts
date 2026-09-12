@@ -77,6 +77,30 @@ test("alternar liga e desliga a mesma reserva", () => {
   expect(result.current.selecionados.size).toBe(0);
 });
 
+test("alternarTodas liga todas as elegíveis e desliga se já estiverem todas ligadas", () => {
+  const { result } = montar();
+  act(() => {
+    result.current.alternarTodas(["r1", "r2", "r4"]);
+  });
+  expect(result.current.selecionados).toEqual(new Set(["r1", "r2", "r4"]));
+
+  act(() => {
+    result.current.alternarTodas(["r1", "r2", "r4"]);
+  });
+  expect(result.current.selecionados.size).toBe(0);
+});
+
+test("alternarTodas com alguma já ligada liga o restante em vez de desligar", () => {
+  const { result } = montar();
+  act(() => {
+    result.current.alternar("r1");
+  });
+  act(() => {
+    result.current.alternarTodas(["r1", "r2"]);
+  });
+  expect(result.current.selecionados).toEqual(new Set(["r1", "r2"]));
+});
+
 test("abrir e fechar controlam o modal", () => {
   const { result } = montar();
   act(() => {

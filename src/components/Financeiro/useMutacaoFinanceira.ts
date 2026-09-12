@@ -10,6 +10,8 @@ export interface ResultadoMutacao<TArgs, TRes> {
   precisaMotivo: boolean;
   motivo: string;
   setMotivo: (m: string) => void;
+  /** Excedente (R$) de um 422 `recebimento_acima_esperado`; null quando não há aviso pendente. */
+  excedente: number | null;
   enviar: (args: TArgs) => Promise<TRes | null>;
   limpar: () => void;
 }
@@ -30,6 +32,7 @@ export function useMutacaoFinanceira<TArgs, TRes>(
   const [conflito, setConflito] = useState(false);
   const [precisaMotivo, setPrecisaMotivo] = useState(false);
   const [motivo, setMotivo] = useState("");
+  const [excedente, setExcedente] = useState<number | null>(null);
 
   function limpar() {
     setSalvando(false);
@@ -38,12 +41,14 @@ export function useMutacaoFinanceira<TArgs, TRes>(
     setConflito(false);
     setPrecisaMotivo(false);
     setMotivo("");
+    setExcedente(null);
   }
 
   async function enviar(args: TArgs): Promise<TRes | null> {
     setErros({});
     setErroBloco(null);
     setConflito(false);
+    setExcedente(null);
     setSalvando(true);
     try {
       const res = await executar(args, motivo.trim() || undefined);
@@ -57,6 +62,9 @@ export function useMutacaoFinanceira<TArgs, TRes>(
         const campo = mapa[erro.codigo];
         if (erro.codigo === "periodo_fechado") {
           setErroBloco(ERRO_PERIODO_FECHADO);
+        } else if (erro.codigo === "recebimento_acima_esperado") {
+          const valor = erro.extensions.excedente;
+          setExcedente(typeof valor === "number" ? valor : 0);
         } else if (erro.codigo === "motivo_obrigatorio") {
           // Primeira recusa só revela o campo; erro embaixo dele só depois que o usuário tentou com motivo.
           if (precisaMotivo) setErros({ motivo: erro.detalhe });
@@ -73,5 +81,5 @@ export function useMutacaoFinanceira<TArgs, TRes>(
     }
   }
 
-  return { salvando, erros, erroBloco, conflito, precisaMotivo, motivo, setMotivo, enviar, limpar };
+  return { salvando, erros, erroBloco, conflito, precisaMotivo, motivo, setMotivo, excedente, enviar, limpar };
 }

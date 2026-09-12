@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
 import { ConciliacaoPage } from "./ConciliacaoPage";
@@ -207,6 +208,20 @@ test("selecionar duas linhas mostra a soma dos saldos na barra de seleção", as
   expect(screen.getByText("2 selecionadas · R$ 1.920,00 · lote só para valor igual ao esperado")).toBeInTheDocument();
 });
 
+test("selecionar todas elegíveis marca as elegíveis e ignora a parcial", async () => {
+  const user = userEvent.setup();
+  montar();
+  await screen.findAllByText("Carlos Mendes · Lisboa");
+  await user.click(screen.getByRole("checkbox", { name: "Selecionar todas elegíveis" }));
+  // 5 elegíveis (a parcial r3 não entra); soma exclui o saldo 580 da parcial.
+  expect(screen.getByText(/^5 selecionadas/)).toBeInTheDocument();
+  expect(screen.getByRole("checkbox", { name: "Selecionar K7X2PQ" })).toBeChecked();
+  expect(screen.queryByRole("checkbox", { name: "Selecionar Marcos e Renata Lima" })).toBeNull();
+
+  await user.click(screen.getByRole("checkbox", { name: "Selecionar todas elegíveis" }));
+  expect(screen.getByText(/^0 selecionadas/)).toBeInTheDocument();
+});
+
 test("Marcar recebidas abre o modal de lote com as reservas selecionadas", async () => {
   montar();
   await screen.findAllByText("Carlos Mendes · Lisboa");
@@ -252,6 +267,41 @@ test("clicar no KPI de atrasadas troca para a aba Atrasadas", async () => {
   montar();
   fireEvent.click(await screen.findByRole("button", { name: "3 reservas · pior: 41 dias →" }));
   expect(screen.getByRole("tab", { name: /Atrasadas/ })).toHaveAttribute("aria-selected", "true");
+});
+
+test("sem atrasadas não mostra 'pior: 0 dias'", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    if (url.includes("/conciliacao?")) {
+      return Promise.resolve(
+        resposta(200, {
+          ...CONCILIACAO,
+          kpis: { ...CONCILIACAO.kpis, atrasadas: { valor: 0, reservas: 0, extra: 0 } },
+        }),
+      );
+    }
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
+    return Promise.resolve(resposta(200, null));
+  });
+  montar();
+  expect(await screen.findByRole("button", { name: "0 reservas →" })).toBeInTheDocument();
+  expect(screen.queryByText(/pior:/)).toBeNull();
+});
+
+test("uma única reserva a receber usa singular", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    if (url.includes("/conciliacao?")) {
+      return Promise.resolve(
+        resposta(200, {
+          ...CONCILIACAO,
+          kpis: { ...CONCILIACAO.kpis, aReceber: { valor: 100, reservas: 1, extra: 1 } },
+        }),
+      );
+    }
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
+    return Promise.resolve(resposta(200, null));
+  });
+  montar();
+  expect(await screen.findByText("1 reserva · 1 operadora")).toBeInTheDocument();
 });
 
 test("aba de divergências troca Situação por Motivo", async () => {

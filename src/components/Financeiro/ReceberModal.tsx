@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ConciliacaoItemDto, FormaPagamentoFin, MovimentoDto, MovimentoRequest } from "@/api/financeiro";
 import { financeiroApi } from "@/api/financeiro";
-import { Button, DateInput, Field, MoneyInput, Select } from "@/components";
+import { Button, Checkbox, DateInput, Field, MoneyInput, Select } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
 import { hojeIso } from "@/lib/datas";
@@ -10,6 +10,9 @@ import s from "./Financeiro.module.css";
 import { MotivoField } from "./MotivoField";
 import { CAMPO_POR_CODIGO_FIN, OPCOES_FORMA } from "./mapaErrosFinanceiro";
 import { useMutacaoFinanceira } from "./useMutacaoFinanceira";
+
+/** `confirmarExcedente` ainda não está no contrato de `MovimentoRequest` (0018); ver relatório da F5. */
+type MovimentoRequestComExcedente = MovimentoRequest & { confirmarExcedente?: boolean };
 
 export type ItemRecebimento = Pick<
   ConciliacaoItemDto,
@@ -27,7 +30,8 @@ export function ReceberModal({ open, item, onClose, onRecebido }: ReceberModalPr
   const [valor, setValor] = useState<number | null>(item.saldo);
   const [data, setData] = useState(hojeIso());
   const [forma, setForma] = useState<FormaPagamentoFin>("transferencia");
-  const m = useMutacaoFinanceira<MovimentoRequest, MovimentoDto>(
+  const [confirmarExcedente, setConfirmarExcedente] = useState(false);
+  const m = useMutacaoFinanceira<MovimentoRequestComExcedente, MovimentoDto>(
     (req, motivo) => financeiroApi.lancar(req, motivo),
     CAMPO_POR_CODIGO_FIN,
   );
@@ -36,19 +40,22 @@ export function ReceberModal({ open, item, onClose, onRecebido }: ReceberModalPr
     setValor(item.saldo);
     setData(hojeIso());
     setForma("transferencia");
+    setConfirmarExcedente(false);
     m.limpar();
     onClose();
   }
 
   async function enviarForm() {
-    const dto = await m.enviar({
+    const corpo: MovimentoRequestComExcedente = {
       reservaId: item.reservaId,
       tipo: "recebimento_operadora",
       valor: valor ?? 0,
       dataMovimento: data,
       formaPagamento: forma,
       observacao: null,
-    });
+    };
+    if (confirmarExcedente) corpo.confirmarExcedente = true;
+    const dto = await m.enviar(corpo);
     if (dto) {
       onRecebido(dto);
       fechar();
@@ -56,6 +63,7 @@ export function ReceberModal({ open, item, onClose, onRecebido }: ReceberModalPr
   }
 
   const parcial = valor !== null && valor < item.saldo;
+  const excedente = valor !== null && valor > item.saldo ? valor - item.saldo : m.excedente;
 
   return (
     <Modal
@@ -97,6 +105,18 @@ export function ReceberModal({ open, item, onClose, onRecebido }: ReceberModalPr
           <Alert tone="neutral">
             Valor menor que o esperado. Registre a diferença como divergência com motivo, ou deixe em aberto para
             receber o saldo depois.
+          </Alert>
+        )}
+        {excedente !== null && excedente > 0 && (
+          <Alert tone="neutral">
+            <p>{formatarDinheiro(excedente)} acima do esperado</p>
+            <Checkbox
+              label="Registrar mesmo assim"
+              checked={confirmarExcedente}
+              onChange={(e) => {
+                setConfirmarExcedente(e.target.checked);
+              }}
+            />
           </Alert>
         )}
         <Field label="Data" required error={m.erros.data}>
