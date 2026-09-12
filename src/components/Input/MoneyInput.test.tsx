@@ -58,15 +58,53 @@ test("emite onChange a cada tecla, sem esperar o blur", async () => {
   expect(screen.getByRole("status")).toHaveTextContent("1500");
 });
 
-test("clamp de allowNegative aplica durante a digitação: -5 vira 5, nunca fica negativo intermediário", async () => {
+test("sem allowNegative, o caractere '-' é recusado (não clampa silenciosamente) e mostra erro", async () => {
   const user = userEvent.setup();
   render(<Harness />);
   const input = screen.getByLabelText("Valor");
   await user.click(input);
-  await user.type(input, "-5");
-  expect(screen.getByRole("status")).toHaveTextContent("5");
-  await user.type(input, "0");
+  await user.type(input, "-");
+  expect(input).toHaveAttribute("aria-invalid", "true");
+  expect(screen.getByRole("alert")).toHaveTextContent("Valor não pode ser negativo");
+  await user.type(input, "50");
   expect(screen.getByRole("status")).toHaveTextContent("50");
+});
+
+test("clique com o mouse seleciona o texto todo: digitar 300 substitui, não concatena", async () => {
+  const user = userEvent.setup();
+  render(<Harness inicial={0} />);
+  const input = screen.getByLabelText("Valor");
+  expect(input).toHaveValue("R$ 0,00");
+  await user.click(input);
+  await user.keyboard("300");
+  await user.tab();
+  expect(input).toHaveValue("R$ 300,00");
+  expect(screen.getByRole("status")).toHaveTextContent("300");
+});
+
+test("texto ambíguo (resto de digitação truncada tipo 0,00300) não vira 3.000 nem some: mantém valor anterior e marca erro", async () => {
+  const user = userEvent.setup();
+  render(<Harness inicial={12} />);
+  const input = screen.getByLabelText("Valor");
+  await user.click(input);
+  await user.clear(input);
+  await user.type(input, "0,00300");
+  expect(input).toHaveValue("0,003");
+  expect(input).toHaveAttribute("aria-invalid", "true");
+  expect(screen.getByRole("alert")).toHaveTextContent("Valor inválido");
+  await user.tab();
+  expect(input).toHaveValue("R$ 0,00");
+});
+
+test("mais de 10 dígitos inteiros bloqueia a digitação", async () => {
+  const user = userEvent.setup();
+  render(<Harness />);
+  const input = screen.getByLabelText("Valor");
+  await user.click(input);
+  await user.type(input, "12345678901");
+  expect(input).toHaveValue("1234567890");
+  expect(input).toHaveAttribute("aria-invalid", "true");
+  expect(screen.getByRole("alert")).toHaveTextContent("Valor acima do limite de R$ 9.999.999.999,99");
 });
 
 test("aceita colar valor formatado com sinal U+2212", async () => {
