@@ -35,6 +35,43 @@ export function somenteDigitos(s: string): string {
   return s.replace(/\D/g, "");
 }
 
+const PESOS_CPF_1 = [10, 9, 8, 7, 6, 5, 4, 3, 2];
+const PESOS_CPF_2 = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2];
+const PESOS_CNPJ_1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+const PESOS_CNPJ_2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+
+function digitoVerificador(digitos: string, pesos: number[]): number {
+  const soma = pesos.reduce((acc, peso, i) => acc + Number(digitos[i]) * peso, 0);
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+
+function todosIguais(s: string): boolean {
+  return new Set(s).size === 1;
+}
+
+/** Dígitos verificadores (algoritmo padrão da Receita Federal) — mesmo cálculo do backend (`DocumentosBrasil.cs`). */
+export function cpfValido(v: string | null | undefined): boolean {
+  const d = somenteDigitos(v ?? "");
+  return (
+    d.length === 11 &&
+    !todosIguais(d) &&
+    Number(d[9]) === digitoVerificador(d, PESOS_CPF_1) &&
+    Number(d[10]) === digitoVerificador(d, PESOS_CPF_2)
+  );
+}
+
+/** Dígitos verificadores (algoritmo padrão da Receita Federal) — mesmo cálculo do backend (`DocumentosBrasil.cs`). */
+export function cnpjValido(v: string | null | undefined): boolean {
+  const d = somenteDigitos(v ?? "");
+  return (
+    d.length === 14 &&
+    !todosIguais(d) &&
+    Number(d[12]) === digitoVerificador(d, PESOS_CNPJ_1) &&
+    Number(d[13]) === digitoVerificador(d, PESOS_CNPJ_2)
+  );
+}
+
 export function formatarCpf(digitos: string | null | undefined): string {
   const d = somenteDigitos(digitos ?? "");
   if (!d) return "";

@@ -98,6 +98,13 @@ test("janelas vigentes viram uma célula legível e o prazo fixo aparece quando 
   expect(screen.getByText("plantão (11) 99999-8888")).toBeInTheDocument();
 });
 
+test("prazo de 1 dia usa o singular (não '1 dias')", async () => {
+  corpo = { ...LISTA, itens: [{ ...DECOLAR, prazoComissaoDias: 1 }] };
+  montar();
+  expect(await screen.findByText("1 dia após a compra")).toBeInTheDocument();
+  expect(screen.queryByText("1 dias após a compra")).not.toBeInTheDocument();
+});
+
 test("sem receitaAno no payload não mostra a coluna de receita", async () => {
   montar();
   await screen.findByText("CVC");

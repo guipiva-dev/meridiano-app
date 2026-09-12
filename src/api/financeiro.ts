@@ -27,6 +27,8 @@ export interface MovimentoRequest {
   formaPagamento: FormaPagamentoFin | null;
   observacao: string | null;
   versao?: string;
+  /** Recebimento acima do esperado: só grava com este flag (422 `recebimento_acima_esperado` sem ele). */
+  confirmarExcedente?: boolean;
 }
 
 export interface MovimentoDto {

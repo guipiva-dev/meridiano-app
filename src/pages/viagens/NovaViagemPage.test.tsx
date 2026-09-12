@@ -31,6 +31,28 @@ const auth: AuthValue = {
   recarregar: () => Promise.resolve(),
 };
 
+function viagemEdicao() {
+  return {
+    id: "v9",
+    codigo: "VG-2026-0042",
+    versao: "7",
+    destino: "Lisboa",
+    tipo: "internacional",
+    dataIda: null,
+    dataVolta: null,
+    vendedorId: "u1",
+    vendedorNome: "Ana",
+    agenteId: "u1",
+    ocasiao: null,
+    observacoes: null,
+    cancelada: false,
+    faseOperacional: "sem_reserva",
+    faseFinanceira: "nao_prevista",
+    passageiros: [{ clienteId: "c1", nome: "Carlos", titular: true }],
+    reservas: [],
+  };
+}
+
 function montar(entrada = "/viagens/nova") {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createMemoryRouter(
@@ -106,4 +128,40 @@ test("falha ao carregar a viagem mostra o erro no topo e sai do esqueleto", asyn
 test("reservaVazia gera chaveLocal distinta a cada chamada (key estável do card sem id)", () => {
   expect(reservaVazia(0).chaveLocal).toBeTruthy();
   expect(reservaVazia(0).chaveLocal).not.toBe(reservaVazia(0).chaveLocal);
+});
+
+test("edição mostra '{titular} · {destino}' como título e 'Vendedor:' sem '(a)'", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
+    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, VENDEDORES));
+    if (url.includes("/agencia")) return Promise.resolve(resposta(200, AGENCIA));
+    if (/\/viagens\/[^/?]+$/.test(url)) {
+      return Promise.resolve(resposta(200, viagemEdicao()));
+    }
+    return Promise.resolve(resposta(200, null));
+  });
+  montar("/viagens/v9/editar");
+  expect(await screen.findByRole("heading", { name: /^Carlos · Lisboa/ })).toBeInTheDocument();
+  expect(screen.getByText(/Vendedor: Ana/)).toBeInTheDocument();
+  expect(screen.queryByText(/Vendedor\(a\)/)).toBeNull();
+});
+
+test("rótulo 'Comissão do vendedor' no resumo", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+  expect(screen.getByText("Comissão do vendedor")).toBeInTheDocument();
+  expect(screen.queryByText(/vendedora/)).toBeNull();
+});
+
+test("edição não repete 'Titular:' no subtítulo", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
+    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, VENDEDORES));
+    if (url.includes("/agencia")) return Promise.resolve(resposta(200, AGENCIA));
+    if (/\/viagens\/[^/?]+$/.test(url)) return Promise.resolve(resposta(200, viagemEdicao()));
+    return Promise.resolve(resposta(200, null));
+  });
+  montar("/viagens/v9/editar");
+  await screen.findByRole("heading", { name: /^Carlos · Lisboa/ });
+  expect(screen.queryByText(/Titular:/)).toBeNull();
 });

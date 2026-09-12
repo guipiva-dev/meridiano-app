@@ -1,6 +1,7 @@
 import type { ChangeEvent } from "react";
 import type { Desfecho, PassageiroDto } from "@/api/viagens";
 import { Checkbox, DateInput, Field, MoneyInput, Select } from "@/components";
+import { hojeIso } from "@/lib/datas";
 
 export interface CreditoValor {
   valor: number | null;
@@ -75,6 +76,8 @@ export function DesfechoFields({ value, onChange, erros, passageiros }: Desfecho
         value.credito &&
         (() => {
           const credito = value.credito;
+          const hoje = hojeIso();
+          const validadePassada = credito.validade !== null && credito.validade < hoje;
           return (
             <>
               <Field label="Valor do crédito" error={erros["credito.valor"]}>
@@ -85,8 +88,12 @@ export function DesfechoFields({ value, onChange, erros, passageiros }: Desfecho
                   }}
                 />
               </Field>
-              <Field label="Validade">
+              <Field
+                label="Validade"
+                error={validadePassada ? "Validade não pode estar no passado" : erros["credito.validade"]}
+              >
                 <DateInput
+                  min={hoje}
                   value={credito.validade ?? ""}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => {
                     onChange({ ...value, credito: { ...credito, validade: e.target.value || null } });

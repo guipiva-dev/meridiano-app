@@ -9,6 +9,7 @@ import { DivergenciaModal, ReceberLoteModal, ReceberModal } from "@/components/f
 import { Page, PageHeader, Subnav, Tabs } from "@/components/shell";
 import { nomeMes, somarMeses } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
+import { plural } from "@/lib/plural";
 import { subnavs } from "@/shell/navegacao";
 import s from "./Conciliacao.module.css";
 import { FiltrosConciliacao } from "./FiltrosConciliacao";
@@ -32,9 +33,16 @@ function contextoRecebido(variacao: number | null, mes: string): string {
   return `${variacao >= 0 ? "▲" : "▼"} ${Math.abs(variacao)} % vs ${mesCurto(somarMeses(mes, -1))}`;
 }
 
+/** "3 reservas · pior: 41 dias →"; sem atraso (extra 0/null) omite o "pior: N dias". */
+function labelAtrasadas(reservas: number, piorDias: number | null): string {
+  const base = plural(reservas, "reserva", "reservas");
+  return piorDias && piorDias > 0 ? `${base} · pior: ${piorDias} dias →` : `${base} →`;
+}
+
 export function ConciliacaoPage() {
   const { pode } = useAuth();
-  const { filtro, definir, selecionados, alternar, modal, abrir, fechar, aplicarMovimento } = useConciliacao();
+  const { filtro, definir, selecionados, alternar, alternarTodas, modal, abrir, fechar, aplicarMovimento } =
+    useConciliacao();
   const fornecedoresQ = useQuery({ queryKey: chaves.fornecedores, queryFn: viagensApi.fornecedores });
   const listaQ = useQuery({
     queryKey: chavesFinanceiro.conciliacao(filtro),
@@ -62,13 +70,13 @@ export function ConciliacaoPage() {
         <KpiCard
           label="A receber"
           value={formatarDinheiro(kpis.aReceber.valor)}
-          contexto={`${kpis.aReceber.reservas} reservas · ${kpis.aReceber.extra ?? 0} operadoras`}
+          contexto={`${plural(kpis.aReceber.reservas, "reserva", "reservas")} · ${plural(kpis.aReceber.extra ?? 0, "operadora", "operadoras")}`}
         />
         <KpiCard
           label="Atrasadas"
           value={formatarDinheiro(kpis.atrasadas.valor)}
           tone={kpis.atrasadas.reservas > 0 ? "danger" : "normal"}
-          actionLabel={`${kpis.atrasadas.reservas} reservas · pior: ${kpis.atrasadas.extra ?? 0} dias →`}
+          actionLabel={labelAtrasadas(kpis.atrasadas.reservas, kpis.atrasadas.extra)}
           onAction={() => {
             definir({ aba: "atrasadas" });
           }}
@@ -76,7 +84,7 @@ export function ConciliacaoPage() {
         <KpiCard
           label="Vencem esta semana"
           value={formatarDinheiro(kpis.vencemSemana.valor)}
-          actionLabel={`${kpis.vencemSemana.reservas} reservas →`}
+          actionLabel={`${plural(kpis.vencemSemana.reservas, "reserva", "reservas")} →`}
           onAction={() => {
             definir({ aba: "pendentes", previsto: "semana" });
           }}
@@ -144,6 +152,7 @@ export function ConciliacaoPage() {
                 carregando={listaQ.isLoading}
                 selecionados={selecionados}
                 alternar={alternar}
+                alternarTodas={alternarTodas}
                 podeMovimentar={podeMovimentar}
                 podeConciliar={podeConciliar}
                 onReceber={(item) => {

@@ -10,9 +10,13 @@ export function EsqueciSenhaPage() {
   const [email, setEmail] = useState("");
   const [estado, setEstado] = useState<"idle" | "enviando" | "enviado" | "erro">("idle");
   const [erro, setErro] = useState("");
+  const [erroCampo, setErroCampo] = useState<string | undefined>();
 
   async function submeter(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
+    const vazio = !email.trim();
+    setErroCampo(vazio ? "Informe o e-mail" : undefined);
+    if (vazio) return;
     setEstado("enviando");
     try {
       await api.post("/auth/esqueci-senha", { email: email.trim() });
@@ -39,7 +43,7 @@ export function EsqueciSenhaPage() {
           </Alert>
         )}
         {estado === "erro" && <Alert tone="danger">{erro}</Alert>}
-        <Field label="E-mail" required>
+        <Field label="E-mail" required error={erroCampo}>
           <Input
             type="email"
             // eslint-disable-next-line jsx-a11y/no-autofocus -- primeiro campo da tela de acesso, sem outro foco em disputa

@@ -87,7 +87,7 @@ export function ClientesPage() {
                 void nav("/clientes/nova");
               }}
             >
-              + Nova pessoa
+              Nova pessoa
             </Button>
           )
         }

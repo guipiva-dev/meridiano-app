@@ -58,6 +58,12 @@
 .wrap {
   position: relative;
 }
+.erro {
+  display: block;
+  margin-top: var(--space-1);
+  font: var(--type-helper);
+  color: var(--color-danger-text);
+}
 .calcBadge {
   position: absolute;
   right: var(--space-2);

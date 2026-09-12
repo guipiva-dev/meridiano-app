@@ -16,6 +16,11 @@ test("Próxima chama onPagina(2)", async () => {
   expect(onPagina).toHaveBeenCalledWith(2);
 });
 
+test("total 0 não renderiza nada", () => {
+  const { container } = render(<Paginacao pagina={1} tamanho={25} total={0} onPagina={vi.fn()} />);
+  expect(container).toBeEmptyDOMElement();
+});
+
 test("última página mostra a faixa final e desabilita Próxima", () => {
   render(<Paginacao pagina={2} tamanho={25} total={42} onPagina={vi.fn()} />);
   expect(screen.getByText("26–42 de 42")).toBeInTheDocument();

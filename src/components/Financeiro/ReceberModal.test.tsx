@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ValidationError } from "@/api/errors";
 import type * as FinanceiroApi from "@/api/financeiro";
 import type { MovimentoDto, MovimentoRequest } from "@/api/financeiro";
 import { ReceberModal } from "./ReceberModal";
@@ -79,4 +80,34 @@ test("valor menor que o saldo avisa sobre divergência", async () => {
   await user.type(valor, "700");
 
   expect(screen.getByText(/Valor menor que o esperado/)).toBeInTheDocument();
+});
+
+test("valor acima do saldo avisa o excedente e só manda confirmarExcedente ao marcar a checkbox", async () => {
+  const user = userEvent.setup();
+  const dto = movimento();
+  lancar.mockResolvedValue(dto);
+  render(<ReceberModal open item={item} onClose={vi.fn()} onRecebido={vi.fn()} />);
+
+  const valor = screen.getByLabelText(/Valor recebido/);
+  await user.clear(valor);
+  await user.type(valor, "1200");
+
+  expect(screen.getByText("R$ 240,00 acima do esperado")).toBeInTheDocument();
+  await user.click(screen.getByRole("checkbox", { name: "Registrar mesmo assim" }));
+  await user.click(screen.getByRole("button", { name: "Confirmar recebimento" }));
+
+  expect(lancar).toHaveBeenCalledWith(expect.objectContaining({ valor: 1200, confirmarExcedente: true }), undefined);
+});
+
+test("422 recebimento_acima_esperado do servidor mostra o aviso com o excedente devolvido", async () => {
+  const user = userEvent.setup();
+  lancar.mockRejectedValue(
+    new ValidationError(422, "recebimento_acima_esperado", "Valor acima do esperado", { excedente: 50 }),
+  );
+  render(<ReceberModal open item={item} onClose={vi.fn()} onRecebido={vi.fn()} />);
+
+  await user.click(screen.getByRole("button", { name: "Confirmar recebimento" }));
+
+  expect(await screen.findByText("R$ 50,00 acima do esperado")).toBeInTheDocument();
+  expect(screen.getByRole("checkbox", { name: "Registrar mesmo assim" })).toBeInTheDocument();
 });

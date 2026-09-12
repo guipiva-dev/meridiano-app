@@ -2,10 +2,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { MemoryRouter } from "react-router";
+import { chavesAuditoria } from "@/api/auditoria";
 import { chaves } from "@/api/viagens";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
+import { chaveDasPendencias } from "@/components/Pendencias/chave";
 import { VIAGEM } from "./fixtures";
-import { useViagem } from "./useViagem";
+import { aplicarViagem, useViagem } from "./useViagem";
 
 function resposta(status: number, body: unknown) {
   return {
@@ -120,4 +122,20 @@ test("verValores segue os valores do DTO", async () => {
     expect(result.current.viagem).toBeDefined();
   });
   expect(result.current.verValores).toBe(true);
+});
+
+test("aplicarViagem grava o cache e invalida o conjunto dependente da viagem", () => {
+  const qc = new QueryClient();
+  const espiao = vi.spyOn(qc, "invalidateQueries");
+
+  aplicarViagem(qc, "v1", { ...VIAGEM, versao: "43" });
+
+  expect(qc.getQueryData(chaves.viagem("v1"))).toMatchObject({ versao: "43" });
+  expect(espiao.mock.calls.map((c) => c[0]?.queryKey)).toEqual([
+    ["viagens", "lista"],
+    chaveDasPendencias("v1"),
+    chavesAuditoria.daViagem("v1"),
+    chaves.creditos("v1"),
+    ["reservas"],
+  ]);
 });

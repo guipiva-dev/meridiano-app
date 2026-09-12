@@ -100,6 +100,7 @@ function validar(v: ViagemForm): Record<string, string> {
   if (!v.destino.trim()) e.destino = "Informe o destino";
   if (v.passageiros.length === 0) e.passageiros = "Adicione ao menos um passageiro";
   if (!v.vendedorId) e.vendedorId = "Escolha quem vendeu";
+  if (v.dataIda && v.dataVolta && v.dataVolta < v.dataIda) e.dataVolta = "Volta antes da ida";
   return e;
 }
 
@@ -139,6 +140,8 @@ export function useNovaViagem(id: string | undefined) {
 
   const [viagem, setViagem] = useState<ViagemDto | null>(null);
   const [locais, setLocais] = useState<Record<string, string>>({});
+  // Valores no momento da última tentativa de salvar: campo alterado desde então perde o erro (local ou da API).
+  const [valoresAoSalvar, setValoresAoSalvar] = useState<Partial<ViagemForm>>({});
 
   // Toda resposta oficial (carga inicial, PUT, recarregar) reentra pelo cache e substitui o form.
   const aplicado = useRef<ViagemDto | null>(null);
@@ -223,9 +226,15 @@ export function useNovaViagem(id: string | undefined) {
   const titular = passageiros.find((p) => p.titular);
   const titularId = titular?.clienteId ?? "";
   const [semelhante, setSemelhante] = useState<ViagemSemelhanteDto | null>(null);
-  // Guarda o titular dispensado, não um booleano: mudar as datas não ressuscita
-  // um aviso que o usuário já respondeu com "Continuar criando nova".
+  // Guarda titular+datas dispensados: outro titular reabre o aviso; mudar só as datas
+  // reabre apenas se elas passarem a se sobrepor à viagem encontrada.
+  const chaveSemelhante = `${titularId}|${dataIda}|${dataVolta}`;
   const [dispensadoPara, setDispensadoPara] = useState<string | null>(null);
+  const semelhanteVisivel =
+    dispensadoPara === chaveSemelhante ||
+    (dispensadoPara?.startsWith(`${titularId}|`) === true && !semelhante?.sobrepoe)
+      ? null
+      : semelhante;
   useEffect(() => {
     if (!titularId) {
       setSemelhante(null);
@@ -298,6 +307,7 @@ export function useNovaViagem(id: string | undefined) {
     const dados = form.getValues();
     const problemas = validar(dados);
     setLocais(problemas);
+    setValoresAoSalvar(dados);
     if (Object.keys(problemas).length > 0) return false;
     return executar(dados);
   }, [form, executar]);
@@ -314,7 +324,12 @@ export function useNovaViagem(id: string | undefined) {
     () => errosDeApi(salvamento.estado === "error" ? salvamento.erro : null),
     [salvamento.estado, salvamento.erro],
   );
-  const erros = { ...locais, ...daApi.campos };
+  const valores = form.watch();
+  const erros = Object.fromEntries(
+    Object.entries({ ...locais, ...daApi.campos }).filter(
+      ([campo]) => valoresAoSalvar[campo as keyof ViagemForm] === valores[campo as keyof ViagemForm],
+    ),
+  );
   const erroCarga = viagemQ.isError ? mensagemDeErro(viagemQ.error) : null;
 
   const receitaPrevista = somarReservas(reservas).receitaPrevista;
@@ -332,9 +347,9 @@ export function useNovaViagem(id: string | undefined) {
     agencia,
     me,
     vendedorSelecionado,
-    semelhante: dispensadoPara === titularId ? null : semelhante,
+    semelhante: semelhanteVisivel,
     dispensarSemelhante: () => {
-      setDispensadoPara(titularId);
+      setDispensadoPara(chaveSemelhante);
     },
     duplicadas,
     repasseSugerido,

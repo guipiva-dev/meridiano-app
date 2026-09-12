@@ -19,12 +19,17 @@
 }
 .linha1 {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
 }
 .linha1 > input {
   flex: 1;
-  min-width: 0;
+  min-width: 240px;
+}
+.linha1 > select {
+  max-width: 280px;
+  text-overflow: ellipsis;
 }
 .avancados {
   display: flex;
@@ -40,10 +45,4 @@
 /* PessoaPage / DadosPessoaForm */
 .mono {
   font: var(--type-code);
-}
-
-@media (max-width: 1024px) {
-  .linha1 {
-    flex-wrap: wrap;
-  }
 }

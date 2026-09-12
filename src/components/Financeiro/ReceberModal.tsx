@@ -6,6 +6,7 @@ import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
 import { hojeIso } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
+import { AvisoExcedente } from "./AvisoExcedente";
 import s from "./Financeiro.module.css";
 import { MotivoField } from "./MotivoField";
 import { CAMPO_POR_CODIGO_FIN, OPCOES_FORMA } from "./mapaErrosFinanceiro";
@@ -27,6 +28,7 @@ export function ReceberModal({ open, item, onClose, onRecebido }: ReceberModalPr
   const [valor, setValor] = useState<number | null>(item.saldo);
   const [data, setData] = useState(hojeIso());
   const [forma, setForma] = useState<FormaPagamentoFin>("transferencia");
+  const [confirmarExcedente, setConfirmarExcedente] = useState(false);
   const m = useMutacaoFinanceira<MovimentoRequest, MovimentoDto>(
     (req, motivo) => financeiroApi.lancar(req, motivo),
     CAMPO_POR_CODIGO_FIN,
@@ -36,19 +38,22 @@ export function ReceberModal({ open, item, onClose, onRecebido }: ReceberModalPr
     setValor(item.saldo);
     setData(hojeIso());
     setForma("transferencia");
+    setConfirmarExcedente(false);
     m.limpar();
     onClose();
   }
 
   async function enviarForm() {
-    const dto = await m.enviar({
+    const corpo: MovimentoRequest = {
       reservaId: item.reservaId,
       tipo: "recebimento_operadora",
       valor: valor ?? 0,
       dataMovimento: data,
       formaPagamento: forma,
       observacao: null,
-    });
+    };
+    if (confirmarExcedente) corpo.confirmarExcedente = true;
+    const dto = await m.enviar(corpo);
     if (dto) {
       onRecebido(dto);
       fechar();
@@ -56,6 +61,7 @@ export function ReceberModal({ open, item, onClose, onRecebido }: ReceberModalPr
   }
 
   const parcial = valor !== null && valor < item.saldo;
+  const excedente = valor !== null && valor > item.saldo ? valor - item.saldo : m.excedente;
 
   return (
     <Modal
@@ -99,6 +105,7 @@ export function ReceberModal({ open, item, onClose, onRecebido }: ReceberModalPr
             receber o saldo depois.
           </Alert>
         )}
+        <AvisoExcedente excedente={excedente} confirmado={confirmarExcedente} onChange={setConfirmarExcedente} />
         <Field label="Data" required error={m.erros.data}>
           <DateInput
             value={data}

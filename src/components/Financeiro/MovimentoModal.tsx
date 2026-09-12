@@ -7,6 +7,7 @@ import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
 import { apresentacaoStatus } from "@/dominio/status";
 import { hojeIso } from "@/lib/datas";
+import { AvisoExcedente } from "./AvisoExcedente";
 import s from "./Financeiro.module.css";
 import { MotivoField } from "./MotivoField";
 import { CAMPO_POR_CODIGO_FIN, OPCOES_FORMA } from "./mapaErrosFinanceiro";
@@ -17,21 +18,34 @@ interface MovimentoModalProps {
   viagem: ViagemDto;
   movimento?: MovimentoDto;
   reservaFixa?: string;
+  /** Restringe o Select de tipo (ex.: viagem cancelada só aceita estorno/reembolso). */
+  tiposPermitidos?: TipoMovimento[];
   onClose: () => void;
   onSalvo: (m: MovimentoDto) => void;
 }
 
-const OPCOES_TIPO = TIPOS_MOVIMENTO.map((t) => ({ value: t, label: apresentacaoStatus("movimento_tipo", t).texto }));
-
-export function MovimentoModal({ open, viagem, movimento, reservaFixa, onClose, onSalvo }: MovimentoModalProps) {
-  // Canceladas só entram quando a comissão foi mantida — as demais não recebem mais movimento.
-  const reservas = viagem.reservas.filter((r) => r.status !== "cancelada" || r.comissaoMantida);
-  const [reservaId, setReservaId] = useState(movimento?.reservaId ?? reservaFixa ?? reservas[0]?.id ?? "");
-  const [tipo, setTipo] = useState<TipoMovimento>(movimento?.tipo ?? "recebimento_operadora");
+export function MovimentoModal({
+  open,
+  viagem,
+  movimento,
+  reservaFixa,
+  tiposPermitidos = TIPOS_MOVIMENTO,
+  onClose,
+  onSalvo,
+}: MovimentoModalProps) {
+  const opcoesTipo = tiposPermitidos.map((t) => ({ value: t, label: apresentacaoStatus("movimento_tipo", t).texto }));
+  const [tipo, setTipo] = useState<TipoMovimento>(movimento?.tipo ?? tiposPermitidos[0] ?? "recebimento_operadora");
+  // Reserva cancelada só recebe estorno/reembolso (§4.7); fora disso entra apenas se a comissão foi mantida.
+  const devolucao = tipo === "estorno_operadora" || tipo === "reembolso_cliente";
+  const reservas = viagem.reservas.filter((r) => devolucao || r.status !== "cancelada" || r.comissaoMantida);
+  const [reservaEscolhida, setReservaId] = useState(movimento?.reservaId ?? reservaFixa ?? "");
+  // A lista muda com o tipo: se a escolha saiu dela (ou nunca houve), cai na primeira.
+  const reservaId = reservas.some((r) => r.id === reservaEscolhida) ? reservaEscolhida : (reservas[0]?.id ?? "");
   const [valor, setValor] = useState<number | null>(movimento ? Math.abs(movimento.valor) : null);
   const [data, setData] = useState(movimento?.dataMovimento ?? hojeIso());
   const [forma, setForma] = useState<FormaPagamentoFin | "">(movimento?.formaPagamento ?? "");
   const [observacao, setObservacao] = useState(movimento?.observacao ?? "");
+  const [confirmarExcedente, setConfirmarExcedente] = useState(false);
   const m = useMutacaoFinanceira<MovimentoRequest, MovimentoDto>(
     (req, motivo) =>
       movimento ? financeiroApi.corrigir(movimento.id, req, motivo) : financeiroApi.lancar(req, motivo),
@@ -39,6 +53,7 @@ export function MovimentoModal({ open, viagem, movimento, reservaFixa, onClose, 
   );
 
   function fechar() {
+    setConfirmarExcedente(false);
     m.limpar();
     onClose();
   }
@@ -52,6 +67,7 @@ export function MovimentoModal({ open, viagem, movimento, reservaFixa, onClose, 
       formaPagamento: forma === "" ? null : forma,
       observacao: observacao.trim() || null,
       versao: movimento?.versao,
+      ...(confirmarExcedente && { confirmarExcedente: true }),
     });
     if (dto) {
       onSalvo(dto);
@@ -101,7 +117,7 @@ export function MovimentoModal({ open, viagem, movimento, reservaFixa, onClose, 
         </Field>
         <Field label="Tipo" required error={m.erros.tipo}>
           <Select
-            options={OPCOES_TIPO}
+            options={opcoesTipo}
             value={tipo}
             disabled={Boolean(movimento)}
             onChange={(e) => {
@@ -112,6 +128,7 @@ export function MovimentoModal({ open, viagem, movimento, reservaFixa, onClose, 
         <Field label="Valor" required helper="Saídas são gravadas como negativo" error={m.erros.valor}>
           <MoneyInput value={valor} onChange={setValor} />
         </Field>
+        <AvisoExcedente excedente={m.excedente} confirmado={confirmarExcedente} onChange={setConfirmarExcedente} />
         <Field label="Data" required error={m.erros.data}>
           <DateInput
             value={data}

@@ -4,6 +4,7 @@ import { Button } from "@/components";
 import { Alert, Badge, StatusBadge } from "@/components/display";
 import { PageHeader } from "@/components/shell";
 import { formatarCarimbo, formatarPeriodo } from "@/lib/datas";
+import { plural } from "@/lib/plural";
 import s from "./Viagem.module.css";
 
 const ROTULO_TIPO = { nacional: "Nacional", internacional: "Internacional" };
@@ -21,12 +22,11 @@ interface CabecalhoViagemProps {
 
 export function CabecalhoViagem({ viagem, pode, onTransferir, onCancelar }: CabecalhoViagemProps) {
   const nav = useNavigate();
-  const n = viagem.passageiros.length;
   const subtitle = [
     formatarPeriodo(viagem.dataIda, viagem.dataVolta),
     ROTULO_TIPO[viagem.tipo],
-    `${n} ${n === 1 ? "passageiro" : "passageiros"}`,
-    `Vendedor(a): ${viagem.vendedorNome}`,
+    plural(viagem.passageiros.length, "passageiro", "passageiros"),
+    `Vendedor: ${viagem.vendedorNome}`,
     `Agente: ${viagem.agenteNome ?? "—"}`,
   ].join(" · ");
 
@@ -48,7 +48,7 @@ export function CabecalhoViagem({ viagem, pode, onTransferir, onCancelar }: Cabe
         }
         actions={
           <>
-            {pode("viagem.transferir") && (
+            {pode("viagem.transferir") && !viagem.cancelada && (
               <Button variant="secondary" onClick={onTransferir}>
                 Transferir
               </Button>

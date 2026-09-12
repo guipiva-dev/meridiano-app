@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { auditoriaApi, chavesAuditoria, type EventoAuditoriaDto } from "@/api/auditoria";
 import { mensagemDeErro } from "@/api/errors";
-import { valorDoCampo } from "@/components/auditoria";
+import { rotuloDominio, valorDoCampo } from "@/components/auditoria";
 import { Alert } from "@/components/display";
 import { EmptyState, Skeleton } from "@/components/feedback";
 import { cx } from "@/lib/cx";
@@ -33,7 +33,7 @@ export function TimelineTab({ viagemId }: { viagemId: string }) {
             <span className={cx(s.bolinha, bolinhaDe(e))} aria-hidden />
             <div className={s.linhaTexto}>
               <b className={s.linhaTitulo}>{e.titulo}</b>
-              {e.subtitulo && <span className={s.linhaMeta}>{e.subtitulo}</span>}
+              {e.subtitulo && <span className={s.linhaMeta}>{rotuloDominio(e.subtitulo)}</span>}
               <span className={s.linhaMeta}>
                 {formatarCarimbo(e.criadoEm)} · {e.usuarioNome ?? "sistema"}
               </span>

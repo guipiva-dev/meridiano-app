@@ -57,9 +57,6 @@
   font: var(--type-helper);
   color: var(--color-text-muted);
 }
-.resp::before {
-  content: " · ";
-}
 .acoes {
   margin-left: auto;
   display: inline-flex;
@@ -111,12 +108,19 @@
   background: var(--color-bg-selected);
 }
 
-/* Contrato §4.5: abaixo de 1366 o responsável cai para a 2ª linha da descrição. */
+/* Contrato §4.5: abaixo de 1366 o responsável cai para a 2ª linha da descrição — sem o
+   " · " (que ficaria órfão no fim da 1ª linha), já que a quebra de linha já os separa. */
 @media (max-width: 1366px) {
   .resp {
     display: block;
   }
-  .resp::before {
-    content: "";
+  .resp .sep {
+    display: none;
   }
+}
+
+.detalhesProximas summary {
+  font: var(--type-label);
+  color: var(--color-text-link);
+  cursor: pointer;
 }

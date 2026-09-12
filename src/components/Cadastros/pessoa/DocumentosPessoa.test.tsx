@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { DocumentoDto } from "@/api/clientes";
 import { DocumentosPessoa } from "./DocumentosPessoa";
 
@@ -79,4 +79,30 @@ test('"+ Documento" abre o modal', async () => {
   fireEvent.click(screen.getByRole("button", { name: "+ Documento" }));
 
   expect(await screen.findByRole("dialog", { name: "Novo documento" })).toBeInTheDocument();
+});
+
+test('clicar "+ Documento" não grava nada: só o Salvar chama a API', async () => {
+  const mutacoes: string[] = [];
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    const method = init?.method ?? "GET";
+    if (method !== "GET") mutacoes.push(`${method} ${url}`);
+    if (url.includes("/anexos")) return Promise.resolve(resposta(200, []));
+    if (method === "POST") return Promise.resolve(resposta(201, {}));
+    return Promise.resolve(resposta(200, DOCS));
+  });
+  montar();
+  await screen.findByText("FX123456");
+
+  const botao = screen.getByRole("button", { name: "+ Documento" });
+  fireEvent.keyDown(botao, { key: "Enter" });
+  fireEvent.click(botao);
+  fireEvent.keyUp(botao, { key: "Enter" });
+  await screen.findByRole("dialog", { name: "Novo documento" });
+  await new Promise((r) => setTimeout(r, 20));
+  expect(mutacoes).toEqual([]);
+
+  fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+  await waitFor(() => {
+    expect(mutacoes).toEqual(["POST /api/v1/clientes/c1/documentos"]);
+  });
 });

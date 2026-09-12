@@ -2,6 +2,7 @@ import type { UseFormReturn } from "react-hook-form";
 import type { TipoFornecedor } from "@/api/fornecedores";
 import { Field, Input, Select, Textarea } from "@/components";
 import { apresentacaoStatus } from "@/dominio/status";
+import { cnpjValido } from "@/lib/documentos";
 import s from "./Fornecedores.module.css";
 import type { FormFornecedor } from "./useFornecedor";
 
@@ -27,17 +28,22 @@ interface DadosFornecedorFormProps {
 }
 
 export function DadosFornecedorForm({ form, erros }: DadosFornecedorFormProps) {
-  const { register } = form;
+  const { register, watch, formState } = form;
+  const nome = watch("nome");
+  const cnpj = watch("cnpj");
+  // Só mostra "obrigatório" depois que o usuário passou pelo campo (evita erro no form em branco recém-aberto).
+  const erroNome = erros.nome ?? (formState.touchedFields.nome && !nome.trim() ? "Nome é obrigatório" : undefined);
+  const erroCnpj = erros.cnpj ?? (cnpj && !cnpjValido(cnpj) ? "CNPJ inválido" : undefined);
   return (
     <div className={s.grid}>
-      <Field label="Nome" required error={erros.nome} className={s.span2}>
+      <Field label="Nome" required error={erroNome} className={s.span2}>
         <Input {...register("nome")} />
       </Field>
 
       <Field label="Tipo" error={erros.tipo}>
         <Select options={OPCOES_TIPO} {...register("tipo")} />
       </Field>
-      <Field label="CNPJ" error={erros.cnpj}>
+      <Field label="CNPJ" error={erroCnpj}>
         <Input className={s.mono} inputMode="numeric" {...register("cnpj")} />
       </Field>
 

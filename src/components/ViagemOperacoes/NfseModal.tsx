@@ -16,8 +16,8 @@ interface NfseModalProps {
   onRecarregar?: () => void;
 }
 
+// `nfse_incompleta` fala de número, data e tomador de uma vez: fica no bloco, não sob um campo.
 const MAPA: Record<string, string> = {
-  nfse_incompleta: "numero",
   nfse_invalida: "status",
 };
 
@@ -36,6 +36,7 @@ export function NfseModal({ open, reserva, viagem, onClose, onSalva, onRecarrega
   const [tomador, setTomador] = useState<"cliente" | "operadora" | "">(reserva.nfseTomador ?? "");
   const [numero, setNumero] = useState(reserva.nfseNumero ?? "");
   const [dataEmissao, setDataEmissao] = useState(reserva.nfseDataEmissao ?? "");
+  const [erroTomadorLocal, setErroTomadorLocal] = useState<string>();
   const { salvando, erros, erroBloco, conflito, enviar, limpar } = useOperacao<NfseRequest>(
     (req) => viagensApi.nfse(reserva.id, req),
     MAPA,
@@ -46,11 +47,17 @@ export function NfseModal({ open, reserva, viagem, onClose, onSalva, onRecarrega
     setTomador(reserva.nfseTomador ?? "");
     setNumero(reserva.nfseNumero ?? "");
     setDataEmissao(reserva.nfseDataEmissao ?? "");
+    setErroTomadorLocal(undefined);
     limpar();
     onClose();
   }
 
   async function enviarForm() {
+    if (status === "emitido" && tomador === "") {
+      setErroTomadorLocal("Tomador é obrigatório para NFSe emitida");
+      return;
+    }
+    setErroTomadorLocal(undefined);
     const req: NfseRequest = {
       status,
       tomador: tomador === "" ? null : tomador,
@@ -114,7 +121,7 @@ export function NfseModal({ open, reserva, viagem, onClose, onSalva, onRecarrega
             }}
           />
         </Field>
-        <Field label="Tomador">
+        <Field label="Tomador" required={status === "emitido"} error={erroTomadorLocal}>
           <Select
             options={OPCOES_TOMADOR}
             placeholder="Selecionar"

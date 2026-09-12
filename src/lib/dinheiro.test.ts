@@ -27,3 +27,8 @@ test("arredonda meio-para-longe-de-zero como o numeric do Postgres", () => {
   expect(parsearDinheiro("2,675")).toBe(2.68);
   expect(parsearDinheiro("1,005")).toBe(1.01);
 });
+
+test("texto ambíguo (resto de digitação truncada) é inválido, não vira número absurdo", () => {
+  expect(parsearDinheiro("0,00300")).toBeNull();
+  expect(parsearDinheiro("1,23,4")).toBeNull();
+});

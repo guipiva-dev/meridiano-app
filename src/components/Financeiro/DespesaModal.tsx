@@ -37,6 +37,7 @@ const OPCOES_SITUACAO = [
 ];
 const AJUDA_RECORRENTE =
   "Ao pagar, o sistema cria a mesma despesa para o mês seguinte. Sem data limite, repete indefinidamente.";
+const AJUDA_RECORRENTE_COM_VIAGEM = "Despesa ligada a viagem não repete";
 
 export function DespesaModal({ open, despesa, viagemFixa, fornecedores, onClose, onSalva }: DespesaModalProps) {
   const [descricao, setDescricao] = useState(despesa?.descricao ?? "");
@@ -54,6 +55,10 @@ export function DespesaModal({ open, despesa, viagemFixa, fornecedores, onClose,
   const [fornecedorId, setFornecedorId] = useState(despesa?.fornecedorId ?? "");
   const [observacao, setObservacao] = useState(despesa?.observacao ?? "");
   const [errosLocais, setErrosLocais] = useState<Record<string, string>>({});
+  const temViagem = Boolean(viagemFixa?.id ?? viagem?.id);
+  // Despesa recorrente ligada a viagem replicava todo mês e inflava o resultado (achado da homologação):
+  // derivado, não estado — nunca chega a "sim" enquanto há viagem, mesmo que `recorrente` já estivesse true.
+  const recorrenteEfetivo = recorrente && !temViagem;
   const m = useMutacaoFinanceira<DespesaRequest, { despesa: DespesaDto; proxima: DespesaDto | null }>(
     async (req, motivo) =>
       despesa
@@ -85,8 +90,8 @@ export function DespesaModal({ open, despesa, viagemFixa, fornecedores, onClose,
       pago,
       pagoEm: pago ? pagoEm : null,
       formaPagamento: forma === "" ? null : forma,
-      recorrente,
-      recorrenciaAte: recorrente ? recorrenciaAte || null : null,
+      recorrente: recorrenteEfetivo,
+      recorrenciaAte: recorrenteEfetivo ? recorrenciaAte || null : null,
       viagemId: viagemFixa?.id ?? viagem?.id ?? null,
       fornecedorId: fornecedorId || null,
       observacao: observacao.trim() || null,
@@ -196,16 +201,22 @@ export function DespesaModal({ open, despesa, viagemFixa, fornecedores, onClose,
             }}
           />
         </Field>
-        <Field label="Repete todo mês" tooltip={AJUDA_RECORRENTE} helper={AJUDA_RECORRENTE}>
+        <Field
+          label="Repete todo mês"
+          tooltip={temViagem ? AJUDA_RECORRENTE_COM_VIAGEM : AJUDA_RECORRENTE}
+          helper={temViagem ? AJUDA_RECORRENTE_COM_VIAGEM : AJUDA_RECORRENTE}
+          error={erro("recorrente")}
+        >
           <Select
             options={OPCOES_SIM_NAO}
-            value={recorrente ? "sim" : "nao"}
+            value={recorrenteEfetivo ? "sim" : "nao"}
+            disabled={temViagem}
             onChange={(e) => {
               setRecorrente(e.target.value === "sim");
             }}
           />
         </Field>
-        {recorrente && (
+        {recorrenteEfetivo && (
           <Field label="Repetir até" helper="Opcional: em branco repete sem prazo">
             <DateInput
               value={recorrenciaAte}

@@ -68,3 +68,8 @@ test("fornecedor sem regra mostra só o estado vazio, sem a linha de prazo fixo"
   expect(screen.getByText("Sem regra de pagamento")).toBeInTheDocument();
   expect(screen.queryByText("ou prazo fixo: 30 dias após a compra")).toBeNull();
 });
+
+test("prazo de 1 dia usa o singular (não '1 dias')", () => {
+  montar({ ...FORNECEDOR, prazoComissaoDias: 1 });
+  expect(screen.getByText("ou prazo fixo: 1 dia após a compra")).toBeInTheDocument();
+});

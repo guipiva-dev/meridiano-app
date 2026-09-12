@@ -1,6 +1,6 @@
 import { type SubmitEvent, useId, useState } from "react";
 import { anexosApi, enviarArquivo, type NovoAnexoRequest, type TipoAnexo } from "@/api/anexos";
-import { mensagemDeErro } from "@/api/http";
+import { mensagemDeErro, ValidationError } from "@/api/errors";
 import { Button, Checkbox, DateInput, Field, Input, Select } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
@@ -15,6 +15,11 @@ interface AnexarModalProps {
 }
 
 const MAX_BYTES = 25 * 1024 * 1024;
+// Mesma allowlist do backend (`AnexosService.IniciarAsync`); a checagem final é lá.
+const EXTENSOES = ["pdf", "jpg", "jpeg", "png", "webp", "heic", "doc", "docx", "xls", "xlsx", "txt"];
+const ACCEPT = EXTENSOES.map((e) => `.${e}`).join(",");
+const ERRO_TIPO = "Tipo de arquivo não permitido (PDF, imagens, Office)";
+const ERRO_ENVIO = "Não foi possível enviar o arquivo. Verifique a conexão e tente de novo.";
 const TIPOS: { value: TipoAnexo; label: string }[] = [
   { value: "voucher", label: "Voucher" },
   { value: "comprovante", label: "Comprovante" },
@@ -44,16 +49,41 @@ export function AnexarModal({ open, escopo, onClose, onEnviado }: AnexarModalPro
   const [erroArquivo, setErroArquivo] = useState<string>();
   const [erroBloco, setErroBloco] = useState<string>();
   const [enviando, setEnviando] = useState(false);
+  // Anexo já iniciado cujo PUT falhou: "Tentar de novo" repete só o PUT e o confirmar.
+  const [pendente, setPendente] = useState<{ id: string; urlUpload: string }>();
+
+  async function subirEConfirmar(anexo: { id: string; urlUpload: string }, arq: File) {
+    setErroBloco(undefined);
+    setEnviando(true);
+    try {
+      // O anexo pendente fica invisível na lista (R7: só confirmados aparecem); o job expurga em 1 dia.
+      await enviarArquivo(anexo.urlUpload, arq);
+      await anexosApi.confirmar(anexo.id);
+    } catch {
+      setPendente(anexo);
+      setErroBloco(ERRO_ENVIO);
+      setEnviando(false);
+      return;
+    }
+    onEnviado();
+    onClose();
+  }
 
   async function enviar(e?: SubmitEvent<HTMLFormElement>) {
     e?.preventDefault();
     setErroBloco(undefined);
+    setPendente(undefined);
     if (!arquivo) {
       setErroArquivo("Escolha um arquivo");
       return;
     }
     if (arquivo.size > MAX_BYTES) {
       setErroArquivo("Arquivo maior que 25 MB. Envie uma versão menor.");
+      return;
+    }
+    const extensao = arquivo.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!EXTENSOES.includes(extensao)) {
+      setErroArquivo(ERRO_TIPO);
       return;
     }
     setErroArquivo(undefined);
@@ -71,21 +101,12 @@ export function AnexarModal({ open, escopo, onClose, onEnviado }: AnexarModalPro
     try {
       criado = await anexosApi.iniciar(req);
     } catch (erro) {
-      setErroBloco(mensagemDeErro(erro));
+      if (erro instanceof ValidationError && erro.codigo === "tipo_arquivo_nao_permitido") setErroArquivo(erro.detalhe);
+      else setErroBloco(mensagemDeErro(erro));
       setEnviando(false);
       return;
     }
-    try {
-      // O anexo pendente fica invisível na lista (R7: só confirmados aparecem); sem limpeza no cliente.
-      await enviarArquivo(criado.urlUpload, arquivo);
-      await anexosApi.confirmar(criado.anexo.id);
-    } catch {
-      setErroBloco("Falha ao enviar o arquivo. Tente de novo.");
-      setEnviando(false);
-      return;
-    }
-    onEnviado();
-    onClose();
+    await subirEConfirmar({ id: criado.anexo.id, urlUpload: criado.urlUpload }, arquivo);
   }
 
   return (
@@ -112,12 +133,35 @@ export function AnexarModal({ open, escopo, onClose, onEnviado }: AnexarModalPro
           void enviar(e);
         }}
       >
-        {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
-        <Field label="Arquivo" required error={erroArquivo} helper="Até 25 MB.">
+        {erroBloco && (
+          <Alert
+            tone="danger"
+            action={
+              pendente &&
+              arquivo && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    void subirEConfirmar(pendente, arquivo);
+                  }}
+                >
+                  Tentar de novo
+                </Button>
+              )
+            }
+          >
+            {erroBloco}
+          </Alert>
+        )}
+        <Field label="Arquivo" required error={erroArquivo} helper="Até 25 MB. PDF, imagens ou Office.">
           <Input
             type="file"
+            accept={ACCEPT}
             onChange={(e) => {
               setArquivo(e.target.files?.[0] ?? null);
+              setPendente(undefined);
+              setErroArquivo(undefined);
             }}
           />
         </Field>

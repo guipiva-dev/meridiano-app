@@ -101,3 +101,71 @@ test("escopo pessoa: sem Select de vínculo, sensível marcado e clienteId no pa
   });
   expect((corpos[0] as { dataDescarte: string }).dataDescarte).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 });
+
+test("campo Arquivo limita os tipos (accept) e .exe vira erro local sem chamar a API", async () => {
+  montar();
+  const input = screen.getByLabelText(/Arquivo/);
+  expect(input).toHaveAttribute("accept", expect.stringContaining(".pdf"));
+  expect(input.getAttribute("accept")).not.toContain(".exe");
+  const exe = new File(["x"], "malware.exe", { type: "application/x-msdownload" });
+  fireEvent.change(input, { target: { files: [exe] } });
+
+  fireEvent.click(screen.getByRole("button", { name: "Anexar" }));
+
+  expect(await screen.findByText("Tipo de arquivo não permitido (PDF, imagens, Office)")).toBeInTheDocument();
+  expect(chamadas).toEqual([]);
+});
+
+test("422 tipo_arquivo_nao_permitido do iniciar vai para o campo Arquivo", async () => {
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    chamadas.push(`${init?.method ?? "GET"} ${url}`);
+    return Promise.resolve(
+      resposta(422, { status: 422, codigo: "tipo_arquivo_nao_permitido", detail: "Tipo de arquivo não permitido" }),
+    );
+  });
+  montar();
+  const input = screen.getByLabelText(/Arquivo/);
+  fireEvent.change(input, { target: { files: [arquivoDe("voucher.pdf", 1024)] } });
+
+  fireEvent.click(screen.getByRole("button", { name: "Anexar" }));
+
+  expect(await screen.findByText("Tipo de arquivo não permitido")).toBeInTheDocument();
+  expect(input).toHaveAttribute("aria-invalid", "true");
+  expect(chamadas).toEqual(["POST /api/v1/anexos"]);
+});
+
+test("PUT falha: mensagem clara e 'Tentar de novo' repete só o PUT e o confirmar", async () => {
+  let putFalha = true;
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    chamadas.push(`${init?.method ?? "GET"} ${url}`);
+    if (url.endsWith("/anexos")) {
+      return Promise.resolve(resposta(201, { anexo: { id: "a9" }, urlUpload: "https://r2/upload/a9" }));
+    }
+    if (init?.method === "PUT" && putFalha) return Promise.reject(new TypeError("Failed to fetch"));
+    return Promise.resolve(resposta(200, {}));
+  });
+  const onEnviado = vi.fn();
+  montar(onEnviado);
+  fireEvent.change(screen.getByLabelText(/Arquivo/), { target: { files: [arquivoDe("voucher.pdf", 1024)] } });
+
+  fireEvent.click(screen.getByRole("button", { name: "Anexar" }));
+
+  expect(
+    await screen.findByText("Não foi possível enviar o arquivo. Verifique a conexão e tente de novo."),
+  ).toBeInTheDocument();
+  expect(onEnviado).not.toHaveBeenCalled();
+  expect(chamadas).toEqual(["POST /api/v1/anexos", "PUT https://r2/upload/a9"]);
+
+  putFalha = false;
+  fireEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
+
+  await waitFor(() => {
+    expect(onEnviado).toHaveBeenCalled();
+  });
+  expect(chamadas).toEqual([
+    "POST /api/v1/anexos",
+    "PUT https://r2/upload/a9",
+    "PUT https://r2/upload/a9",
+    "POST /api/v1/anexos/a9/confirmar",
+  ]);
+});

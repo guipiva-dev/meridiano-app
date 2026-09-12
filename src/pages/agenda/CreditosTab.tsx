@@ -15,7 +15,10 @@ const COLUNAS: Coluna<CreditoVencendoDto>[] = [
   {
     id: "validade",
     titulo: "Validade",
-    render: (c) => `${mesAno(c.validade)} · ${Math.round(c.diasParaVencer / 30)} meses`,
+    render: (c) =>
+      c.diasParaVencer < 0
+        ? `${mesAno(c.validade)} · vencido`
+        : `${mesAno(c.validade)} · ${Math.round(c.diasParaVencer / 30)} meses`,
   },
   { id: "valor", titulo: "Valor", alinhar: "right", render: (c) => <MoneyCell value={c.valor} /> },
   { id: "abrir", titulo: "", render: (c) => <Link to={`/clientes/${c.clienteId}`}>Abrir</Link> },

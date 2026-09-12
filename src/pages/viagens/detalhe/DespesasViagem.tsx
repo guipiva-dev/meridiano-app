@@ -5,7 +5,6 @@ import { chavesDespesas, despesasApi } from "@/api/despesas";
 import { chaves, type ViagemDto, viagensApi } from "@/api/viagens";
 import { Button, MoneyValue, StatusCell } from "@/components";
 import { DespesaModal, ExcluirDespesaModal, PagarDespesaModal } from "@/components/financeiro";
-import { MenuAcoes } from "@/components/Menu/MenuAcoes";
 import { apresentacaoStatus } from "@/dominio/status";
 import { formatarData } from "@/lib/datas";
 import fs from "./FinanceiroTab.module.css";
@@ -50,7 +49,7 @@ export function DespesasViagem({ viagem, podeMovimentar, onMudou }: DespesasViag
       meta={
         <span className={fs.acoesTopo}>
           {q.data?.total ?? 0}
-          {podeMovimentar && (
+          {podeMovimentar && !viagem.cancelada && (
             <Button
               variant="secondary"
               size="sm"
@@ -97,18 +96,15 @@ export function DespesasViagem({ viagem, podeMovimentar, onMudou }: DespesasViag
               >
                 Editar
               </Button>
-              <MenuAcoes
-                label={`Mais ações de ${d.descricao}`}
-                itens={[
-                  {
-                    label: "Excluir",
-                    tone: "danger",
-                    onClick: () => {
-                      setModal({ tipo: "excluir", despesa: d });
-                    },
-                  },
-                ]}
-              />
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => {
+                  setModal({ tipo: "excluir", despesa: d });
+                }}
+              >
+                Excluir…
+              </Button>
             </>
           )}
         </div>

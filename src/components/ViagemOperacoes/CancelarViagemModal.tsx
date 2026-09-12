@@ -4,6 +4,7 @@ import { viagensApi } from "@/api/viagens";
 import { Button, Field, useField } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
+import { plural } from "@/lib/plural";
 import { DesfechoFields, type DesfechoValue } from "./DesfechoFields";
 import s from "./Operacoes.module.css";
 import { useOperacao } from "./useOperacao";
@@ -94,12 +95,11 @@ export function CancelarViagemModal({ open, viagem, onClose, onCancelada, onReca
   }
 
   const n = ativos.length;
-  const rotuloReservas = n === 1 ? "reserva" : "reservas";
-  const rotuloBotao = n === 0 ? "Cancelar viagem" : `Cancelar viagem e ${n} ${rotuloReservas}`;
+  const rotuloBotao = n === 0 ? "Cancelar viagem" : `Cancelar viagem e ${plural(n, "reserva", "reservas")}`;
   const textoImpacto =
     n === 0
       ? "Não há reservas ativas; cancela as pendências automáticas."
-      : `Cancela ${n} ${rotuloReservas} ativas e as pendências automáticas.`;
+      : `Cancela ${plural(n, "reserva ativa", "reservas ativas")} e as pendências automáticas.`;
 
   return (
     <Modal

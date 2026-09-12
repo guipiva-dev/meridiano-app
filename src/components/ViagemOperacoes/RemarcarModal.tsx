@@ -45,6 +45,7 @@ export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada, onR
   const [dataAlteracao, setDataAlteracao] = useState(hojeIso());
   const [descricao, setDescricao] = useState("");
   const [valorNovo, setValorNovo] = useState<number | null>(null);
+  const [novaVenda, setNovaVenda] = useState<number | null>(reserva.valorCliente ?? null);
   const [multaCliente, setMultaCliente] = useState<number | null>(0);
   const [novaDataIda, setNovaDataIda] = useState(viagem.dataIda ?? "");
   const [novaDataVolta, setNovaDataVolta] = useState(viagem.dataVolta ?? "");
@@ -59,6 +60,7 @@ export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada, onR
     setDataAlteracao(hojeIso());
     setDescricao("");
     setValorNovo(null);
+    setNovaVenda(reserva.valorCliente ?? null);
     setMultaCliente(0);
     setNovaDataIda(viagem.dataIda ?? "");
     setNovaDataVolta(viagem.dataVolta ?? "");
@@ -78,6 +80,7 @@ export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada, onR
       dataAlteracao,
       descricao: descricao.trim(),
       valorNovo,
+      ...(novaVenda !== null && novaVenda !== reserva.valorCliente && { novoValorCliente: novaVenda }),
       multaCliente: multaCliente ?? 0,
       novaDataIda: datasEditadas ? novaDataIda || null : null,
       novaDataVolta: datasEditadas ? novaDataVolta || null : null,
@@ -92,6 +95,8 @@ export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada, onR
 
   const indice = viagem.reservas.findIndex((r) => r.id === reserva.id) + 1;
   const helperValor = reserva.valorTotal !== undefined ? `Atual: ${formatarDinheiro(reserva.valorTotal)}` : undefined;
+  // Remarcar muda o custo sem tocar a venda: avisa antes de o RAV do cliente ficar negativo.
+  const vendaAbaixoDoCusto = valorNovo !== null && novaVenda !== null && valorNovo > novaVenda;
 
   return (
     <Modal
@@ -145,6 +150,16 @@ export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada, onR
         <Field label="Novo valor da reserva" helper={helperValor} error={erros.valorNovo}>
           <MoneyInput value={valorNovo} onChange={setValorNovo} />
         </Field>
+        {reserva.valorCliente !== undefined && (
+          <Field
+            label="Nova venda ao cliente"
+            helper="Deixe como está para manter a venda atual"
+            error={erros.novoValorCliente}
+          >
+            <MoneyInput value={novaVenda} onChange={setNovaVenda} />
+          </Field>
+        )}
+        {vendaAbaixoDoCusto && <Alert tone="warning">Venda abaixo do custo: RAV do cliente ficará negativo</Alert>}
         <Field label="Multa paga pelo cliente" helper="Informativa: não altera receita nem repasse">
           <MoneyInput value={multaCliente} onChange={setMultaCliente} />
         </Field>

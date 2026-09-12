@@ -1,13 +1,24 @@
-import { useQuery } from "@tanstack/react-query";
-import { type ReactNode, useId } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { type ReactNode, useId, useState } from "react";
+import { useParams } from "react-router";
 import { mensagemDeErro } from "@/api/http";
-import { chaves, type ReservaDto, ROTULO_FORMA, ROTULO_SERVICO, viagensApi } from "@/api/viagens";
+import {
+  chaves,
+  type ReservaDto,
+  ROTULO_FORMA,
+  ROTULO_SERVICO,
+  type StatusReservaRequest,
+  type ViagemDto,
+  viagensApi,
+} from "@/api/viagens";
 import { Button, MoneyValue } from "@/components";
 import { Alert, StatusBadge } from "@/components/display";
 import { Skeleton } from "@/components/feedback";
 import { ListaServicos } from "@/components/servicos";
+import { useOperacao } from "@/components/ViagemOperacoes/useOperacao";
 import { formatarCarimbo, formatarData } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
+import { aplicarViagem } from "@/pages/viagens/detalhe/useViagem";
 import r from "./Reserva.module.css";
 import s from "./ReservaDetalhe.module.css";
 import { ResultSummary } from "./ResultSummary";
@@ -81,7 +92,27 @@ export function ReservaDetalheCard({
   onNfse,
 }: ReservaDetalheCardProps) {
   const idTitulo = useId();
+  const qc = useQueryClient();
+  // "Marcar emitida" / "Voltar a em emissão" (§6.1). O card só recebe a reserva; a versão da viagem
+  // (xmin exigido pelo PUT) vem do cache da rota `/viagens/:id`, e a resposta substitui a viagem em
+  // cache como nas outras operações (`useViagem.aplicar`).
+  const { id: viagemId = "" } = useParams();
+  const status = useOperacao<StatusReservaRequest>((req) => viagensApi.definirStatusReserva(reserva.id, req), {});
+  const [erroStatusLocal, setErroStatusLocal] = useState<string | null>(null);
   const cancelada = reserva.status === "cancelada";
+  const emitida = reserva.status === "emitida";
+
+  async function mudarStatus() {
+    const viagem = qc.getQueryData<ViagemDto>(chaves.viagem(viagemId));
+    if (!viagem) {
+      setErroStatusLocal("Viagem não carregada. Recarregue a página e tente de novo.");
+      return;
+    }
+    setErroStatusLocal(null);
+    const dto = await status.enviar({ status: emitida ? "pendente" : "emitida", versao: viagem.versao });
+    if (!dto) return;
+    aplicarViagem(qc, viagemId, dto);
+  }
   const servicos = reserva.tiposServico.map((t) => ROTULO_SERVICO[t]).join(" · ");
   const formas = reserva.formasPagamento.map((f) => ROTULO_FORMA[f]).join(" · ");
 
@@ -158,20 +189,40 @@ export function ReservaDetalheCard({
           </div>
 
           {podeEditar && !cancelada && (
-            <div className={s.acoes}>
-              <Button variant="secondary" size="sm" onClick={onEditar}>
-                Editar
-              </Button>
-              <Button variant="secondary" size="sm" onClick={onRemarcar}>
-                Remarcar…
-              </Button>
-              <Button variant="secondary" size="sm" onClick={onNfse}>
-                NFSe…
-              </Button>
-              <Button variant="danger" size="sm" onClick={onCancelar}>
-                Cancelar reserva…
-              </Button>
-            </div>
+            <>
+              {status.conflito && (
+                <Alert tone="danger">
+                  Alguém alterou esta viagem enquanto você decidia. Recarregue e tente de novo.
+                </Alert>
+              )}
+              {(erroStatusLocal ?? status.erroBloco) && (
+                <Alert tone="danger">{erroStatusLocal ?? status.erroBloco}</Alert>
+              )}
+              <div className={s.acoes}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  loading={status.salvando}
+                  onClick={() => {
+                    void mudarStatus();
+                  }}
+                >
+                  {emitida ? "Voltar a em emissão" : "Marcar emitida"}
+                </Button>
+                <Button variant="secondary" size="sm" onClick={onEditar}>
+                  Editar
+                </Button>
+                <Button variant="secondary" size="sm" onClick={onRemarcar}>
+                  Remarcar…
+                </Button>
+                <Button variant="secondary" size="sm" onClick={onNfse}>
+                  NFSe…
+                </Button>
+                <Button variant="danger" size="sm" onClick={onCancelar}>
+                  Cancelar reserva…
+                </Button>
+              </div>
+            </>
           )}
         </div>
       )}
