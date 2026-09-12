@@ -101,6 +101,7 @@ test('clicar "+ Documento" não grava nada: só o Salvar chama a API', async () 
   await new Promise((r) => setTimeout(r, 20));
   expect(mutacoes).toEqual([]);
 
+  fireEvent.change(screen.getByLabelText("Número"), { target: { value: "FX123456" } });
   fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
   await waitFor(() => {
     expect(mutacoes).toEqual(["POST /api/v1/clientes/c1/documentos"]);

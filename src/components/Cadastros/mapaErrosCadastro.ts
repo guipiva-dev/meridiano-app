@@ -27,6 +27,8 @@ export const CAMPO_POR_CODIGO: Record<string, string> = {
   prioridade_invalida: "prioridade",
   passageiro_invalido: "viagemId",
   telefone_invalido: "telefone",
+  numero_obrigatorio: "numero",
+  site_invalido: "site",
   // Nome duplicado de fornecedor/grupo: 422 (RegraDeNegocioException) é o caminho normal.
   fornecedor_duplicado: "nome",
   grupo_duplicado: "nome",
