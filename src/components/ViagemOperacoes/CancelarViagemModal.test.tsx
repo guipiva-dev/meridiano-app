@@ -127,3 +127,19 @@ test("422 de desfecho aparece no bloco, não sob um campo", async () => {
     expect(campo).not.toHaveAttribute("aria-invalid");
   }
 });
+
+test("uma reserva ativa: singular no impacto e no botão", () => {
+  const v = {
+    ...viagem(),
+    reservas: [reserva("r1", "CVC"), { ...reserva("r2", "Decolar"), status: "cancelada" as const }],
+  };
+  render(<CancelarViagemModal open viagem={v} onClose={vi.fn()} onCancelada={vi.fn()} />);
+
+  expect(screen.getByText("Cancela 1 reserva ativa e as pendências automáticas.")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Cancelar viagem e 1 reserva" })).toBeInTheDocument();
+});
+
+test("duas reservas ativas: plural no impacto", () => {
+  render(<CancelarViagemModal open viagem={viagem()} onClose={vi.fn()} onCancelada={vi.fn()} />);
+  expect(screen.getByText("Cancela 2 reservas ativas e as pendências automáticas.")).toBeInTheDocument();
+});

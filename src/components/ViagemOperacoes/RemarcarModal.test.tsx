@@ -113,3 +113,44 @@ test("editar datas dentro do details envia novaDataIda/novaDataVolta", async () 
     }),
   );
 });
+
+test("nova venda ao cliente vem pré-preenchida e, se não mudar, não é enviada", async () => {
+  const user = userEvent.setup();
+  const r = { ...reserva(), valorCliente: 3200 };
+  const v = viagem(r);
+  remarcar.mockResolvedValue(v);
+  render(<RemarcarModal open reserva={r} viagem={v} onClose={vi.fn()} onRemarcada={vi.fn()} />);
+
+  expect(screen.getByLabelText("Nova venda ao cliente")).toHaveValue("R$ 3.200,00");
+  await user.type(screen.getByLabelText(/Descrição/), "Troca de hotel");
+  await user.click(screen.getByRole("button", { name: "Remarcar" }));
+
+  expect(remarcar.mock.calls[0]?.[1]).not.toHaveProperty("novoValorCliente");
+});
+
+test("nova venda alterada é enviada como novoValorCliente", async () => {
+  const user = userEvent.setup();
+  const r = { ...reserva(), valorCliente: 3200 };
+  const v = viagem(r);
+  remarcar.mockResolvedValue(v);
+  render(<RemarcarModal open reserva={r} viagem={v} onClose={vi.fn()} onRemarcada={vi.fn()} />);
+
+  await user.type(screen.getByLabelText(/Descrição/), "Upgrade de quarto");
+  fireEvent.change(screen.getByLabelText("Nova venda ao cliente"), { target: { value: "3.900,00" } });
+  await user.click(screen.getByRole("button", { name: "Remarcar" }));
+
+  expect(remarcar).toHaveBeenCalledWith("r1", expect.objectContaining({ novoValorCliente: 3900 }));
+});
+
+test("avisa quando o novo custo fica acima da venda ao cliente", () => {
+  const r = { ...reserva(), valorCliente: 3200 };
+  const v = viagem(r);
+  render(<RemarcarModal open reserva={r} viagem={v} onClose={vi.fn()} onRemarcada={vi.fn()} />);
+
+  expect(screen.queryByText(/RAV do cliente ficará negativo/)).toBeNull();
+  fireEvent.change(screen.getByLabelText("Novo valor da reserva"), { target: { value: "3.500,00" } });
+  expect(screen.getByText("Venda abaixo do custo: RAV do cliente ficará negativo")).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText("Nova venda ao cliente"), { target: { value: "4.000,00" } });
+  expect(screen.queryByText(/RAV do cliente ficará negativo/)).toBeNull();
+});

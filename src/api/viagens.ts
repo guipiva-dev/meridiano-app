@@ -50,6 +50,12 @@ export function qsLista(f: FiltroViagens): string {
 
 export type Tipo = "nacional" | "internacional";
 export type StatusReserva = "pendente" | "emitida";
+
+/** `PUT /reservas/{id}/status`: `versao` é o xmin da viagem, como nas outras operações. */
+export interface StatusReservaRequest {
+  status: StatusReserva;
+  versao: string;
+}
 export type RavClienteModo = "retido_agencia" | "via_operadora";
 export type FluxoPagamento = "cliente_paga_operadora" | "cliente_paga_agencia";
 export type NfseStatus = "falta_emitir" | "emitido" | "nao_precisa";
@@ -283,6 +289,8 @@ export const viagensApi = {
   cancelarReserva: (reservaId: string, r: CancelarReservaRequest) =>
     api.post<ViagemDto>(`/reservas/${reservaId}/cancelar`, r),
   remarcar: (reservaId: string, r: RemarcarRequest) => api.post<ViagemDto>(`/reservas/${reservaId}/remarcar`, r),
+  definirStatusReserva: (reservaId: string, r: StatusReservaRequest) =>
+    api.put<ViagemDto>(`/reservas/${reservaId}/status`, r),
   nfse: (reservaId: string, r: NfseRequest) => api.put<ViagemDto>(`/reservas/${reservaId}/nfse`, r),
   alteracoes: (reservaId: string) => api.get<ReservaAlteracaoDto[]>(`/reservas/${reservaId}/alteracoes`),
 };

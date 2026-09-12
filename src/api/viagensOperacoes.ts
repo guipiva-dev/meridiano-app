@@ -83,6 +83,8 @@ export interface RemarcarRequest {
   dataAlteracao: string;
   descricao: string;
   valorNovo: number | null;
+  /** Nova venda ao cliente; omitido quando o usuário não mexeu (mantém `valor_cliente`). */
+  novoValorCliente?: number;
   multaCliente: number;
   novaDataIda: string | null;
   novaDataVolta: string | null;
