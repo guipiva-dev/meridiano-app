@@ -256,7 +256,8 @@ export function useNovaViagem(id: string | undefined) {
       void viagensApi
         .semelhantes(titularId, dataIda || null, dataVolta || null, id)
         .then((lista) => {
-          if (vivo) setSemelhante(lista[0] ?? null);
+          // A própria viagem nunca é "semelhante" (o back já exclui por excetoViagemId; aqui é rede de segurança).
+          if (vivo) setSemelhante(lista.find((v) => v.id !== id) ?? null);
         })
         .catch(() => {
           if (vivo) setSemelhante(null);

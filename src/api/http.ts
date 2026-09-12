@@ -4,7 +4,7 @@ export { mensagemDeErro } from "./errors";
 
 const BASE = "/api/v1";
 /** Request presa não pode virar spinner infinito: fetch aborta e cai no catch (TimeoutError → NetworkError). */
-const TIMEOUT_MS = 30_000;
+export const TIMEOUT_MS = 30_000;
 
 /** `motivo` justifica escrita auditada (período fechado, exclusão). Viaja no header, percent-encoded. */
 export interface OpcoesRequest {

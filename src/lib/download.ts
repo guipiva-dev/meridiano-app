@@ -1,4 +1,4 @@
-import { erroDeResposta, NetworkError } from "@/api/errors";
+import { ApiError, erroDeResposta, NetworkError } from "@/api/errors";
 
 // Baixa via <a download>: o navegador cuida do arquivo, sem blob nem fetch — o CSV vem pronto da API.
 export function baixar(url: string, nomeArquivo?: string): void {
@@ -30,7 +30,7 @@ export async function baixarComFeedback(url: string, nomeArquivo: string): Promi
       try {
         json = await resposta.json();
       } catch {
-        // segue com json nulo: erroDeResposta cai na mensagem genérica do status
+        throw new ApiError(resposta.status, "resposta_invalida", "Resposta inválida do servidor");
       }
     }
     throw erroDeResposta(resposta.status, json as Parameters<typeof erroDeResposta>[1]);
@@ -40,6 +40,9 @@ export async function baixarComFeedback(url: string, nomeArquivo: string): Promi
   try {
     baixar(objectUrl, nomeArquivo);
   } finally {
-    URL.revokeObjectURL(objectUrl);
+    // Firefox aborta o download se a URL for revogada de forma síncrona após o clique.
+    setTimeout(() => {
+      URL.revokeObjectURL(objectUrl);
+    }, 1000);
   }
 }

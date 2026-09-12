@@ -88,7 +88,7 @@ export function FornecedoresPage() {
     <Page>
       <PageHeader
         title="Fornecedores"
-        subtitle={`${listaQ.data?.total ?? 0} cadastrados · a regra de pagamento define quando a comissão é esperada`}
+        subtitle={`${listaQ.isLoading ? "—" : (listaQ.data?.total ?? 0)} cadastrados · a regra de pagamento define quando a comissão é esperada`}
         actions={
           pode("fornecedor.editar") && (
             <Button

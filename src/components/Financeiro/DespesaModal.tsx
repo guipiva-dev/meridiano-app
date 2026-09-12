@@ -242,7 +242,7 @@ export function DespesaModal({ open, despesa, viagemFixa, fornecedores, onClose,
             }}
           />
         </Field>
-        <Field label="Observação" helper={`${observacao.length}/2000`} className={s.span2}>
+        <Field label="Observação" helper={`${observacao.length}/2000`} error={erro("observacao")} className={s.span2}>
           <Textarea
             value={observacao}
             maxLength={2000}

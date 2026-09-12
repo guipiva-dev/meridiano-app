@@ -46,6 +46,8 @@ export function ClientesPage() {
 
   const itens = listaQ.data?.itens ?? [];
   const contadores = listaQ.data?.contadores ?? CONTADORES_VAZIOS;
+  // MED-07: "—" enquanto carrega, para "0" não parecer dado real.
+  const n = (x: number) => (listaQ.isLoading ? "—" : x);
 
   const colunas = useMemo<Coluna<ListaClienteDto>[]>(
     () => [
@@ -77,7 +79,7 @@ export function ClientesPage() {
     <Page>
       <PageHeader
         title="Clientes"
-        subtitle={`${contadores.pessoas} pessoas · ${contadores.grupos} grupos · ${contadores.passaportesVencendo} passaportes vencendo`}
+        subtitle={`${n(contadores.pessoas)} pessoas · ${n(contadores.grupos)} grupos · ${n(contadores.passaportesVencendo)} passaportes vencendo`}
         actions={
           pode("cliente.editar") && (
             <Button

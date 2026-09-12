@@ -11,6 +11,8 @@ export interface ReservaValores {
   valorCliente: number | null;
   taxaServico: number | null;
   ravClienteModo: "retido_agencia" | "via_operadora";
+  /** Cancelada fica fora dos totais, como no Resumo do detalhe. */
+  status?: string;
 }
 
 export function somarReservas(reservas: ReservaValores[]): {
@@ -22,6 +24,7 @@ export function somarReservas(reservas: ReservaValores[]): {
   let custo = 0;
   let receitaPrevista = 0;
   for (const r of reservas) {
+    if (r.status === "cancelada") continue;
     const valorTotal = r.valorTotal ?? 0;
     const valorCliente = r.valorCliente ?? 0;
     vendaTotal += valorCliente;

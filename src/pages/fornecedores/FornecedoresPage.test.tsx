@@ -122,3 +122,17 @@ test("clicar na linha abre /fornecedores/<id>", async () => {
   fireEvent.click(await screen.findByText("CVC"));
   expect(await screen.findByText("Detalhe f1")).toBeInTheDocument();
 });
+
+test("contador mostra — enquanto a lista carrega (não 0)", () => {
+  vi.stubGlobal(
+    "fetch",
+    () =>
+      new Promise<Response>(() => {
+        /* nunca resolve: a página fica carregando */
+      }),
+  );
+  montar();
+  expect(
+    screen.getByText("— cadastrados · a regra de pagamento define quando a comissão é esperada"),
+  ).toBeInTheDocument();
+});

@@ -59,7 +59,11 @@ export function useMutacaoFinanceira<TArgs, TRes>(
       if (erro instanceof ConflictError) {
         setConflito(true);
       } else if (erro instanceof ValidationError) {
-        const campo = mapa[erro.codigo];
+        // texto_longo é genérico: o campo vem em extensions.campo (um código, N campos), como em mapaErrosCadastro.
+        const campo =
+          erro.codigo === "texto_longo" && typeof erro.extensions.campo === "string"
+            ? erro.extensions.campo
+            : mapa[erro.codigo];
         if (erro.codigo === "periodo_fechado") {
           setErroBloco(ERRO_PERIODO_FECHADO);
         } else if (erro.codigo === "recebimento_acima_esperado") {

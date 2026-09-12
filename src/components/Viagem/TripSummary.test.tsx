@@ -55,3 +55,22 @@ test("sem mostrarResultado esconde comissão, despesas e resultado, e mostra a r
   expect(screen.getByText("R$ 520,00")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "+ Adicionar reserva" })).toBeInTheDocument();
 });
+
+test("reserva cancelada fica fora de todos os totais (alinhado ao Resumo do detalhe)", () => {
+  const ativa: ReservaValores = {
+    valorTotal: 3000,
+    valorComissao: 300,
+    ravOperadora: 20,
+    valorCliente: 3200,
+    taxaServico: 0,
+    ravClienteModo: "via_operadora",
+    status: "emitida",
+  };
+  const cancelada: ReservaValores = { ...ativa, valorTotal: 10000, valorCliente: 10500, status: "cancelada" };
+  render(<TripSummary reservas={[ativa, cancelada]} repasseValor={0} despesas={0} onAdicionarReserva={vi.fn()} />);
+
+  expect(screen.getByText("R$ 3.200,00")).toBeInTheDocument();
+  expect(screen.getByText("R$ 3.000,00")).toBeInTheDocument();
+  expect(screen.queryByText("R$ 13.700,00")).toBeNull();
+  expect(screen.getByText("R$ 520,00")).toBeInTheDocument();
+});

@@ -61,7 +61,7 @@ export function GruposPage() {
     <Page>
       <PageHeader
         title="Grupos e empresas"
-        subtitle={`${total} grupos · organizam o cadastro de pessoas; não têm valor financeiro`}
+        subtitle={`${listaQ.isLoading ? "—" : total} grupos · organizam o cadastro de pessoas; não têm valor financeiro`}
         actions={
           pode("cliente.editar") && (
             <Button

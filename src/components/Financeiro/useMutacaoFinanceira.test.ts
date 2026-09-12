@@ -101,3 +101,19 @@ test("422 recebimento_acima_esperado sem excedente numérico vira erro de bloco,
   expect(result.current.excedente).toBeNull();
   expect(result.current.erroBloco).toBe("Valor acima do esperado");
 });
+
+test("422 texto_longo com extensions.campo vira erro inline no campo, não bloco", async () => {
+  const executar = vi
+    .fn()
+    .mockRejectedValue(
+      new ValidationError(422, "texto_longo", "observacao deve ter no máximo 2000 caracteres", { campo: "observacao" }),
+    );
+  const { result } = renderHook(() => useMutacaoFinanceira(executar, CAMPO_POR_CODIGO_FIN));
+
+  await act(async () => {
+    await result.current.enviar({});
+  });
+
+  expect(result.current.erros).toEqual({ observacao: "observacao deve ter no máximo 2000 caracteres" });
+  expect(result.current.erroBloco).toBeNull();
+});
