@@ -128,7 +128,7 @@ export function ViagensPage() {
           )
         }
       />
-      <Subnav items={subnavs["/viagens"] ?? []} />
+      <Subnav items={(subnavs["/viagens"] ?? []).filter((i) => i.path !== "/viagens/nova" || pode("viagem.criar"))} />
 
       <Tabs
         tabs={TABS.map((t) => ({

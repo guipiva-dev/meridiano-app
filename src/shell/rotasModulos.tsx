@@ -18,9 +18,11 @@ export function RotasApp() {
       <Route index element={<Navigate to="/viagens" replace />} />
       <Route element={<RotaProtegida permissao={["viagem.ver", "viagem.ver_proprias"]} />}>
         <Route path="/viagens" element={<ViagensPage />} />
-        <Route path="/viagens/nova" element={<NovaViagemPage />} />
         <Route path="/viagens/:id" element={<ViagemPage />} />
-        <Route path="/viagens/:id/editar" element={<NovaViagemPage />} />
+        <Route element={<RotaProtegida permissao="viagem.criar" />}>
+          <Route path="/viagens/nova" element={<NovaViagemPage />} />
+          <Route path="/viagens/:id/editar" element={<NovaViagemPage />} />
+        </Route>
       </Route>
       {RotasCadastros()}
       {RotasFinanceiro()}

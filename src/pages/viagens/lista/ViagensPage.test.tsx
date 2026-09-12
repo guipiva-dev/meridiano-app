@@ -60,7 +60,7 @@ function DetalheStub() {
   return <div>Detalhe {id}</div>;
 }
 
-function montar(entrada = "/viagens") {
+function montar(entrada = "/viagens", authValue: AuthValue = auth) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createMemoryRouter(
     [
@@ -71,7 +71,7 @@ function montar(entrada = "/viagens") {
   );
   render(
     <QueryClientProvider client={qc}>
-      <AuthContext.Provider value={auth}>
+      <AuthContext.Provider value={authValue}>
         <RouterProvider router={router} />
       </AuthContext.Provider>
     </QueryClientProvider>,
@@ -114,6 +114,13 @@ test("clicar na linha navega para /viagens/<id>", async () => {
   montar();
   fireEvent.click(await screen.findByText("Carlos Mendes"));
   expect(await screen.findByText("Detalhe v1")).toBeInTheDocument();
+});
+
+test("perfil financeiro (sem viagem.criar) não mostra 'Nova viagem' na sub-nav nem no header", async () => {
+  montar("/viagens", { ...auth, pode: (p) => p !== "viagem.criar" });
+  await screen.findByText("Carlos Mendes");
+  expect(screen.queryByRole("link", { name: "Nova viagem" })).toBeNull();
+  expect(screen.queryByRole("button", { name: /Nova viagem/ })).toBeNull();
 });
 
 test("sem vendaTotal no payload não mostra a coluna Venda", async () => {

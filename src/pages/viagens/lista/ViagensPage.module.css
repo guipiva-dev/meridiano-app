@@ -28,6 +28,10 @@
 .linha1 > select,
 .linha1 > button {
   flex: none;
+  width: auto;
+}
+.linha1 > select {
+  max-width: 220px;
 }
 .avancados {
   display: flex;

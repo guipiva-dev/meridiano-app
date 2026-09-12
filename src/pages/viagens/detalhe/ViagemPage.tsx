@@ -87,7 +87,7 @@ export function ViagemPage() {
           v.abrir({ tipo: "cancelarViagem" });
         }}
       />
-      <Subnav items={subnavs["/viagens"] ?? []} />
+      <Subnav items={(subnavs["/viagens"] ?? []).filter((i) => i.path !== "/viagens/nova" || v.pode("viagem.criar"))} />
 
       <Tabs tabs={tabs} active={tab} onChange={v.setTab}>
         <Tabs.Panel id="resumo" active={tab}>

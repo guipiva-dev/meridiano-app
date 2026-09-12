@@ -98,6 +98,12 @@ test("/equipe/:id sem usuario.gerenciar cai em Sem permissão", () => {
   expect(screen.getByText("Sem permissão")).toBeInTheDocument();
 });
 
+// Reteste homologação 2: Financeiro tem viagem.ver mas não viagem.criar — não pode abrir o formulário.
+test("/viagens/nova sem viagem.criar cai em Sem permissão", () => {
+  montar("/viagens/nova", (p) => p === "viagem.ver");
+  expect(screen.getByText("Sem permissão")).toBeInTheDocument();
+});
+
 test("/auditoria abre com auditoria.ver", () => {
   montar("/auditoria", (p) => p === "auditoria.ver");
   expect(screen.getByRole("heading", { name: "Auditoria" })).toBeInTheDocument();

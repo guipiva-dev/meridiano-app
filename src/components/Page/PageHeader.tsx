@@ -17,7 +17,7 @@ export function PageHeader({ title, subtitle, meta, status, dirty, salvoEm, acti
     <header className={s.head}>
       <div>
         <h1 className={s.titulo}>
-          {title}
+          <span className={s.tituloTexto}>{title}</span>
           {meta}
           {status}
         </h1>
