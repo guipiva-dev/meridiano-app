@@ -1,4 +1,13 @@
-import { formatarCnpj, formatarCpf, formatarTelefone, situacaoValidade, somenteDigitos, UFS } from "./documentos";
+import {
+  cnpjValido,
+  cpfValido,
+  formatarCnpj,
+  formatarCpf,
+  formatarTelefone,
+  situacaoValidade,
+  somenteDigitos,
+  UFS,
+} from "./documentos";
 
 test("UFS tem as 27 unidades federativas", () => {
   expect(UFS.length).toBe(27);
@@ -49,4 +58,35 @@ test("situacaoValidade <= 180 dias: warning", () => {
 
 test("situacaoValidade > 180 dias: neutral", () => {
   expect(situacaoValidade(181).tone).toBe("neutral");
+});
+
+test("cpfValido aceita CPF com dígitos verificadores corretos", () => {
+  expect(cpfValido("529.982.247-25")).toBe(true);
+});
+
+test("cpfValido rejeita dígito verificador errado", () => {
+  expect(cpfValido("123.456.789-00")).toBe(false);
+});
+
+test("cpfValido rejeita sequência repetida", () => {
+  expect(cpfValido("111.111.111-11")).toBe(false);
+});
+
+test("cpfValido rejeita tamanho errado e valores vazios", () => {
+  expect(cpfValido("123")).toBe(false);
+  expect(cpfValido("")).toBe(false);
+  expect(cpfValido(null)).toBe(false);
+  expect(cpfValido(undefined)).toBe(false);
+});
+
+test("cnpjValido aceita CNPJ com dígitos verificadores corretos", () => {
+  expect(cnpjValido("11.222.333/0001-81")).toBe(true);
+});
+
+test("cnpjValido rejeita dígito verificador errado", () => {
+  expect(cnpjValido("12.345.678/0001-00")).toBe(false);
+});
+
+test("cnpjValido rejeita sequência repetida", () => {
+  expect(cnpjValido("11.111.111/1111-11")).toBe(false);
 });

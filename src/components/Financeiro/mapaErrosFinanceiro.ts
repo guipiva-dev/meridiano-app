@@ -13,6 +13,7 @@ export const CAMPO_POR_CODIGO_FIN: Record<string, string> = {
   pagamento_incompleto: "formaPagamento",
   referencia_invalida: "viagemId",
   repasse_sem_valor: "valor",
+  recorrente_com_viagem: "recorrente",
 };
 
 export const ERRO_PERIODO_FECHADO = "Período fechado. Só Dono ou Financeiro alteram com motivo.";

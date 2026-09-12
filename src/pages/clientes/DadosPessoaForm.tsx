@@ -3,7 +3,7 @@ import type { ListaGrupoDto } from "@/api/grupos";
 import { DateInput, Field, Input, Select, Textarea } from "@/components";
 import { TagsInput } from "@/components/cadastros";
 import { Section } from "@/components/shell";
-import { formatarCpf, UFS } from "@/lib/documentos";
+import { cpfValido, formatarCpf, UFS } from "@/lib/documentos";
 import s from "./Clientes.module.css";
 import type { FormPessoa } from "./usePessoa";
 
@@ -24,6 +24,8 @@ export function DadosPessoaForm({ form, grupos, erros, verDocumento, onNovoGrupo
   // Antes do primeiro `reset` (carga do DTO ou "nova pessoa") o react-hook-form ainda não tem valores,
   // apesar do tipo prometer que tem.
   const tags = (form.watch("tags") as string[] | undefined) ?? [];
+  const cpf = form.watch("cpf");
+  const erroCpf = erros.cpf ?? (cpf && !cpfValido(cpf) ? "CPF inválido" : undefined);
 
   const opcoesGrupo = [
     ...grupos.map((g) => ({ value: g.id, label: g.nome })),
@@ -38,7 +40,7 @@ export function DadosPessoaForm({ form, grupos, erros, verDocumento, onNovoGrupo
             <Input autoComplete="off" {...form.register("nome")} />
           </Field>
           {verDocumento && (
-            <Field label="CPF" className="span-3" error={erros.cpf}>
+            <Field label="CPF" className="span-3" error={erroCpf}>
               <Input
                 className={s.mono}
                 autoComplete="off"

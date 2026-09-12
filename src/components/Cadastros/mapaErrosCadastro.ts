@@ -26,6 +26,10 @@ export const CAMPO_POR_CODIGO: Record<string, string> = {
   titulo_obrigatorio: "titulo",
   prioridade_invalida: "prioridade",
   passageiro_invalido: "viagemId",
+  telefone_invalido: "telefone",
+  // Nome duplicado de fornecedor/grupo: 422 (RegraDeNegocioException) é o caminho normal.
+  fornecedor_duplicado: "nome",
+  grupo_duplicado: "nome",
 };
 
 export interface ErrosApi {
@@ -37,9 +41,21 @@ export interface ErrosApi {
 
 const VAZIO: ErrosApi = { campos: {}, bloco: null, conflito: false };
 
+/**
+ * 409 que não é conflito de concorrência (xmin): nome duplicado de fornecedor/grupo.
+ * Caminho normal é 422 (ver `CAMPO_POR_CODIGO`); isto cobre a corrida rara em que o índice único do banco
+ * dispara antes da checagem da regra de negócio, chegando como 409 (código específico ou o genérico `duplicado`).
+ */
+const CODIGOS_NOME_DUPLICADO_CONFLITO = new Set(["fornecedor_duplicado", "grupo_duplicado", "duplicado"]);
+
 export function errosDeCadastro(erro: unknown): ErrosApi {
   if (erro === null || erro === undefined) return VAZIO;
-  if (erro instanceof ConflictError) return { campos: {}, bloco: null, conflito: true };
+  if (erro instanceof ConflictError) {
+    if (CODIGOS_NOME_DUPLICADO_CONFLITO.has(erro.codigo)) {
+      return { campos: { nome: erro.detalhe }, bloco: null, conflito: false };
+    }
+    return { campos: {}, bloco: null, conflito: true };
+  }
   if (erro instanceof ValidationError) {
     const campo = CAMPO_POR_CODIGO[erro.codigo];
     if (campo) return { campos: { [campo]: erro.detalhe }, bloco: null, conflito: false };

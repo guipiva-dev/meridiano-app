@@ -73,6 +73,44 @@ test("422 nome_obrigatorio do servidor cai no campo Nome (via errosDeCadastro)",
   expect(screen.getByText("Nome é obrigatório")).toBeInTheDocument();
 });
 
+test("422 grupo_duplicado do servidor (caminho normal) cai no campo Nome", async () => {
+  const user = userEvent.setup();
+  vi.stubGlobal("fetch", () =>
+    Promise.resolve({
+      ok: false,
+      status: 422,
+      headers: { get: () => "application/json" },
+      json: () => Promise.resolve({ codigo: "grupo_duplicado", detail: "Já existe um grupo com esse nome" }),
+    } as unknown as Response),
+  );
+  render(<GrupoInlineModal open onClose={vi.fn()} onCriado={vi.fn()} />);
+
+  await user.type(screen.getByLabelText(/Nome/), "Família Mendes");
+  await user.click(screen.getByRole("button", { name: "Criar" }));
+
+  expect(await screen.findByText("Já existe um grupo com esse nome")).toBeInTheDocument();
+  expect(screen.queryByText(/Alguém alterou/)).not.toBeInTheDocument();
+});
+
+test("409 grupo_duplicado do servidor (corrida do índice único) também cai no campo Nome, sem banner de conflito", async () => {
+  const user = userEvent.setup();
+  vi.stubGlobal("fetch", () =>
+    Promise.resolve({
+      ok: false,
+      status: 409,
+      headers: { get: () => "application/json" },
+      json: () => Promise.resolve({ codigo: "grupo_duplicado", detail: "Já existe um grupo com esse nome" }),
+    } as unknown as Response),
+  );
+  render(<GrupoInlineModal open onClose={vi.fn()} onCriado={vi.fn()} />);
+
+  await user.type(screen.getByLabelText(/Nome/), "Família Mendes");
+  await user.click(screen.getByRole("button", { name: "Criar" }));
+
+  expect(await screen.findByText("Já existe um grupo com esse nome")).toBeInTheDocument();
+  expect(screen.queryByText(/Alguém alterou/)).not.toBeInTheDocument();
+});
+
 test("submit com nome chama POST /grupos e onCriado", async () => {
   const user = userEvent.setup();
   const onCriado = vi.fn();

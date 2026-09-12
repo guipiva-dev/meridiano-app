@@ -7,6 +7,7 @@ import { Alert } from "@/components/display";
 import { Skeleton } from "@/components/feedback";
 import { Page, PageHeader, Section } from "@/components/shell";
 import { apresentacaoStatus } from "@/dominio/status";
+import { cnpjValido } from "@/lib/documentos";
 import { useAtalho } from "@/lib/useAtalho";
 import s from "./Grupos.module.css";
 import { PessoasDoGrupo } from "./PessoasDoGrupo";
@@ -25,7 +26,13 @@ export function GrupoPage() {
 
   // "Novo grupo" começa sem tipo selecionado; o form tipa como obrigatório, mas o runtime começa undefined.
   const tipo = v.form.watch("tipo") as TipoGrupo | undefined;
+  const nome = v.form.watch("nome");
+  const cnpj = v.form.watch("cnpj");
   const dirty = v.salvamento.estado === "dirty" || v.salvamento.estado === "error";
+  // Só mostra "obrigatório" depois que o usuário passou pelo campo (evita erro no form em branco recém-aberto).
+  const erroNome =
+    v.erros.nome ?? (v.form.formState.touchedFields.nome && !nome.trim() ? "Nome é obrigatório" : undefined);
+  const erroCnpj = v.erros.cnpj ?? (cnpj && !cnpjValido(cnpj) ? "CNPJ inválido" : undefined);
 
   useAtalho(
     "ctrl+s",
@@ -102,18 +109,13 @@ export function GrupoPage() {
 
       <Section>
         <div className="grid-form">
-          <Field label="Nome" required className="span-6" error={v.erros.nome}>
+          <Field label="Nome" required className="span-6" error={erroNome}>
             <Input autoComplete="off" {...v.form.register("nome")} />
           </Field>
           <Field label="Tipo" className="span-3" error={v.erros.tipo}>
             <Select options={OPCOES_TIPO} {...v.form.register("tipo")} />
           </Field>
-          <Field
-            label="CNPJ"
-            className="span-3"
-            helper={tipo === "empresa" ? undefined : "(empresa)"}
-            error={v.erros.cnpj}
-          >
+          <Field label="CNPJ" className="span-3" helper={tipo === "empresa" ? undefined : "(empresa)"} error={erroCnpj}>
             <Input className={s.mono} disabled={tipo !== "empresa"} {...v.form.register("cnpj")} />
           </Field>
           <Field label="Observações" className="span-12">

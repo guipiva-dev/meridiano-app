@@ -71,7 +71,7 @@ test("repete todo mês revela o campo Repetir até", async () => {
   expect(screen.getByLabelText("Repetir até")).toBeInTheDocument();
 });
 
-test("envia recorrente e a viagem escolhida na combobox", async () => {
+test("escolher uma viagem desliga 'Repete todo mês' e desabilita o campo (despesa recorrente não pode ficar ligada a viagem)", async () => {
   const user = userEvent.setup();
   criar.mockResolvedValue(resultado());
   const onSalva = vi.fn();
@@ -87,6 +87,12 @@ test("envia recorrente e a viagem escolhida na combobox", async () => {
   await user.type(screen.getByRole("combobox", { name: "Viagem" }), "Lisboa");
   const opcao = await screen.findByRole("option", { name: /Lisboa/ });
   await user.click(opcao);
+
+  const repeteSelect = screen.getByLabelText("Repete todo mês");
+  expect(repeteSelect).toHaveValue("nao");
+  expect(repeteSelect).toBeDisabled();
+  expect(screen.getByText("Despesa ligada a viagem não repete")).toBeInTheDocument();
+
   await user.click(screen.getByRole("button", { name: "Lançar despesa" }));
 
   await waitFor(() => {
@@ -95,7 +101,7 @@ test("envia recorrente e a viagem escolhida na combobox", async () => {
         descricao: "Sistema de emissão",
         valor: 290,
         vencimento: "2026-04-10",
-        recorrente: true,
+        recorrente: false,
         recorrenciaAte: null,
         viagemId: "v1",
         pago: false,
@@ -105,4 +111,19 @@ test("envia recorrente e a viagem escolhida na combobox", async () => {
     );
   });
   expect(onSalva).toHaveBeenCalledWith(expect.objectContaining({ id: "d1" }), null);
+});
+
+test("despesa com viagem fixa (lançada na aba da viagem) já abre com 'Repete todo mês' desabilitado", () => {
+  render(
+    <DespesaModal
+      open
+      viagemFixa={{ id: "v1", rotulo: "VG-2026-0001" }}
+      fornecedores={[]}
+      onClose={vi.fn()}
+      onSalva={vi.fn()}
+    />,
+  );
+
+  expect(screen.getByLabelText("Repete todo mês")).toBeDisabled();
+  expect(screen.getByText("Despesa ligada a viagem não repete")).toBeInTheDocument();
 });
