@@ -131,6 +131,12 @@ test("sem fornecedor.editar não há botão Salvar e Ctrl+S não chama a API", a
   expect(chamadas.some((c) => c.metodo === "PUT")).toBe(false);
 });
 
+test("telefone/telefone de emergência carregam formatados (back guarda só dígitos)", async () => {
+  montar();
+  expect(await screen.findByDisplayValue("(11) 3333-4444")).toBeInTheDocument();
+  expect(screen.getByDisplayValue("(11) 99999-8888")).toBeInTheDocument();
+});
+
 test("aba Financeiro mostra a regra vigente", async () => {
   montar();
   fireEvent.click(await screen.findByRole("tab", { name: "Financeiro" }));

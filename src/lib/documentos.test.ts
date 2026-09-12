@@ -4,8 +4,10 @@ import {
   formatarCnpj,
   formatarCpf,
   formatarTelefone,
+  siteValido,
   situacaoValidade,
   somenteDigitos,
+  telefoneValido,
   UFS,
 } from "./documentos";
 
@@ -89,4 +91,51 @@ test("cnpjValido rejeita dígito verificador errado", () => {
 
 test("cnpjValido rejeita sequência repetida", () => {
   expect(cnpjValido("11.111.111/1111-11")).toBe(false);
+});
+
+test("telefoneValido aceita dígitos, espaços, parênteses, + . e - com pelo menos 10 caracteres", () => {
+  expect(telefoneValido("(11) 99876-5678")).toBe(true);
+  expect(telefoneValido("+55 11 998765678")).toBe(true);
+});
+
+test("telefoneValido faz trim antes de validar", () => {
+  expect(telefoneValido("  (11) 99876-5678  ")).toBe(true);
+});
+
+test("telefoneValido rejeita letras", () => {
+  expect(telefoneValido("11a998765678")).toBe(false);
+});
+
+test("telefoneValido rejeita menos de 10 caracteres", () => {
+  expect(telefoneValido("123456789")).toBe(false);
+});
+
+test("telefoneValido rejeita vazio e valores nulos", () => {
+  expect(telefoneValido("")).toBe(false);
+  expect(telefoneValido(null)).toBe(false);
+  expect(telefoneValido(undefined)).toBe(false);
+});
+
+test("siteValido aceita URL com esquema http/https", () => {
+  expect(siteValido("https://exemplo.com.br")).toBe(true);
+  expect(siteValido("http://exemplo.com")).toBe(true);
+});
+
+test("siteValido aceita domínio simples sem esquema (mesma tolerância do back)", () => {
+  expect(siteValido("exemplo.com.br")).toBe(true);
+});
+
+test("siteValido rejeita esquema que não é http/https", () => {
+  expect(siteValido("ftp://exemplo.com")).toBe(false);
+});
+
+test("siteValido rejeita string sem domínio válido", () => {
+  expect(siteValido("não é site")).toBe(false);
+  expect(siteValido("exemplo")).toBe(false);
+});
+
+test("siteValido rejeita vazio e valores nulos", () => {
+  expect(siteValido("")).toBe(false);
+  expect(siteValido(null)).toBe(false);
+  expect(siteValido(undefined)).toBe(false);
 });

@@ -1,5 +1,6 @@
 .codigo {
   font: var(--type-code);
+  overflow-wrap: anywhere;
 }
 
 .resumo,
@@ -94,6 +95,7 @@
 .linhaTitulo {
   font: var(--type-component);
   color: var(--color-text-heading);
+  overflow-wrap: anywhere;
 }
 .linhaMeta {
   font: var(--type-helper);

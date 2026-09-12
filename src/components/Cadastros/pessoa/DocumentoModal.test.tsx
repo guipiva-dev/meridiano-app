@@ -63,9 +63,33 @@ test("salvar envia tipo, número e datas", async () => {
 test("422 validade_invalida vira erro no campo Validade", async () => {
   proxima = { status: 422, body: { codigo: "validade_invalida", detail: "Validade anterior à emissão" } };
   montar();
+  fireEvent.change(screen.getByLabelText("Número"), { target: { value: "FX123456" } });
   fireEvent.change(screen.getByLabelText("Validade"), { target: { value: "2010-01-01" } });
 
   fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
 
   expect(await screen.findByText("Validade anterior à emissão")).toBeInTheDocument();
+});
+
+test("número vazio bloqueia Salvar e mostra erro inline ao sair do campo", async () => {
+  const onSalvo = vi.fn();
+  montar(onSalvo);
+
+  expect(screen.getByRole("button", { name: "Salvar" })).toBeDisabled();
+
+  fireEvent.blur(screen.getByLabelText("Número"));
+  expect(await screen.findByText("Número é obrigatório")).toBeInTheDocument();
+  expect(onSalvo).not.toHaveBeenCalled();
+  expect(chamadas).toHaveLength(0);
+});
+
+test("preencher número habilita Salvar e limpa o erro", async () => {
+  montar();
+
+  fireEvent.blur(screen.getByLabelText("Número"));
+  expect(await screen.findByText("Número é obrigatório")).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText("Número"), { target: { value: "FX123456" } });
+  expect(screen.queryByText("Número é obrigatório")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Salvar" })).not.toBeDisabled();
 });

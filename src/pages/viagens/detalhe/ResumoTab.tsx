@@ -69,6 +69,11 @@ interface ResumoTabProps {
 export function ResumoTab({ viagem, verValores, pendencias, onAbrirReserva, onVerPendencias }: ResumoTabProps) {
   const faixa = faixaDaViagem(viagem, verValores);
   const reservasAtivas = viagem.reservas.filter((r) => r.status !== "cancelada").length;
+  const reservasTotal = viagem.reservas.length;
+  const metaReservas =
+    reservasTotal > reservasAtivas
+      ? `Ativas ${reservasAtivas} · Total ${reservasTotal} · clique para abrir`
+      : `${reservasAtivas} · clique para abrir`;
   const proximas = [...pendencias]
     .filter((p) => p.status === "aberta")
     .sort((a, b) => a.dataPrevista.localeCompare(b.dataPrevista))
@@ -79,7 +84,7 @@ export function ResumoTab({ viagem, verValores, pendencias, onAbrirReserva, onVe
       {faixa && <FaixaResumo itens={faixa.itens} extra={faixa.extra} />}
 
       <div className={s.split}>
-        <Bloco titulo="Reservas" meta={`${reservasAtivas} · clique para abrir`}>
+        <Bloco titulo="Reservas" meta={metaReservas}>
           {viagem.reservas.length === 0 && (
             <EmptyState title="Nenhuma reserva" description="Adicione a primeira reserva pela edição da viagem." />
           )}

@@ -98,6 +98,12 @@ test("header mostra os contadores e as abas mostram as contagens", async () => {
   expect(screen.getByRole("tab", { name: /Em emissão/ })).toHaveTextContent("1");
 });
 
+test("enquanto carrega, subtítulo e contadores das abas mostram — em vez de 0 (MED-07)", () => {
+  montar();
+  expect(screen.getByText("— viagens · — em emissão · — com comissão atrasada")).toBeInTheDocument();
+  expect(screen.getByRole("tab", { name: /Todas/ })).toHaveTextContent("—");
+});
+
 test("tabela mostra as duas viagens", async () => {
   montar();
   expect(await screen.findByText("Carlos Mendes")).toBeInTheDocument();

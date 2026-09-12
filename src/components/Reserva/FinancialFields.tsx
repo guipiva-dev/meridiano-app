@@ -46,6 +46,7 @@ function Observacoes({
       aria-describedby={f?.describedBy}
       aria-invalid={f?.invalid ? true : undefined}
       rows={4}
+      maxLength={2000}
       className={s.control}
       value={value}
       readOnly={readOnly}
@@ -95,7 +96,13 @@ export function FinancialFields({
           }}
         />
       </Field>
-      <Field label="Comissão" className="span-2" helper={helperComissao} error={erros.valorComissao}>
+      <Field
+        label="Comissão"
+        className="span-2"
+        tooltip="O que o fornecedor paga à agência por esta reserva (ex.: 10% de R$ 10.000 = R$ 1.000)."
+        helper={helperComissao}
+        error={erros.valorComissao}
+      >
         <MoneyInput
           value={value.valorComissao}
           readOnly={readOnly}
@@ -157,7 +164,11 @@ export function FinancialFields({
           ))}
         </div>
       </Field>
-      <Field label="Fluxo" className="span-2">
+      <Field
+        label="Fluxo"
+        className="span-2"
+        tooltip="Quem recebe o pagamento do cliente: a agência ou a operadora (ex.: pix à agência, que repassa)."
+      >
         <Select
           options={OPCOES_FLUXO}
           value={value.fluxoPagamento}
@@ -170,7 +181,12 @@ export function FinancialFields({
       <details className={s.mais}>
         <summary>+ mais campos</summary>
         <div className="grid-form">
-          <Field label="Taxa de serviço" className="span-2" error={erros.taxaServico}>
+          <Field
+            label="Taxa de serviço"
+            className="span-2"
+            tooltip="Valor fixo cobrado do cliente sem custo por trás, como assessoria ou emissão de visto (ex.: R$ 150)."
+            error={erros.taxaServico}
+          >
             <MoneyInput
               value={value.taxaServico}
               readOnly={readOnly}

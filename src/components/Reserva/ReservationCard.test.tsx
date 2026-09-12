@@ -79,3 +79,8 @@ test("reserva cancelada: sem 'Remover reserva' e campos somente leitura", () => 
   expect(screen.getByLabelText("Total da reserva")).toHaveAttribute("readonly");
   expect(screen.getByLabelText("Fornecedor")).toBeDisabled();
 });
+
+test("localizador tem maxLength 40", () => {
+  render(<ReservationCard {...base({ value: reservaPreenchida(true) })} />);
+  expect(screen.getByLabelText("Localizador")).toHaveAttribute("maxLength", "40");
+});

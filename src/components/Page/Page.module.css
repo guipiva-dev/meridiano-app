@@ -13,12 +13,17 @@
   gap: var(--space-4);
   flex-wrap: wrap;
 }
+.head > * {
+  min-width: 0;
+}
 .titulo {
   font: var(--type-page);
   color: var(--color-text-heading);
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .subtitulo {
   font: var(--type-body);

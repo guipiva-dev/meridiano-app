@@ -5,6 +5,7 @@ import { mensagemDeErro } from "@/api/http";
 import { Input } from "@/components";
 import { StatusBadge } from "@/components/display";
 import { toast } from "@/components/feedback";
+import { formatarTelefone } from "@/lib/documentos";
 import { useAtalho } from "@/lib/useAtalho";
 import s from "./BuscaGlobal.module.css";
 
@@ -172,7 +173,7 @@ export const BuscaGlobal = forwardRef<HTMLInputElement>(function BuscaGlobal(_, 
                     {item.tipo === "cliente" && (
                       <>
                         {item.nome}
-                        {item.telefone && <span className={s.optionMeta}> · {item.telefone}</span>}
+                        {item.telefone && <span className={s.optionMeta}> · {formatarTelefone(item.telefone)}</span>}
                       </>
                     )}
                     {item.tipo === "viagem" && (

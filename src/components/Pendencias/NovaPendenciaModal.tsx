@@ -188,6 +188,7 @@ export function NovaPendenciaModal({ open, escopo, vendedores, pendencia, onClos
           <Input
             value={titulo}
             placeholder="Ex.: enviar voucher do hotel"
+            maxLength={150}
             onChange={(e) => {
               setTitulo(e.target.value);
             }}

@@ -1,12 +1,14 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { clientesApi } from "@/api/clientes";
+import { mensagemDeErro } from "@/api/errors";
 import { chavesGrupos } from "@/api/grupos";
 import { useAuth } from "@/auth/useAuth";
 import { Button } from "@/components";
 import { GrupoInlineModal } from "@/components/cadastros";
 import { Alert, Badge } from "@/components/display";
-import { Skeleton } from "@/components/feedback";
+import { ConfirmModal, Skeleton } from "@/components/feedback";
 import { Page, PageHeader, Subnav } from "@/components/shell";
 import { formatarCpf } from "@/lib/documentos";
 import { useAtalho } from "@/lib/useAtalho";
@@ -22,6 +24,7 @@ export function PessoaPage() {
   const { pode } = useAuth();
   const v = usePessoa(id);
   const [grupoAberto, setGrupoAberto] = useState(false);
+  const [confirmarExclusao, setConfirmarExclusao] = useState(false);
 
   const podeEditar = pode("cliente.editar");
   const verDocumento = pode("cliente.ver_documento");
@@ -37,6 +40,18 @@ export function PessoaPage() {
     },
     podeEditar,
   );
+
+  const excluir = useMutation({
+    mutationFn: () => clientesApi.excluir(id ?? ""),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["clientes", "lista"] });
+      void nav("/clientes");
+    },
+    // Fecha o modal para o Alert de erro (abaixo do PageHeader) não ficar atrás do overlay.
+    onError: () => {
+      setConfirmarExclusao(false);
+    },
+  });
 
   if (v.carregando) {
     return (
@@ -97,6 +112,16 @@ export function PessoaPage() {
         salvoEm={v.salvamento.salvoEm}
         actions={
           <>
+            {podeEditar && v.dto && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setConfirmarExclusao(true);
+                }}
+              >
+                Excluir cliente
+              </Button>
+            )}
             <Button
               variant="tertiary"
               onClick={() => {
@@ -121,6 +146,7 @@ export function PessoaPage() {
       />
       <Subnav items={subnavs["/clientes"] ?? []} />
 
+      {excluir.isError && <Alert tone="danger">{mensagemDeErro(excluir.error)}</Alert>}
       {v.conflito && (
         <Alert
           tone="warning"
@@ -164,6 +190,23 @@ export function PessoaPage() {
           v.form.setValue("grupoId", g.id, { shouldDirty: true });
         }}
       />
+
+      {confirmarExclusao && (
+        <ConfirmModal
+          open
+          title={`Excluir ${v.dto?.nome ?? "cliente"}?`}
+          impact="Esta ação não pode ser desfeita."
+          confirmLabel="Excluir"
+          tone="danger"
+          loading={excluir.isPending}
+          onConfirm={() => {
+            excluir.mutate();
+          }}
+          onCancel={() => {
+            setConfirmarExclusao(false);
+          }}
+        />
+      )}
     </Page>
   );
 }

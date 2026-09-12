@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
+import { NetworkError } from "@/api/errors";
 import type { RelatorioResumoDto } from "@/api/relatorios";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
 import { RelatoriosPage } from "./RelatoriosPage";
@@ -144,11 +145,41 @@ test("trocar o vendedor refaz a busca com vendedorId", async () => {
 });
 
 test("Exportar CSV baixa o csv do ano e vendedor atuais", async () => {
-  const { baixar } = await import("@/lib/download");
+  const { baixarComFeedback } = await import("@/lib/download");
+  vi.mocked(baixarComFeedback).mockResolvedValue(undefined);
   montar();
   await screen.findByText("R$ 187.400,00");
   fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
-  expect(baixar).toHaveBeenCalledWith("/api/v1/relatorios/csv?ano=2026", "relatorio-2026.csv");
+  await waitFor(() => {
+    expect(baixarComFeedback).toHaveBeenCalledWith("/api/v1/relatorios/csv?ano=2026", "relatorio-2026.csv");
+  });
+});
+
+test("Exportar CSV mostra Gerando… enquanto a exportação está em andamento (MED-04)", async () => {
+  const { baixarComFeedback } = await import("@/lib/download");
+  let resolver: () => void = () => undefined;
+  vi.mocked(baixarComFeedback).mockReturnValue(
+    new Promise((resolve) => {
+      resolver = () => {
+        resolve();
+      };
+    }),
+  );
+  montar();
+  await screen.findByText("R$ 187.400,00");
+  fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
+  expect(await screen.findByRole("button", { name: "Gerando…" })).toBeDisabled();
+  resolver();
+  expect(await screen.findByRole("button", { name: "Exportar CSV" })).toBeInTheDocument();
+});
+
+test("Exportar CSV com falha mostra Alert com a mensagem de erro (MED-04)", async () => {
+  const { baixarComFeedback } = await import("@/lib/download");
+  vi.mocked(baixarComFeedback).mockRejectedValue(new NetworkError());
+  montar();
+  await screen.findByText("R$ 187.400,00");
+  fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("Sem conexão. Verifique a internet e tente de novo.");
 });
 
 test("teto MEI em alerta mostra tone de aviso", async () => {

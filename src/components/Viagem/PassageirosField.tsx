@@ -5,6 +5,7 @@ import type { ClienteBuscaDto } from "@/api/viagens";
 import { Button, Field, IconButton, Input } from "@/components";
 import { Chip } from "@/components/display";
 import { cx } from "@/lib/cx";
+import { formatarTelefone } from "@/lib/documentos";
 import s from "./Viagem.module.css";
 
 export interface PassageiroForm {
@@ -169,7 +170,7 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
                   }}
                 >
                   {c.nome}
-                  {c.telefone && <span className={s.optionMeta}> · {c.telefone}</span>}
+                  {c.telefone && <span className={s.optionMeta}> · {formatarTelefone(c.telefone)}</span>}
                 </li>
               ))}
             </ul>

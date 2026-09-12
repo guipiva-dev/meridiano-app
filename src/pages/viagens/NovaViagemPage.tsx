@@ -73,12 +73,7 @@ export function NovaViagemPage() {
         salvoEm={v.salvamento.salvoEm}
         actions={
           <>
-            <Button
-              variant="tertiary"
-              onClick={() => {
-                void nav(-1);
-              }}
-            >
+            <Button variant="tertiary" onClick={v.fechar}>
               Fechar
             </Button>
             <Button
@@ -163,7 +158,7 @@ export function NovaViagemPage() {
             onNovoFornecedor={() => {
               setFornecedorPara(i);
             }}
-            erros={{}}
+            erros={v.errosReservas[i] ?? {}}
             avisoDuplicada={duplicada ? `Este localizador já está na viagem ${duplicada}.` : null}
           />
         );

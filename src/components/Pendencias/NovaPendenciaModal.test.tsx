@@ -155,6 +155,11 @@ test('escopo pessoa troca os chips "Para quem" por "Viagem relacionada" (sem can
   expect(screen.getByRole("button", { name: "Criar pendência" })).toBeInTheDocument();
 });
 
+test("título tem maxLength 150", () => {
+  montar();
+  expect(screen.getByLabelText(/^O que precisa ser feito/)).toHaveAttribute("maxLength", "150");
+});
+
 test("sem título mostra erro local e não chama a API", async () => {
   montar();
 

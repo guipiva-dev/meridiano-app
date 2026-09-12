@@ -147,6 +147,7 @@ export function DespesaModal({ open, despesa, viagemFixa, fornecedores, onClose,
         <Field label="Descrição" required error={erro("descricao")} className={s.span2}>
           <Input
             value={descricao}
+            maxLength={200}
             onChange={(e) => {
               setDescricao(e.target.value);
             }}
@@ -241,9 +242,10 @@ export function DespesaModal({ open, despesa, viagemFixa, fornecedores, onClose,
             }}
           />
         </Field>
-        <Field label="Observação" className={s.span2}>
+        <Field label="Observação" helper={`${observacao.length}/2000`} className={s.span2}>
           <Textarea
             value={observacao}
+            maxLength={2000}
             onChange={(e) => {
               setObservacao(e.target.value);
             }}

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderHook } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { MemoryRouter } from "react-router";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
@@ -147,6 +147,24 @@ export function montar(id?: string, caminho = "/") {
     );
   return renderHook(() => useNovaViagem(id), { wrapper });
 }
+
+type Resultado = ReturnType<typeof montar>["result"];
+
+/** Espera as consultas de carga (fornecedores/vendedores/agência, ou a viagem) resolverem. */
+export const esperar = {
+  fornecedores: (result: Resultado) =>
+    waitFor(() => {
+      expect(result.current.fornecedores).toHaveLength(1);
+    }),
+  agencia: (result: Resultado) =>
+    waitFor(() => {
+      expect(result.current.agencia).not.toBeNull();
+    }),
+  viagem: (result: Resultado) =>
+    waitFor(() => {
+      expect(result.current.viagem).not.toBeNull();
+    }),
+};
 
 /** Segura as respostas de `padrao` até o teste resolvê-las, na ordem que quiser. */
 export function adiarRespostas(padrao: string) {

@@ -69,6 +69,15 @@ test("cabeçalho traz titular · destino, código e período", async () => {
   ).toBeInTheDocument();
 });
 
+test("badge financeiro do cabeçalho traz o prefixo Comissão e explica o que representa", async () => {
+  montar();
+  const badge = await screen.findByText("Comissão: A receber");
+  expect(badge.closest("[title]")).toHaveAttribute(
+    "title",
+    "Situação da comissão dos fornecedores nas reservas ativas",
+  );
+});
+
 test("faixa do resumo mostra o resultado da viagem", async () => {
   montar();
   expect(await screen.findByText("R$ 1.640,00")).toBeInTheDocument();
@@ -80,6 +89,12 @@ test("aba Reservas mostra os dois cards", async () => {
   expect(await screen.findByText("Reserva 1")).toBeInTheDocument();
   expect(screen.getByText("Reserva 2")).toBeInTheDocument();
   expect(screen.getByRole("tab", { name: /Reservas/ })).toHaveTextContent("2");
+});
+
+test("com reserva cancelada, a aba Reservas mostra Ativas N · Total M", async () => {
+  viagem = { ...VIAGEM, reservas: [VIAGEM.reservas[0]!, { ...VIAGEM.reservas[1]!, status: "cancelada" }] };
+  montar();
+  expect(await screen.findByRole("tab", { name: /Reservas.*Ativas 1.*Total 2/ })).toBeInTheDocument();
 });
 
 test("sem auditoria.ver a aba Timeline não aparece", async () => {

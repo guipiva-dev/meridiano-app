@@ -76,3 +76,71 @@ test("form sem defaultValues (novo fornecedor) não quebra ao renderizar nem ao 
 
   expect(await screen.findByText("Nome é obrigatório")).toBeInTheDocument();
 });
+
+test("telefone com letras mostra erro local", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  await user.type(screen.getByLabelText("Telefone"), "11a99876567");
+
+  expect(await screen.findByText("Telefone inválido")).toBeInTheDocument();
+});
+
+test("telefone válido não mostra erro", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  await user.type(screen.getByLabelText("Telefone"), "(11) 99876-5678");
+
+  expect(screen.queryByText("Telefone inválido")).not.toBeInTheDocument();
+});
+
+test("telefone de emergência com letras mostra erro local", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  await user.type(screen.getByLabelText("Telefone de emergência"), "11a99876567");
+
+  expect(await screen.findByText("Telefone inválido")).toBeInTheDocument();
+});
+
+test("erro telefone_emergencia_invalido vindo da API aparece no campo", () => {
+  render(<Wrapper erros={{ telefoneEmergencia: "Telefone inválido" }} />);
+  expect(screen.getByLabelText("Telefone de emergência")).toBeInvalid();
+});
+
+test("site sem domínio válido mostra erro local", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  await user.type(screen.getByLabelText("Site / portal"), "não é site");
+
+  expect(await screen.findByText("Site inválido")).toBeInTheDocument();
+});
+
+test("site como domínio simples sem esquema não mostra erro (mesma tolerância do back)", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  await user.type(screen.getByLabelText("Site / portal"), "exemplo.com.br");
+
+  expect(screen.queryByText("Site inválido")).not.toBeInTheDocument();
+});
+
+test("nome tem maxLength 150", () => {
+  render(<Wrapper />);
+  expect(screen.getByLabelText(/^Nome/)).toHaveAttribute("maxLength", "150");
+});
+
+test("observações tem maxLength 2000 e mostra contador N/2000", async () => {
+  const user = userEvent.setup();
+  render(<Wrapper />);
+
+  const observacoes = screen.getByLabelText("Observações");
+  expect(observacoes).toHaveAttribute("maxLength", "2000");
+  expect(screen.getByText("0/2000")).toBeInTheDocument();
+
+  await user.type(observacoes, "abc");
+
+  expect(screen.getByText("3/2000")).toBeInTheDocument();
+});

@@ -186,6 +186,7 @@ test("sem cliente.editar: não mostra Salvar, Remover nem Vincular; Ctrl+S não 
 
   expect(screen.queryByRole("button", { name: "Salvar" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Remover" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Excluir grupo" })).toBeNull();
   expect(screen.queryByLabelText("Buscar pessoa para vincular")).toBeNull();
   expect(screen.getByRole("button", { name: "Fechar" })).toBeInTheDocument();
 
@@ -194,4 +195,61 @@ test("sem cliente.editar: não mostra Salvar, Remover nem Vincular; Ctrl+S não 
 
   fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
   expect(await screen.findByText("Lista de grupos")).toBeInTheDocument();
+});
+
+test("nome tem maxLength 150", async () => {
+  montar();
+  await screen.findByDisplayValue("12.345.678/0001-99");
+  expect(screen.getByLabelText(/^Nome/)).toHaveAttribute("maxLength", "150");
+});
+
+test("observações mostra contador N/2000 e limita maxLength", async () => {
+  montar();
+  await screen.findByDisplayValue("12.345.678/0001-99");
+  const observacoes = screen.getByLabelText("Observações");
+  expect(observacoes).toHaveAttribute("maxLength", "2000");
+
+  fireEvent.change(observacoes, { target: { value: "abc" } });
+
+  expect(screen.getByText("3/2000")).toBeInTheDocument();
+});
+
+test("Excluir grupo confirma, chama DELETE e volta para a lista", async () => {
+  montar();
+  await screen.findByDisplayValue("12.345.678/0001-99");
+
+  fireEvent.click(screen.getByRole("button", { name: "Excluir grupo" }));
+  const dialogo = await screen.findByRole("dialog");
+  expect(chamadas.some((c) => c.method === "DELETE" && c.url === "/api/v1/grupos/g1")).toBe(false);
+
+  fireEvent.click(within(dialogo).getByRole("button", { name: "Excluir" }));
+
+  await waitFor(() => {
+    expect(chamadas.some((c) => c.method === "DELETE" && c.url === "/api/v1/grupos/g1")).toBe(true);
+  });
+  expect(await screen.findByText("Lista de grupos")).toBeInTheDocument();
+});
+
+test("Excluir grupo com falha fecha o diálogo (Alert não fica atrás do overlay)", async () => {
+  montar();
+  await screen.findByDisplayValue("12.345.678/0001-99");
+
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    const method = init?.method ?? "GET";
+    chamadas.push({ method, url });
+    if (url === "/api/v1/grupos/g1" && method === "DELETE") {
+      return Promise.resolve(resposta(500, { codigo: "erro", detail: "Falha ao excluir" }));
+    }
+    if (url === "/api/v1/grupos/g1") return Promise.resolve(resposta(200, GRUPO));
+    return Promise.resolve(resposta(200, null));
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: "Excluir grupo" }));
+  const dialogo = await screen.findByRole("dialog");
+  fireEvent.click(within(dialogo).getByRole("button", { name: "Excluir" }));
+
+  await waitFor(() => {
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+  expect(await screen.findByText("Falha ao excluir")).toBeInTheDocument();
 });

@@ -57,6 +57,7 @@ export function BookingFields({
           className={s.mono}
           value={value.localizador}
           readOnly={readOnly}
+          maxLength={40}
           onChange={(e: ChangeEvent<HTMLInputElement>) => {
             onChange({ localizador: e.target.value });
           }}

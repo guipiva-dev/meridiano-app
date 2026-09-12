@@ -2,7 +2,7 @@ import type { UseFormReturn } from "react-hook-form";
 import type { TipoFornecedor } from "@/api/fornecedores";
 import { Field, Input, Select, Textarea } from "@/components";
 import { apresentacaoStatus } from "@/dominio/status";
-import { cnpjValido } from "@/lib/documentos";
+import { cnpjValido, siteValido, telefoneValido } from "@/lib/documentos";
 import s from "./Fornecedores.module.css";
 import type { FormFornecedor } from "./useFornecedor";
 
@@ -34,10 +34,19 @@ export function DadosFornecedorForm({ form, erros }: DadosFornecedorFormProps) {
   // Só mostra "obrigatório" depois que o usuário passou pelo campo (evita erro no form em branco recém-aberto).
   const erroNome = erros.nome ?? (formState.touchedFields.nome && !nome.trim() ? "Nome é obrigatório" : undefined);
   const erroCnpj = erros.cnpj ?? (cnpj && !cnpjValido(cnpj) ? "CNPJ inválido" : undefined);
+  const telefone = watch("telefone");
+  const telefoneEmergencia = watch("telefoneEmergencia");
+  const site = watch("site");
+  const observacoes = (watch("observacoes") as string | undefined) ?? "";
+  const erroTelefone = erros.telefone ?? (telefone && !telefoneValido(telefone) ? "Telefone inválido" : undefined);
+  const erroTelefoneEmergencia =
+    erros.telefoneEmergencia ??
+    (telefoneEmergencia && !telefoneValido(telefoneEmergencia) ? "Telefone inválido" : undefined);
+  const erroSite = erros.site ?? (site && !siteValido(site) ? "Site inválido" : undefined);
   return (
     <div className={s.grid}>
       <Field label="Nome" required error={erroNome} className={s.span2}>
-        <Input {...register("nome")} />
+        <Input maxLength={150} {...register("nome")} />
       </Field>
 
       <Field label="Tipo" error={erros.tipo}>
@@ -57,7 +66,7 @@ export function DadosFornecedorForm({ form, erros }: DadosFornecedorFormProps) {
           <span className={s.sufixo}>%</span>
         </div>
       </Field>
-      <Field label="Telefone de emergência" error={erros.telefoneEmergencia}>
+      <Field label="Telefone de emergência" error={erroTelefoneEmergencia}>
         <Input {...register("telefoneEmergencia")} />
       </Field>
 
@@ -68,14 +77,14 @@ export function DadosFornecedorForm({ form, erros }: DadosFornecedorFormProps) {
       >
         <Select options={OPCOES_SITUACAO} {...register("ativo")} />
       </Field>
-      <Field label="Site / portal" error={erros.site}>
+      <Field label="Site / portal" error={erroSite}>
         <Input {...register("site")} />
       </Field>
 
       <Field label="Contato comercial" error={erros.contato}>
         <Input {...register("contato")} />
       </Field>
-      <Field label="Telefone" error={erros.telefone}>
+      <Field label="Telefone" error={erroTelefone}>
         <Input {...register("telefone")} />
       </Field>
 
@@ -88,8 +97,8 @@ export function DadosFornecedorForm({ form, erros }: DadosFornecedorFormProps) {
       </Field>
       <div />
 
-      <Field label="Observações" error={erros.observacoes} className={s.span2}>
-        <Textarea {...register("observacoes")} />
+      <Field label="Observações" helper={`${observacoes.length}/2000`} error={erros.observacoes} className={s.span2}>
+        <Textarea maxLength={2000} {...register("observacoes")} />
       </Field>
     </div>
   );

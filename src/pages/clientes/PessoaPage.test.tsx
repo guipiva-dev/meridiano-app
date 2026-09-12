@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider, useParams } from "react-router";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
 import { PessoaPage } from "./PessoaPage";
@@ -275,6 +275,64 @@ test("/clientes/nova não tem abas e salvar cria e navega para a pessoa", async 
   const post = chamadas.find((c) => c.method === "POST");
   expect(post?.body).toMatchObject({ nome: "Bia Nova", telefone: null });
   expect(await screen.findAllByRole("tab")).toHaveLength(5);
+});
+
+test("Excluir cliente confirma, chama DELETE e volta para a lista", async () => {
+  montar();
+  await screen.findByDisplayValue("São Paulo");
+
+  fireEvent.click(screen.getByRole("button", { name: "Excluir cliente" }));
+  const dialogo = await screen.findByRole("dialog");
+  expect(chamadas.some((c) => c.method === "DELETE" && c.url === "/api/v1/clientes/p1")).toBe(false);
+
+  fireEvent.click(within(dialogo).getByRole("button", { name: "Excluir" }));
+
+  await waitFor(() => {
+    expect(chamadas.some((c) => c.method === "DELETE" && c.url === "/api/v1/clientes/p1")).toBe(true);
+  });
+  expect(await screen.findByText("Lista")).toBeInTheDocument();
+});
+
+test("Excluir cliente com vínculos mostra a mensagem do back e fecha o diálogo", async () => {
+  montar();
+  await screen.findByDisplayValue("São Paulo");
+
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    const method = init?.method ?? "GET";
+    chamadas.push({ method, url });
+    if (url === "/api/v1/clientes/p1" && method === "DELETE") {
+      return Promise.resolve(
+        resposta(422, {
+          codigo: "cliente_com_vinculos",
+          title: "Cliente com vínculos",
+          detail: "Cliente possui viagens vinculadas",
+        }),
+      );
+    }
+    if (url === "/api/v1/clientes/p1") return Promise.resolve(resposta(200, cliente));
+    return Promise.resolve(resposta(200, []));
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: "Excluir cliente" }));
+  const dialogo = await screen.findByRole("dialog");
+  fireEvent.click(within(dialogo).getByRole("button", { name: "Excluir" }));
+
+  await waitFor(() => {
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+  expect(await screen.findByText("Cliente possui viagens vinculadas")).toBeInTheDocument();
+});
+
+test("sem cliente.editar não mostra Excluir cliente", async () => {
+  montar("/clientes/p1", ["cliente.ver"]);
+  await screen.findByDisplayValue("São Paulo");
+
+  expect(screen.queryByRole("button", { name: "Excluir cliente" })).toBeNull();
+});
+
+test("telefone/whatsapp carregam formatados (back guarda só dígitos)", async () => {
+  montar();
+  expect(await screen.findByDisplayValue("(11) 99876-5678")).toBeInTheDocument();
 });
 
 test("sem cliente.ver_documento o campo CPF não é renderizado", async () => {

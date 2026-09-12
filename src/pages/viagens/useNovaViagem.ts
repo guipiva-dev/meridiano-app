@@ -104,6 +104,14 @@ function validar(v: ViagemForm): Record<string, string> {
   return e;
 }
 
+/** Campo que uma reserva ativa cobra antes de gastar uma ida ao servidor (ALT-01). Só o que o back também exige: `fornecedorId`
+ * (`valorTotal`/`tiposServico` são opcionais no schema, front não pode ser mais estrito). Cancelada é imutável: não valida. */
+function validarReserva(r: ReservaForm): Record<string, string> {
+  const e: Record<string, string> = {};
+  if (!r.fornecedorId) e.fornecedorId = "Escolha o fornecedor";
+  return e;
+}
+
 /** Comissão sugerida pelo percentual do fornecedor enquanto ninguém a editou à mão. */
 function comSugestao(r: ReservaForm, patch: Partial<ReservaForm>, fornecedores: FornecedorDto[]): ReservaForm {
   const mudouBase = "fornecedorId" in patch || "valorTotal" in patch;
@@ -142,6 +150,8 @@ export function useNovaViagem(id: string | undefined) {
   const [locais, setLocais] = useState<Record<string, string>>({});
   // Valores no momento da última tentativa de salvar: campo alterado desde então perde o erro (local ou da API).
   const [valoresAoSalvar, setValoresAoSalvar] = useState<Partial<ViagemForm>>({});
+  // ALT-01: liga a validação de reserva (ao vivo dali em diante, some sozinha ao corrigir) na primeira tentativa de salvar.
+  const [tentouSalvarReserva, setTentouSalvarReserva] = useState(false);
 
   // Toda resposta oficial (carga inicial, PUT, recarregar) reentra pelo cache e substitui o form.
   const aplicado = useRef<ViagemDto | null>(null);
@@ -303,22 +313,44 @@ export function useNovaViagem(id: string | undefined) {
     if (isDirty) marcarSujo();
   }, [isDirty, marcarSujo]);
 
+  // ALT-01: computado uma vez a partir do valor ao vivo do form; reusado tanto para o bloqueio de `salvar` quanto para a exibição.
+  const problemasPorReserva = useMemo(
+    () => reservas.map((r) => (r.status === "cancelada" ? {} : validarReserva(r))),
+    [reservas],
+  );
+
   const salvar = useCallback(async () => {
     const dados = form.getValues();
     const problemas = validar(dados);
+    const temErroReserva = problemasPorReserva.some((p) => Object.keys(p).length > 0);
     setLocais(problemas);
     setValoresAoSalvar(dados);
-    if (Object.keys(problemas).length > 0) return false;
+    setTentouSalvarReserva(true);
+    if (temErroReserva) {
+      // Reserva recolhida com erro: abre o card para o erro ficar visível sem precisar procurá-lo.
+      setReservas(
+        dados.reservas.map((r, i) =>
+          Object.keys(problemasPorReserva[i] ?? {}).length > 0 ? { ...r, aberta: true } : r,
+        ),
+      );
+    }
+    if (Object.keys(problemas).length > 0 || temErroReserva) return false;
     return executar(dados);
-  }, [form, executar]);
+  }, [form, executar, problemasPorReserva, setReservas]);
 
   // Recarregar (botão do 409) troca o form pela versão do servidor: o erro exibido morre junto.
   const recarregar = useCallback(async () => {
     if (!id) return;
     await qc.refetchQueries({ queryKey: chaves.viagem(id) });
     setLocais({});
+    setTentouSalvarReserva(false);
     limpar();
   }, [id, qc, limpar]);
+
+  // ALT-13: nunca nav(-1) — o destino depende de a viagem já existir (criada ou em edição).
+  const fechar = useCallback(() => {
+    void nav(viagem ? `/viagens/${viagem.id}` : "/viagens");
+  }, [viagem, nav]);
 
   const daApi = useMemo(
     () => errosDeApi(salvamento.estado === "error" ? salvamento.erro : null),
@@ -331,6 +363,8 @@ export function useNovaViagem(id: string | undefined) {
     ),
   );
   const erroCarga = viagemQ.isError ? mensagemDeErro(viagemQ.error) : null;
+  // ALT-01: ao vivo a partir da 1ª tentativa de salvar — soma sozinha ao corrigir o campo, sem precisar salvar de novo.
+  const errosReservas = tentouSalvarReserva ? problemasPorReserva : [];
 
   const receitaPrevista = somarReservas(reservas).receitaPrevista;
   const repasseSugerido =
@@ -359,8 +393,10 @@ export function useNovaViagem(id: string | undefined) {
     atualizarReserva,
     salvamento,
     salvar,
+    fechar,
     recarregar,
     erros,
+    errosReservas,
     erroBloco: erroCarga ?? daApi.bloco,
     conflito: daApi.conflito,
   };
