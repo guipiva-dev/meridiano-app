@@ -21,8 +21,11 @@
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   font: var(--type-helper);
-  white-space: nowrap;
+  white-space: normal;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 2rem));
   box-shadow: var(--shadow-float);
+  display: none;
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
@@ -30,6 +33,7 @@
 }
 .wrap:hover .bubble,
 .trigger:focus-visible ~ .bubble {
+  display: block;
   visibility: visible;
   opacity: 1;
 }
