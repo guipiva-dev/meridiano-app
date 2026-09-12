@@ -37,9 +37,11 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 });
 
-test("baixarComFeedback com resposta ok baixa o blob e revoga a URL (MED-04)", async () => {
+test("baixarComFeedback com resposta ok baixa o blob e revoga a URL só 1 s após o clique (MED-04; Firefox)", async () => {
+  vi.useFakeTimers();
   const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockReturnValue(undefined);
   vi.stubGlobal("fetch", () => Promise.resolve(resposta(200, null, "text/csv")));
 
@@ -47,7 +49,27 @@ test("baixarComFeedback com resposta ok baixa o blob e revoga a URL (MED-04)", a
 
   expect(click).toHaveBeenCalledTimes(1);
   expect(createObjectURL).toHaveBeenCalledTimes(1);
+  expect(revokeObjectURL).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(999);
+  expect(revokeObjectURL).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(1);
   expect(revokeObjectURL).toHaveBeenCalledWith("blob:x");
+  click.mockRestore();
+});
+
+test("baixarComFeedback com resposta não-2xx e JSON inválido lança ApiError resposta_invalida, como http.ts", async () => {
+  const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockReturnValue(undefined);
+  const quebrada = resposta(500, null);
+  quebrada.json = () => Promise.reject(new SyntaxError("bad json"));
+  vi.stubGlobal("fetch", () => Promise.resolve(quebrada));
+
+  await expect(baixarComFeedback("/api/v1/x.csv", "x.csv")).rejects.toMatchObject({
+    codigo: "resposta_invalida",
+    status: 500,
+    message: "Resposta inválida do servidor",
+  });
+
+  expect(click).not.toHaveBeenCalled();
   click.mockRestore();
 });
 

@@ -1,4 +1,5 @@
-import { api } from "./http";
+import { NetworkError } from "./errors";
+import { api, TIMEOUT_MS } from "./http";
 
 export type TipoAnexo = "voucher" | "comprovante" | "documento" | "contrato" | "extrato" | "outro";
 
@@ -39,11 +40,18 @@ export const anexosApi = {
 };
 
 export async function enviarArquivo(urlUpload: string, arquivo: File): Promise<void> {
-  const resposta = await fetch(urlUpload, {
-    method: "PUT",
-    body: arquivo,
-    headers: { "Content-Type": arquivo.type },
-  });
+  let resposta: Response;
+  try {
+    // Mesmo timeout do cliente HTTP: upload preso não vira spinner infinito (TimeoutError → NetworkError).
+    resposta = await fetch(urlUpload, {
+      method: "PUT",
+      body: arquivo,
+      headers: { "Content-Type": arquivo.type },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch {
+    throw new NetworkError();
+  }
   if (!resposta.ok) throw new Error("Falha ao enviar o arquivo");
 }
 

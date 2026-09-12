@@ -172,6 +172,7 @@ export function adiarRespostas(padrao: string) {
   const pendentes: ((body: unknown) => void)[] = [];
   vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
     if (!url.includes(padrao)) return base(url, init);
+    chamadas.push({ url, metodo: init?.method ?? "GET", corpo: undefined });
     return new Promise<Response>((res) => {
       pendentes.push((body) => {
         res(resposta(200, body));

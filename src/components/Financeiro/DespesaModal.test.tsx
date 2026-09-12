@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type * as DespesasApi from "@/api/despesas";
 import type { DespesaCriadaDto, DespesaRequest } from "@/api/despesas";
+import { ValidationError } from "@/api/errors";
 import { DespesaModal } from "./DespesaModal";
 
 const criar = vi.fn<(d: DespesaRequest, motivo?: string) => Promise<DespesaCriadaDto>>();
@@ -144,4 +145,21 @@ test("observação tem maxLength 2000 e mostra contador N/2000", async () => {
   await user.type(observacao, "abc");
 
   expect(screen.getByText("3/2000")).toBeInTheDocument();
+});
+
+test("422 texto_longo em observacao vira erro inline no campo Observação, sem Alert de bloco", async () => {
+  const user = userEvent.setup();
+  criar.mockRejectedValue(
+    new ValidationError(422, "texto_longo", "observacao deve ter no máximo 2000 caracteres", { campo: "observacao" }),
+  );
+  render(<DespesaModal open fornecedores={[]} onClose={vi.fn()} onSalva={vi.fn()} />);
+
+  await user.type(screen.getByLabelText(/^Descrição/), "Aluguel");
+  fireEvent.change(screen.getByLabelText(/^Vencimento/), { target: { value: "2026-04-10" } });
+  await user.click(screen.getByRole("button", { name: "Lançar despesa" }));
+
+  await waitFor(() => {
+    expect(screen.getByLabelText("Observação")).toHaveAccessibleDescription(/no máximo 2000/);
+  });
+  expect(screen.getByRole("alert")).toHaveTextContent("observacao deve ter no máximo 2000 caracteres");
 });

@@ -94,3 +94,15 @@ test("clicar na linha navega para /clientes/grupos/<id>", async () => {
   fireEvent.click(await screen.findByText("Família Mendes"));
   expect(await screen.findByText("Detalhe g1")).toBeInTheDocument();
 });
+
+test("contador mostra — enquanto a lista carrega (não 0)", () => {
+  vi.stubGlobal(
+    "fetch",
+    () =>
+      new Promise<Response>(() => {
+        /* nunca resolve: a página fica carregando */
+      }),
+  );
+  montar();
+  expect(screen.getByText("— grupos · organizam o cadastro de pessoas; não têm valor financeiro")).toBeInTheDocument();
+});

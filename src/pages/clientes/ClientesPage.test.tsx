@@ -135,3 +135,15 @@ test("+ Nova pessoa navega para /clientes/nova", async () => {
   fireEvent.click(screen.getByRole("button", { name: /Nova pessoa/ }));
   expect(await screen.findByText("Nova pessoa")).toBeInTheDocument();
 });
+
+test("contadores mostram — enquanto a lista carrega (não 0)", () => {
+  vi.stubGlobal(
+    "fetch",
+    () =>
+      new Promise<Response>(() => {
+        /* nunca resolve: a página fica carregando */
+      }),
+  );
+  montar();
+  expect(screen.getByText("— pessoas · — grupos · — passaportes vencendo")).toBeInTheDocument();
+});
