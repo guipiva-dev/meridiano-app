@@ -13,7 +13,7 @@ interface PendenciasAgendaProps {
   onEditar: (p: PendenciaDto) => void;
 }
 
-/** Um grupo (Atrasadas/Hoje/Esta semana) de `PendenciasAgenda`. */
+/** Um grupo (Atrasadas/Hoje/Esta semana/Próximos 30 dias) de `PendenciasAgenda`. */
 function Grupo({
   titulo,
   itens,
@@ -22,6 +22,7 @@ function Grupo({
   onAdiar,
   onExcluir,
   onEditar,
+  colapsavel = false,
 }: {
   titulo: string;
   itens: PendenciaDto[];
@@ -30,34 +31,43 @@ function Grupo({
   onAdiar: (p: PendenciaDto) => void;
   onExcluir: (p: PendenciaDto) => void;
   onEditar: (p: PendenciaDto) => void;
+  /** Próximos 30 dias: seção informativa, recolhida por padrão (`<details>`). */
+  colapsavel?: boolean;
 }) {
   if (itens.length === 0) return null;
-  return (
-    <Section title={`${titulo} ${itens.length}`}>
-      <div className={s.lista}>
-        {itens.map((p) => (
-          <LinhaPendencia
-            key={p.id}
-            p={p}
-            podeEditar={podeEditar}
-            mostrarViagem
-            onConcluir={() => {
-              acoes.concluir.mutate(p);
-            }}
-            onAdiar={() => {
-              onAdiar(p);
-            }}
-            onEditar={() => {
-              onEditar(p);
-            }}
-            onExcluir={() => {
-              onExcluir(p);
-            }}
-          />
-        ))}
-      </div>
-    </Section>
+  const lista = (
+    <div className={s.lista}>
+      {itens.map((p) => (
+        <LinhaPendencia
+          key={p.id}
+          p={p}
+          podeEditar={podeEditar}
+          mostrarViagem
+          onConcluir={() => {
+            acoes.concluir.mutate(p);
+          }}
+          onAdiar={() => {
+            onAdiar(p);
+          }}
+          onEditar={() => {
+            onEditar(p);
+          }}
+          onExcluir={() => {
+            onExcluir(p);
+          }}
+        />
+      ))}
+    </div>
   );
+  if (colapsavel) {
+    return (
+      <details className={s.detalhesProximas}>
+        <summary>{`${titulo} ${itens.length}`}</summary>
+        {lista}
+      </details>
+    );
+  }
+  return <Section title={`${titulo} ${itens.length}`}>{lista}</Section>;
 }
 
 export function PendenciasAgenda({ pendencias, responsavelId, podeEditar, onEditar }: PendenciasAgendaProps) {
@@ -103,6 +113,17 @@ export function PendenciasAgenda({ pendencias, responsavelId, podeEditar, onEdit
           />
         </>
       )}
+
+      <Grupo
+        titulo="Próximos 30 dias"
+        itens={pendencias.proximas ?? []}
+        podeEditar={podeEditar}
+        acoes={acoes}
+        onAdiar={setAdiando}
+        onExcluir={setExcluindo}
+        onEditar={onEditar}
+        colapsavel
+      />
 
       {adiando && (
         <AdiarModal

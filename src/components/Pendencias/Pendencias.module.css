@@ -57,9 +57,6 @@
   font: var(--type-helper);
   color: var(--color-text-muted);
 }
-.resp::before {
-  content: " · ";
-}
 .acoes {
   margin-left: auto;
   display: inline-flex;
@@ -116,7 +113,10 @@
   .resp {
     display: block;
   }
-  .resp::before {
-    content: "";
-  }
+}
+
+.detalhesProximas summary {
+  font: var(--type-label);
+  color: var(--color-text-link);
+  cursor: pointer;
 }

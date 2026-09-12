@@ -49,7 +49,12 @@ export function LinhaPendencia({
         <span className={s.meta}>
           {formatarData(p.dataPrevista)} · {p.origem === "automatica" ? "automática" : "manual"}
           {mostrarViagem && p.codigoViagem && ` · viagem ${p.codigoViagem}`}
-          {p.responsavelNome && <span className={s.resp}>{p.responsavelNome}</span>}
+          {p.responsavelNome && (
+            <>
+              {" · "}
+              <span className={s.resp}>{p.responsavelNome}</span>
+            </>
+          )}
         </span>
       </div>
       {p.prioridade === "urgente" && aberta && <StatusBadge entidade="prioridade" valor="urgente" />}

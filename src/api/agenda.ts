@@ -12,6 +12,8 @@ export interface AgendaPendenciasDto {
   atrasadas: PendenciaDto[];
   hoje: PendenciaDto[];
   semana: PendenciaDto[];
+  /** Abertas com `data > hoje+7` e `<= hoje+30` — sem isso, adiar para depois da semana some da Agenda. */
+  proximas?: PendenciaDto[];
   total: number;
 }
 
