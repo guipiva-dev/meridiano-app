@@ -1,3 +1,4 @@
+import { plural } from "@/lib/plural";
 import { api } from "./http";
 import type { FornecedorDto } from "./viagens";
 
@@ -113,7 +114,7 @@ export function resumoRegra(janelas: JanelaDto[], prazoDias: number | null): str
       .map((j) => `${j.diaInicial}–${j.diaFinal} → dia ${j.diaPagamento}${sufixoMeses(j.mesesAFrente)}`)
       .join(" · ");
   }
-  if (prazoDias !== null) return `${prazoDias} dias após a compra`;
+  if (prazoDias !== null) return `${plural(prazoDias, "dia", "dias")} após a compra`;
   return "—";
 }
 

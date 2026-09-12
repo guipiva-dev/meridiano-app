@@ -5,6 +5,7 @@ import { Alert } from "@/components/display";
 import { EmptyState } from "@/components/feedback";
 import { Section } from "@/components/shell";
 import { formatarData } from "@/lib/datas";
+import { plural } from "@/lib/plural";
 import s from "./Fornecedores.module.css";
 import { NovaVersaoRegraModal } from "./NovaVersaoRegraModal";
 
@@ -45,7 +46,9 @@ export function RegrasTab({ fornecedor, podeEditar, onMudou }: RegrasTabProps) {
             </Alert>
             <Janelas regra={vigente} />
             {fornecedor.prazoComissaoDias !== null && (
-              <p className={s.meta}>ou prazo fixo: {fornecedor.prazoComissaoDias} dias após a compra</p>
+              <p className={s.meta}>
+                ou prazo fixo: {plural(fornecedor.prazoComissaoDias, "dia", "dias")} após a compra
+              </p>
             )}
           </>
         ) : (

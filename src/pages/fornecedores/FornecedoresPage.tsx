@@ -11,7 +11,6 @@ import { EmptyState } from "@/components/feedback";
 import { Page, PageHeader } from "@/components/shell";
 import { apresentacaoStatus } from "@/dominio/status";
 import { formatarTelefone } from "@/lib/documentos";
-import { plural } from "@/lib/plural";
 import s from "./Fornecedores.module.css";
 
 type Situacao = "ativos" | "inativos" | "todos";
@@ -26,14 +25,6 @@ const ATIVO_POR_SITUACAO: Record<Situacao, boolean | undefined> = {
   inativos: false,
   todos: undefined,
 };
-
-/** `resumoRegra` cravava "dias" no plural; aqui corrige o singular ("1 dia") mantendo o resto igual. */
-function textoPrazo(f: ListaFornecedorDto): string {
-  if (f.janelasVigentes.length === 0 && f.prazoComissaoDias !== null) {
-    return `${plural(f.prazoComissaoDias, "dia", "dias")} após a compra`;
-  }
-  return resumoRegra(f.janelasVigentes, f.prazoComissaoDias);
-}
 
 export function FornecedoresPage() {
   const nav = useNavigate();
@@ -77,7 +68,7 @@ export function FornecedoresPage() {
       {
         id: "pagamento",
         titulo: "Pagamento",
-        render: (f) => textoPrazo(f),
+        render: (f) => resumoRegra(f.janelasVigentes, f.prazoComissaoDias),
       },
       { id: "reservas", titulo: "Reservas", alinhar: "right", render: (f) => f.reservas },
     ];

@@ -14,6 +14,10 @@ test("resumoRegra sem janelas com prazo", () => {
   expect(resumoRegra([], 30)).toBe("30 dias após a compra");
 });
 
+test("resumoRegra sem janelas com prazo de 1 dia usa o singular", () => {
+  expect(resumoRegra([], 1)).toBe("1 dia após a compra");
+});
+
 test("resumoRegra sem janelas nem prazo", () => {
   expect(resumoRegra([], null)).toBe("—");
 });
