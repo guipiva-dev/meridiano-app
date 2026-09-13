@@ -7,7 +7,7 @@
   background-color: var(--color-bg-surface);
   background-image:
     linear-gradient(to left, var(--color-bg-surface) 40%, transparent),
-    linear-gradient(to left, rgb(0 0 0 / 12%), transparent);
+    linear-gradient(to left, var(--table-scroll-shadow), transparent);
   background-repeat: no-repeat, no-repeat;
   background-position: right center, right center;
   background-size: 24px 100%, 24px 100%;

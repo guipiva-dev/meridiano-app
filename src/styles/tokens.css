@@ -147,6 +147,7 @@
   --table-row-h:        52px;                 /* duas linhas: principal + secundária */
   --table-row-hover:    var(--color-info-soft);
   --table-row-selected: var(--color-bg-selected);
+  --table-scroll-shadow: rgba(41, 35, 92, 0.12); /* indicador de rolagem horizontal do DataTable; mesma navy do --shadow-float */
 
   --card-bg:     var(--color-bg-surface);
   --card-border: var(--color-border);

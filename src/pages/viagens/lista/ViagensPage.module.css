@@ -1,19 +1,31 @@
-.primary,
-.secondary {
+.primary {
   max-width: 34rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.primary {
   font: var(--type-component);
   color: var(--color-text-heading);
 }
 .secondary {
+  display: flex;
+  align-items: baseline;
+  max-width: 34rem;
   font: var(--type-helper);
   color: var(--color-text-secondary);
 }
+.secondaryDestino {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.separator {
+  flex: none;
+  white-space: pre;
+}
 .secondary code {
+  flex: none;
   font: var(--type-code);
 }
 

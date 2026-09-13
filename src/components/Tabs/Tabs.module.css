@@ -10,11 +10,6 @@
   overflow-x: auto;
   scrollbar-width: thin;
 }
-@media (max-width: 640px) {
-  .list {
-    flex-wrap: nowrap;
-  }
-}
 .tab {
   background: none;
   border: 0;

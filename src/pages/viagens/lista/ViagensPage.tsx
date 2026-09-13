@@ -80,10 +80,14 @@ export function ViagensPage() {
               <div className={s.primary} title={l.titular}>
                 {l.titular}
               </div>
-              {/* código antes do destino: com nowrap + ellipsis na linha inteira, o corte fica
-                  sempre no destino (à direita), nunca no código do localizador. */}
-              <div className={s.secondary} title={`${l.codigo} · ${destinoTipo}`}>
-                <code>{l.codigo}</code> · {destinoTipo}
+              {/* Ordem congelada do protótipo (destino · tipo · código): quem trunca é só o
+                  destino+tipo (flex:1, ellipsis); o código fica com flex:none e nunca corta. */}
+              <div className={s.secondary}>
+                <span className={s.secondaryDestino} title={destinoTipo}>
+                  {destinoTipo}
+                </span>
+                <span className={s.separator}> · </span>
+                <code>{l.codigo}</code>
               </div>
             </div>
           );

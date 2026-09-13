@@ -135,12 +135,16 @@ test("1ª coluna trunca (A01): classe + title com o texto completo, código nunc
   expect(titular).toHaveClass("primary");
   expect(titular).toHaveAttribute("title", "Carlos Mendes");
 
-  const codigo = screen.getByText("VG-2026-0001");
-  const linhaSecundaria = codigo.parentElement;
+  // Ordem congelada do protótipo: destino · tipo · código. Quem trunca (ellipsis + title) é só o
+  // span do destino/tipo; o <code> fica com flex:none, sempre por último, nunca cortado.
+  const destino = screen.getByText("Lisboa · Internacional");
+  expect(destino).toHaveClass("secondaryDestino");
+  expect(destino).toHaveAttribute("title", "Lisboa · Internacional");
+
+  const linhaSecundaria = destino.parentElement;
   expect(linhaSecundaria).toHaveClass("secondary");
-  expect(linhaSecundaria).toHaveAttribute("title", "VG-2026-0001 · Lisboa · Internacional");
-  // o <code> vem antes do destino: com nowrap + ellipsis, o corte cai no destino, nunca no código.
-  expect(linhaSecundaria?.firstElementChild?.tagName).toBe("CODE");
+  expect(linhaSecundaria?.lastElementChild?.tagName).toBe("CODE");
+  expect(linhaSecundaria?.lastElementChild).toHaveTextContent("VG-2026-0001");
 });
 
 test("contador no singular (U11): '1 viagem', não '1 viagens'", async () => {
