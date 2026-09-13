@@ -9,6 +9,10 @@
 .secondary code {
   font: var(--type-code);
 }
+/* MED-08: telefone de plantão numa linha só. */
+.plantao {
+  white-space: nowrap;
+}
 
 /* Lista */
 .filtros {

@@ -4,6 +4,7 @@ import { createMemoryRouter, RouterProvider } from "react-router";
 import { NetworkError } from "@/api/errors";
 import type { RelatorioResumoDto } from "@/api/relatorios";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
+import { toast } from "@/components/feedback";
 import { RelatoriosPage } from "./RelatoriosPage";
 
 vi.mock("@/lib/download");
@@ -214,4 +215,36 @@ test("sem movimentos no ano mostra o card sem teto", async () => {
   respostaAtual = dto({ tetoMei: null });
   montar();
   expect(await screen.findByText("Sem movimentos no ano")).toBeInTheDocument();
+});
+
+test("Exportar CSV bem-sucedido mostra toast com o nome do arquivo (MED-07)", async () => {
+  const { baixarComFeedback } = await import("@/lib/download");
+  vi.mocked(baixarComFeedback).mockResolvedValue(undefined);
+  const sucesso = vi.spyOn(toast, "success");
+  montar();
+  await screen.findByText("R$ 187.400,00");
+  fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
+  await waitFor(() => {
+    expect(sucesso).toHaveBeenCalledWith("Arquivo pronto: relatorio-2026.csv");
+  });
+  sucesso.mockRestore();
+});
+
+test("Exportar CSV com falha não mostra toast de sucesso (MED-07)", async () => {
+  const { baixarComFeedback } = await import("@/lib/download");
+  vi.mocked(baixarComFeedback).mockRejectedValue(new NetworkError());
+  const sucesso = vi.spyOn(toast, "success");
+  montar();
+  await screen.findByText("R$ 187.400,00");
+  fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("Sem conexão com o servidor.");
+  expect(sucesso).not.toHaveBeenCalled();
+  sucesso.mockRestore();
+});
+
+test("KPI com 1 reserva e 1 viagem usa singular (BAI-01)", async () => {
+  const base = dto();
+  respostaAtual = dto({ kpis: { ...base.kpis, reservas: 1, viagens: 1 } });
+  montar();
+  expect(await screen.findByText("1 reserva · 1 viagem")).toBeInTheDocument();
 });

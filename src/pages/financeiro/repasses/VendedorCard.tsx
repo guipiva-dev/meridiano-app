@@ -41,7 +41,7 @@ function textoItem(item: RepasseItemDto): string {
     // A35: back não devolve mais aguardando 0 (repasse vira "cancelado" nesse caso), mas se vier,
     // "aguardando 0 comissões" confundia mais do que ajudava.
     if (item.aguardando === 0) return "aguardando comissões da viagem";
-    return `aguardando ${item.aguardando} comiss${item.aguardando === 1 ? "ão" : "ões"}`;
+    return `aguardando ${plural(item.aguardando, "comissão", "comissões")}`;
   }
   if (item.valor === null) return "sem valor definido";
   return `comissão recebida ${diaMes(item.ultimoRecebimentoEm)}`;

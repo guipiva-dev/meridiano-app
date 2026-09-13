@@ -10,6 +10,7 @@ import { ConfirmModal, Skeleton } from "@/components/feedback";
 import { Page, PageHeader, Section } from "@/components/shell";
 import { apresentacaoStatus } from "@/dominio/status";
 import { cnpjValido } from "@/lib/documentos";
+import { plural } from "@/lib/plural";
 import { useAtalho } from "@/lib/useAtalho";
 import s from "./Grupos.module.css";
 import { PessoasDoGrupo } from "./PessoasDoGrupo";
@@ -74,7 +75,7 @@ export function GrupoPage() {
     <Page dirty={dirty} titulo={v.dto?.nome ?? "Novo grupo"} onSalvarESair={podeEditar ? v.salvar : undefined}>
       <PageHeader
         title={v.dto?.nome ?? "Novo grupo"}
-        subtitle={`${tipoTexto} · ${pessoas} pessoas · ${viagens} viagens`}
+        subtitle={`${tipoTexto} · ${plural(pessoas, "pessoa", "pessoas")} · ${plural(viagens, "viagem", "viagens")}`}
         dirty={dirty}
         salvoEm={v.salvamento.salvoEm}
         actions={

@@ -10,6 +10,7 @@ import { ConfirmModal, toast } from "@/components/feedback";
 import { Page, PageHeader } from "@/components/shell";
 import { apresentacaoStatus } from "@/dominio/status";
 import { formatarCarimboRelativo } from "@/lib/datas";
+import { plural } from "@/lib/plural";
 import { ConvidarModal } from "./ConvidarModal";
 import s from "./Equipe.module.css";
 import { ROTULO_PERFIL } from "./perfis";
@@ -32,7 +33,7 @@ function rotuloAcesso(c: ColaboradorDto): { texto: string; tone: ReturnType<type
   const base = apresentacaoStatus("acesso", c.acesso);
   if (c.acesso === "convite_pendente" && c.conviteExpiraEm) {
     const dias = diasAteCarimbo(c.conviteExpiraEm);
-    return { texto: `convite expira em ${dias} dia${dias === 1 ? "" : "s"}`, tone: base.tone };
+    return { texto: `convite expira em ${plural(dias, "dia", "dias")}`, tone: base.tone };
   }
   if (conviteExpirado(c)) return { texto: "convite expirado", tone: base.tone };
   return base;
@@ -162,8 +163,8 @@ export function EquipePage() {
         title="Equipe e acessos"
         subtitle={
           listaQ.data
-            ? `${listaQ.data.total} pessoas na equipe · ${listaQ.data.comAcesso} com acesso · ${listaQ.data.convitesPendentes} convite${listaQ.data.convitesPendentes === 1 ? "" : "s"} pendente${listaQ.data.convitesPendentes === 1 ? "" : "s"}`
-            : undefined
+            ? `${plural(listaQ.data.total, "pessoa", "pessoas")} na equipe · ${listaQ.data.comAcesso} com acesso · ${plural(listaQ.data.convitesPendentes, "convite pendente", "convites pendentes")}`
+            : "— pessoas na equipe · — com acesso · — convites pendentes"
         }
         actions={
           <>

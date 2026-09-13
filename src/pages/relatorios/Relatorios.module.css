@@ -4,6 +4,12 @@
   flex-wrap: wrap;
   gap: var(--space-3);
 }
+/* MED-05: controles curtos lado a lado (mesma regra de ViagensPage .linha1). */
+.acoes > select,
+.acoes > button {
+  flex: none;
+  width: auto;
+}
 .select {
   min-width: 140px;
 }

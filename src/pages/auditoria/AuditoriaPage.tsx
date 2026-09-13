@@ -7,7 +7,7 @@ import { mensagemDeErro } from "@/api/errors";
 import { Button } from "@/components";
 import { DetalhesEventoModal, LinhaEvento } from "@/components/auditoria";
 import { Alert } from "@/components/display";
-import { EmptyState, Skeleton } from "@/components/feedback";
+import { EmptyState, Skeleton, toast } from "@/components/feedback";
 import { Page, PageHeader } from "@/components/shell";
 import { baixarComFeedback } from "@/lib/download";
 import s from "./Auditoria.module.css";
@@ -31,6 +31,7 @@ export function AuditoriaPage() {
     setExportando(true);
     try {
       await baixarComFeedback(urlCsv(filtroBase), "auditoria.csv");
+      toast.success("Arquivo pronto: auditoria.csv");
     } catch (e) {
       setErroExportacao(mensagemDeErro(e));
     } finally {

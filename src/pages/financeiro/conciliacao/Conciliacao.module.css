@@ -12,6 +12,13 @@
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
+/* MED-05: controles curtos lado a lado (mesma regra de ViagensPage .linha1). */
+.filtros > select,
+.filtros > input,
+.filtros > button {
+  flex: none;
+  width: auto;
+}
 .selecao {
   margin-left: auto;
   font: var(--type-helper);

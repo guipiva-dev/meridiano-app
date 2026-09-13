@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/feedback";
 import { Page, PageHeader, Subnav } from "@/components/shell";
 import { formatarMesAno } from "@/lib/datas";
 import { formatarTelefone } from "@/lib/documentos";
+import { plural } from "@/lib/plural";
 import { subnavs } from "@/shell/navegacao";
 import s from "./Clientes.module.css";
 import { FiltrosClientes } from "./FiltrosClientes";
@@ -53,7 +54,8 @@ export function ClientesPage() {
   const itens = listaQ.data?.itens ?? [];
   const contadores = listaQ.data?.contadores ?? CONTADORES_VAZIOS;
   // MED-07: "—" enquanto carrega, para "0" não parecer dado real.
-  const n = (x: number) => (listaQ.isLoading ? "—" : x);
+  const n = (x: number, singular: string, pluralForm: string) =>
+    listaQ.isLoading ? `— ${pluralForm}` : plural(x, singular, pluralForm);
 
   const colunas = useMemo<Coluna<ListaClienteDto>[]>(
     () => [
@@ -73,7 +75,7 @@ export function ClientesPage() {
         ),
       },
       { id: "grupo", titulo: "Grupo", render: (l) => l.grupoNome ?? "—" },
-      { id: "contato", titulo: "Contato", render: (l) => formatarTelefone(l.contato) || "—" },
+      { id: "contato", titulo: "Contato", classe: s.nowrap, render: (l) => formatarTelefone(l.contato) || "—" },
       { id: "pendencias", titulo: "Pendências", render: pendencias },
       { id: "ultima_viagem", titulo: "Última viagem", ordenavel: true, render: ultimaViagem },
       { id: "viagens", titulo: "Viagens", alinhar: "right", render: (l) => l.viagens },
@@ -86,9 +88,9 @@ export function ClientesPage() {
       <PageHeader
         title="Clientes"
         subtitle={[
-          `${n(contadores.pessoas)} pessoas`,
-          podeVerGrupos && `${n(contadores.grupos)} grupos`,
-          `${n(contadores.passaportesVencendo)} passaportes vencendo`,
+          n(contadores.pessoas, "pessoa", "pessoas"),
+          podeVerGrupos && n(contadores.grupos, "grupo", "grupos"),
+          n(contadores.passaportesVencendo, "passaporte vencendo", "passaportes vencendo"),
         ]
           .filter(Boolean)
           .join(" · ")}

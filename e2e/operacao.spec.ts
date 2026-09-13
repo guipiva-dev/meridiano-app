@@ -6,7 +6,7 @@ test.describe("operação", () => {
   test("agenda mostra pendência atrasada do seed, badge e cria pendência solta", async ({ page }) => {
     await loginUi(page);
     // Badge de Agenda na sidebar: o `aria-label` do link carrega a contagem (o número em si é aria-hidden).
-    await expect(page.getByRole("link", { name: /Agenda · \d+ pendências/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Agenda · \d+ pendências?/ })).toBeVisible();
 
     await page.goto("/agenda");
     const atrasadas = page.locator("section", { has: page.getByRole("heading", { name: /^Atrasadas \d+$/ }) });

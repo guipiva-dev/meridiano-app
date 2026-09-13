@@ -60,3 +60,8 @@ test("título soma os itens e o envio manda os repasseIds", async () => {
   expect(pagarLote).toHaveBeenCalledWith(["rp1", "rp2"], "2026-04-30", "PIX enviado", undefined);
   expect(onPagos).toHaveBeenCalledWith(itens);
 });
+
+test("um único item usa singular no impacto (BAI-01)", () => {
+  render(<PagarRepasseModal open vendedor={vendedor} itens={[item("rp1", 500)]} onClose={vi.fn()} onPagos={vi.fn()} />);
+  expect(screen.getByText(/1 viagem sai de/)).toBeInTheDocument();
+});

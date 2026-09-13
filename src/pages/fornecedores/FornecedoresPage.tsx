@@ -10,6 +10,7 @@ import { Alert } from "@/components/display";
 import { EmptyState } from "@/components/feedback";
 import { Page, PageHeader } from "@/components/shell";
 import { apresentacaoStatus } from "@/dominio/status";
+import { cx } from "@/lib/cx";
 import { formatarTelefone } from "@/lib/documentos";
 import s from "./Fornecedores.module.css";
 
@@ -59,7 +60,7 @@ export function FornecedoresPage() {
           <div>
             <div className={s.primary}>{f.nome}</div>
             {f.telefoneEmergencia && (
-              <div className={s.secondary}>plantão {formatarTelefone(f.telefoneEmergencia)}</div>
+              <div className={cx(s.secondary, s.plantao)}>plantão {formatarTelefone(f.telefoneEmergencia)}</div>
             )}
           </div>
         ),

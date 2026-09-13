@@ -68,3 +68,8 @@ test("badge 0 não renderiza", async () => {
   const link = await screen.findByRole("link", { name: "Agenda" });
   expect(link).not.toHaveTextContent(/\d/);
 });
+
+test("badge 1 usa singular no rótulo acessível (BAI-01)", async () => {
+  comPermissoes(["viagem.ver"], { agenda: 1, financeiro: null, clientes: null });
+  expect(await screen.findByRole("link", { name: "Agenda · 1 pendência" })).toBeInTheDocument();
+});

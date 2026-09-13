@@ -5,6 +5,7 @@ import { agendaApi, chavesAgenda } from "@/api/agenda";
 import { useAuth } from "@/auth/useAuth";
 import { Badge } from "@/components/display";
 import { cx } from "@/lib/cx";
+import { plural } from "@/lib/plural";
 import { itensSidebar, temPermissao } from "./navegacao";
 import s from "./Sidebar.module.css";
 
@@ -41,7 +42,7 @@ export function Sidebar({ aberta = false, onFechar }: { aberta?: boolean; onFech
             <div className={s.secaoTitulo}>{sec}</div>
             {itens.map(({ label, icon: Icon, path, badge }) => {
               const n = badge ? (badges?.[badge] ?? null) : null;
-              const rotulo = n && n > 0 ? `${label} · ${n} pendências` : label;
+              const rotulo = n && n > 0 ? `${label} · ${plural(n, "pendência", "pendências")}` : label;
               return (
                 <NavLink
                   key={path}

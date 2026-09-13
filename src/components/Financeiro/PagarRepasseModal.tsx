@@ -6,6 +6,7 @@ import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
 import { hojeIso } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
+import { plural } from "@/lib/plural";
 import s from "./Financeiro.module.css";
 import { MotivoField } from "./MotivoField";
 import { CAMPO_POR_CODIGO_FIN } from "./mapaErrosFinanceiro";
@@ -81,8 +82,9 @@ export function PagarRepasseModal({ open, vendedor, itens, onClose, onPagos }: P
         {m.conflito && <Alert tone="danger">Algum repasse mudou enquanto você decidia. Recarregue.</Alert>}
         {m.erroBloco && <Alert tone="danger">{m.erroBloco}</Alert>}
         <p className={s.impacto}>
-          {itens.length} viagens saem de &ldquo;a pagar&rdquo; para &ldquo;pago&rdquo; com a data abaixo. O valor pago
-          fica congelado mesmo que a viagem mude depois.
+          {itens.length === 1 ? "1 viagem sai" : `${plural(itens.length, "viagem", "viagens")} saem`} de &ldquo;a
+          pagar&rdquo; para &ldquo;pago&rdquo; com a data abaixo. O valor pago fica congelado mesmo que a viagem mude
+          depois.
         </p>
         <Field label="Pago em" required error={m.erros.data}>
           <DateInput

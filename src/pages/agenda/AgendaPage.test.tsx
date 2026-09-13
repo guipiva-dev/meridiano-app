@@ -259,3 +259,21 @@ test("concluir chama POST /pendencias/{id}/concluir e invalida", async () => {
     expect(c?.method).toBe("POST");
   });
 });
+
+test("subtítulo com contagens 1 usa singular (BAI-01)", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    if (url.includes("/agenda")) {
+      return Promise.resolve(
+        resposta(200, {
+          ...AGENDA,
+          cabecalho: { hoje: "2026-04-07", pendenciasHoje: 1, atrasadas: 1, embarquesSemana: 1 },
+        }),
+      );
+    }
+    return Promise.resolve(resposta(200, []));
+  });
+  montar();
+  expect(
+    await screen.findByText("Terça, 7 de abril · 1 pendência hoje · 1 atrasada · 1 embarque esta semana"),
+  ).toBeInTheDocument();
+});
