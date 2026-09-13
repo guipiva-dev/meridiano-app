@@ -1,4 +1,3 @@
-import { NetworkError } from "./errors";
 import { api, TIMEOUT_MS } from "./http";
 
 export type TipoAnexo = "voucher" | "comprovante" | "documento" | "contrato" | "extrato" | "outro";
@@ -40,9 +39,10 @@ export const anexosApi = {
 };
 
 export async function enviarArquivo(urlUpload: string, arquivo: File): Promise<void> {
+  const host = new URL(urlUpload).host;
   let resposta: Response;
   try {
-    // Mesmo timeout do cliente HTTP: upload preso não vira spinner infinito (TimeoutError → NetworkError).
+    // Mesmo timeout do cliente HTTP: upload preso não vira spinner infinito.
     resposta = await fetch(urlUpload, {
       method: "PUT",
       body: arquivo,
@@ -50,9 +50,11 @@ export async function enviarArquivo(urlUpload: string, arquivo: File): Promise<v
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
   } catch {
-    throw new NetworkError();
+    // Cobre rede, timeout e mixed content (PUT bloqueado pelo navegador): a exceção não diz o motivo,
+    // mas o host do destino já ajuda a diagnosticar (ex.: endpoint de storage apontando para localhost).
+    throw new Error(`sem conexão com ${host}`);
   }
-  if (!resposta.ok) throw new Error("Falha ao enviar o arquivo");
+  if (!resposta.ok) throw new Error(`${host} recusou o arquivo (HTTP ${resposta.status})`);
 }
 
 export const chavesAnexos = {

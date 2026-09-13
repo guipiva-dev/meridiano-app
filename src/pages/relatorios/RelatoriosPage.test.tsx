@@ -179,7 +179,7 @@ test("Exportar CSV com falha mostra Alert com a mensagem de erro (MED-04)", asyn
   montar();
   await screen.findByText("R$ 187.400,00");
   fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent("Sem conexão. Verifique a internet e tente de novo.");
+  expect(await screen.findByRole("alert")).toHaveTextContent("Sem conexão com o servidor.");
 });
 
 test("teto MEI em alerta mostra tone de aviso", async () => {

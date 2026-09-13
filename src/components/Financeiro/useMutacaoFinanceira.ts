@@ -12,6 +12,8 @@ export interface ResultadoMutacao<TArgs, TRes> {
   setMotivo: (m: string) => void;
   /** Excedente (R$) de um 422 `recebimento_acima_esperado`; null quando não há aviso pendente. */
   excedente: number | null;
+  /** true quando o servidor recusou por faltar a confirmação do excedente: o modal avisa e foca a checkbox. */
+  precisaConfirmarExcedente: boolean;
   enviar: (args: TArgs) => Promise<TRes | null>;
   limpar: () => void;
 }
@@ -33,6 +35,7 @@ export function useMutacaoFinanceira<TArgs, TRes>(
   const [precisaMotivo, setPrecisaMotivo] = useState(false);
   const [motivo, setMotivo] = useState("");
   const [excedente, setExcedente] = useState<number | null>(null);
+  const [precisaConfirmarExcedente, setPrecisaConfirmarExcedente] = useState(false);
 
   function limpar() {
     setSalvando(false);
@@ -42,6 +45,7 @@ export function useMutacaoFinanceira<TArgs, TRes>(
     setPrecisaMotivo(false);
     setMotivo("");
     setExcedente(null);
+    setPrecisaConfirmarExcedente(false);
   }
 
   async function enviar(args: TArgs): Promise<TRes | null> {
@@ -49,6 +53,7 @@ export function useMutacaoFinanceira<TArgs, TRes>(
     setErroBloco(null);
     setConflito(false);
     setExcedente(null);
+    setPrecisaConfirmarExcedente(false);
     setSalvando(true);
     try {
       const res = await executar(args, motivo.trim() || undefined);
@@ -68,8 +73,12 @@ export function useMutacaoFinanceira<TArgs, TRes>(
           setErroBloco(ERRO_PERIODO_FECHADO);
         } else if (erro.codigo === "recebimento_acima_esperado") {
           const valor = erro.extensions.excedente;
-          if (typeof valor === "number" && valor > 0) setExcedente(valor);
-          else setErroBloco(erro.detalhe);
+          if (typeof valor === "number" && valor > 0) {
+            setExcedente(valor);
+            setPrecisaConfirmarExcedente(true);
+          } else {
+            setErroBloco(erro.detalhe);
+          }
         } else if (erro.codigo === "motivo_obrigatorio") {
           // Primeira recusa só revela o campo; erro embaixo dele só depois que o usuário tentou com motivo.
           if (precisaMotivo) setErros({ motivo: erro.detalhe });
@@ -86,5 +95,17 @@ export function useMutacaoFinanceira<TArgs, TRes>(
     }
   }
 
-  return { salvando, erros, erroBloco, conflito, precisaMotivo, motivo, setMotivo, excedente, enviar, limpar };
+  return {
+    salvando,
+    erros,
+    erroBloco,
+    conflito,
+    precisaMotivo,
+    motivo,
+    setMotivo,
+    excedente,
+    precisaConfirmarExcedente,
+    enviar,
+    limpar,
+  };
 }

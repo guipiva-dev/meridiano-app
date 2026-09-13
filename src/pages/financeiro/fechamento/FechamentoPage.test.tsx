@@ -228,7 +228,9 @@ test("erro ao carregar as pendentes mostra alerta com tentar de novo, sem abrir 
   montar();
   await screen.findByText("Março");
   fireEvent.click(screen.getByRole("button", { name: "Fechar Março…" }));
-  expect(await screen.findByText("Erro inesperado")).toBeInTheDocument();
+  expect(
+    await screen.findByText("O servidor não respondeu (erro 500). Tente de novo em instantes."),
+  ).toBeInTheDocument();
   expect(screen.queryByRole("dialog")).toBeNull();
   expect(screen.getByRole("button", { name: "Tentar de novo" })).toBeInTheDocument();
 });

@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { ConflictError, ValidationError } from "@/api/errors";
+import { ApiError, ConflictError, NetworkError, ValidationError } from "@/api/errors";
 import type { ViagemDto } from "@/api/viagens";
 import { useOperacao } from "./useOperacao";
 
@@ -83,6 +83,28 @@ test("sucesso devolve o DTO", async () => {
   expect(devolvido).toEqual(dto);
   expect(result.current.salvando).toBe(false);
   expect(result.current.erros).toEqual({});
+});
+
+test("502 vira erro de bloco com a mensagem de servidor (F01: nunca fica em silêncio)", async () => {
+  const executar = vi.fn().mockRejectedValue(new ApiError(502, "erro", "Erro inesperado"));
+  const { result } = renderHook(() => useOperacao(executar, MAPA));
+
+  await act(async () => {
+    await result.current.enviar({});
+  });
+
+  expect(result.current.erroBloco).toBe("O servidor não respondeu (erro 502). Tente de novo em instantes.");
+});
+
+test("erro de rede vira erro de bloco (F01: nunca fica em silêncio)", async () => {
+  const executar = vi.fn().mockRejectedValue(new NetworkError());
+  const { result } = renderHook(() => useOperacao(executar, MAPA));
+
+  await act(async () => {
+    await result.current.enviar({});
+  });
+
+  expect(result.current.erroBloco).toBe("Sem conexão com o servidor.");
 });
 
 test("limpar reseta o estado", async () => {

@@ -19,7 +19,13 @@ const MAX_BYTES = 25 * 1024 * 1024;
 const EXTENSOES = ["pdf", "jpg", "jpeg", "png", "webp", "heic", "doc", "docx", "xls", "xlsx", "txt"];
 const ACCEPT = EXTENSOES.map((e) => `.${e}`).join(",");
 const ERRO_TIPO = "Tipo de arquivo não permitido (PDF, imagens, Office)";
-const ERRO_ENVIO = "Não foi possível enviar o arquivo. Verifique a conexão e tente de novo.";
+// A partir da 2ª falha, o texto sugere contato com o suporte (upload falhando de novo raramente se resolve sozinho).
+const FALHAS_PARA_SUPORTE = 2;
+
+function mensagemErroEnvio(motivo: string, falhas: number): string {
+  const base = `Não foi possível enviar o arquivo ao armazenamento (${motivo}). Tente de novo.`;
+  return falhas >= FALHAS_PARA_SUPORTE ? `${base} Se persistir, fale com o suporte.` : base;
+}
 const TIPOS: { value: TipoAnexo; label: string }[] = [
   { value: "voucher", label: "Voucher" },
   { value: "comprovante", label: "Comprovante" },
@@ -51,6 +57,7 @@ export function AnexarModal({ open, escopo, onClose, onEnviado }: AnexarModalPro
   const [enviando, setEnviando] = useState(false);
   // Anexo já iniciado cujo PUT falhou: "Tentar de novo" repete só o PUT e o confirmar.
   const [pendente, setPendente] = useState<{ id: string; urlUpload: string }>();
+  const [falhasEnvio, setFalhasEnvio] = useState(0);
 
   async function subirEConfirmar(anexo: { id: string; urlUpload: string }, arq: File) {
     setErroBloco(undefined);
@@ -59,9 +66,12 @@ export function AnexarModal({ open, escopo, onClose, onEnviado }: AnexarModalPro
       // O anexo pendente fica invisível na lista (R7: só confirmados aparecem); o job expurga em 1 dia.
       await enviarArquivo(anexo.urlUpload, arq);
       await anexosApi.confirmar(anexo.id);
-    } catch {
+    } catch (erro) {
+      const motivo = erro instanceof Error ? erro.message : "erro desconhecido";
+      const falhas = falhasEnvio + 1;
+      setFalhasEnvio(falhas);
       setPendente(anexo);
-      setErroBloco(ERRO_ENVIO);
+      setErroBloco(mensagemErroEnvio(motivo, falhas));
       setEnviando(false);
       return;
     }
@@ -162,6 +172,7 @@ export function AnexarModal({ open, escopo, onClose, onEnviado }: AnexarModalPro
               setArquivo(e.target.files?.[0] ?? null);
               setPendente(undefined);
               setErroArquivo(undefined);
+              setFalhasEnvio(0);
             }}
           />
         </Field>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ConciliacaoItemDto, FormaPagamentoFin, MovimentoDto, MovimentoRequest } from "@/api/financeiro";
 import { financeiroApi } from "@/api/financeiro";
 import { Button, DateInput, Field, MoneyInput, Select } from "@/components";
@@ -29,10 +29,19 @@ export function ReceberModal({ open, item, onClose, onRecebido }: ReceberModalPr
   const [data, setData] = useState(hojeIso());
   const [forma, setForma] = useState<FormaPagamentoFin>("transferencia");
   const [confirmarExcedente, setConfirmarExcedente] = useState(false);
+  const avisoRef = useRef<HTMLDivElement>(null);
   const m = useMutacaoFinanceira<MovimentoRequest, MovimentoDto>(
     (req, motivo) => financeiroApi.lancar(req, motivo),
     CAMPO_POR_CODIGO_FIN,
   );
+
+  // Servidor recusou por faltar "Registrar mesmo assim": o aviso já pode estar na tela (cálculo local),
+  // então sem foco + mensagem explícita o usuário não percebe por que o clique não fez nada (F01).
+  useEffect(() => {
+    if (m.precisaConfirmarExcedente) {
+      avisoRef.current?.querySelector<HTMLInputElement>('input[type="checkbox"]')?.focus();
+    }
+  }, [m.precisaConfirmarExcedente]);
 
   function fechar() {
     setValor(item.saldo);
@@ -105,7 +114,12 @@ export function ReceberModal({ open, item, onClose, onRecebido }: ReceberModalPr
             receber o saldo depois.
           </Alert>
         )}
-        <AvisoExcedente excedente={excedente} confirmado={confirmarExcedente} onChange={setConfirmarExcedente} />
+        <div ref={avisoRef}>
+          <AvisoExcedente excedente={excedente} confirmado={confirmarExcedente} onChange={setConfirmarExcedente} />
+          {m.precisaConfirmarExcedente && (
+            <Alert tone="danger">{"Marque 'Registrar mesmo assim' para confirmar"}</Alert>
+          )}
+        </div>
         <Field label="Data" required error={m.erros.data}>
           <DateInput
             value={data}
