@@ -39,7 +39,12 @@ export const anexosApi = {
 };
 
 export async function enviarArquivo(urlUpload: string, arquivo: File): Promise<void> {
-  const host = new URL(urlUpload).host;
+  let host: string;
+  try {
+    host = new URL(urlUpload).host;
+  } catch {
+    throw new Error("URL de upload inválida — fale com o suporte.");
+  }
   let resposta: Response;
   try {
     // Mesmo timeout do cliente HTTP: upload preso não vira spinner infinito.

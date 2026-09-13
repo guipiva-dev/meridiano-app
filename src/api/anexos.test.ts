@@ -21,3 +21,7 @@ test("enviarArquivo com resposta não-ok lança erro com o host e o status HTTP"
 
   await expect(enviarArquivo("https://r2/upload", arquivo)).rejects.toThrow("r2 recusou o arquivo (HTTP 403)");
 });
+
+test("enviarArquivo com URL inválida lança erro legível em vez de TypeError", async () => {
+  await expect(enviarArquivo("nao-e-url", arquivo)).rejects.toThrow("URL de upload inválida");
+});
