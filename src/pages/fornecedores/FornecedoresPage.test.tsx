@@ -97,10 +97,14 @@ test("cabeçalho troca o rótulo conforme o filtro de situação", async () => {
   await screen.findByText("CVC");
 
   fireEvent.change(screen.getByLabelText("Situação"), { target: { value: "inativos" } });
-  expect(await screen.findByText("2 inativos · a regra de pagamento define quando a comissão é esperada")).toBeInTheDocument();
+  expect(
+    await screen.findByText("2 inativos · a regra de pagamento define quando a comissão é esperada"),
+  ).toBeInTheDocument();
 
   fireEvent.change(screen.getByLabelText("Situação"), { target: { value: "todos" } });
-  expect(await screen.findByText("2 cadastrados · a regra de pagamento define quando a comissão é esperada")).toBeInTheDocument();
+  expect(
+    await screen.findByText("2 cadastrados · a regra de pagamento define quando a comissão é esperada"),
+  ).toBeInTheDocument();
 });
 
 test("janelas vigentes viram uma célula legível e o prazo fixo aparece quando não há janela", async () => {
@@ -144,7 +148,5 @@ test("contador mostra — enquanto a lista carrega (não 0)", () => {
       }),
   );
   montar();
-  expect(
-    screen.getByText("— ativos · a regra de pagamento define quando a comissão é esperada"),
-  ).toBeInTheDocument();
+  expect(screen.getByText("— ativos · a regra de pagamento define quando a comissão é esperada")).toBeInTheDocument();
 });

@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type * as ClientesApi from "@/api/clientes";
 import type { AtendimentoDto, AtendimentoRequest } from "@/api/clientes";
 import { ApiError, NetworkError } from "@/api/errors";
-import type * as ClientesApi from "@/api/clientes";
 import { AtendimentoModal } from "./AtendimentoModal";
 
 const criarAtendimento = vi.fn<(id: string, a: AtendimentoRequest) => Promise<AtendimentoDto>>();
