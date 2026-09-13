@@ -86,12 +86,13 @@ export const ROTULO_SERVICO: Record<TipoServico, string> = {
   outro: "Outro",
 };
 
-export const FORMAS_PAGAMENTO = ["pix", "boleto", "cartao"] as const;
+export const FORMAS_PAGAMENTO = ["pix", "boleto", "cartao", "dinheiro"] as const;
 export type FormaPagamento = (typeof FORMAS_PAGAMENTO)[number];
 export const ROTULO_FORMA: Record<FormaPagamento, string> = {
   pix: "PIX",
   boleto: "Boleto",
   cartao: "Cartão",
+  dinheiro: "Dinheiro",
 };
 
 export interface PassageiroRequest {
