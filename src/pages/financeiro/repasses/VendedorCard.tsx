@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import { mensagemDeErro } from "@/api/errors";
-import { plural } from "@/lib/plural";
 import type { RepasseItemDto, VendedorRepassesDto } from "@/api/repasses";
 import { repassesApi } from "@/api/repasses";
 import { Button, MoneyInput, MoneyValue } from "@/components";
@@ -8,6 +7,7 @@ import { Badge, StatusBadge } from "@/components/display";
 import { toast } from "@/components/feedback";
 import { formatarData } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
+import { plural } from "@/lib/plural";
 import s from "./Repasses.module.css";
 
 interface VendedorCardProps {

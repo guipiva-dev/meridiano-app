@@ -57,7 +57,11 @@ export function RegrasTab({ fornecedor, podeEditar, onMudou }: RegrasTabProps) {
     <Section title="Quando paga a comissão" description="Define a data prevista de cada reserva na conciliação">
       <div className={s.blocoRegras}>
         {proximas.map((p) => (
-          <Alert key={p.vigenteDesde} tone="info" title={`Próxima versão (a partir de ${formatarData(p.vigenteDesde)})`}>
+          <Alert
+            key={p.vigenteDesde}
+            tone="info"
+            title={`Próxima versão (a partir de ${formatarData(p.vigenteDesde)})`}
+          >
             <Janelas regra={p} />
           </Alert>
         ))}
