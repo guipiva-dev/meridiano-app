@@ -25,7 +25,6 @@ const MAPA: Record<string, string> = {
   credito_valor_invalido: "credito.valor",
   credito_cliente_invalido: "credito.clienteId",
   credito_validade_passada: "credito.validade",
-  valor_acima_da_venda: "valorReembolso",
 };
 
 const DESFECHO_PADRAO: DesfechoValue = {
@@ -65,7 +64,8 @@ export function CancelarReservaModal({
   const [erroMotivoLocal, setErroMotivoLocal] = useState<string>();
   const { salvando, erros, erroBloco, conflito, enviar, limpar } = useOperacao<CancelarReservaRequest>(
     (req) => viagensApi.cancelarReserva(reserva.id, req),
-    MAPA,
+    // `valor_acima_da_venda` vale para reembolso e crédito: cai no campo do desfecho atual.
+    { ...MAPA, valor_acima_da_venda: desfecho.desfecho === "credito" ? "credito.valor" : "valorReembolso" },
   );
 
   function fechar() {

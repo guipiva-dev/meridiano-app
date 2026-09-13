@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import s from "./Page.module.css";
 
 interface PageHeaderProps {
@@ -13,6 +13,14 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ title, subtitle, meta, status, dirty, salvoEm, actions }: PageHeaderProps) {
+  // I3: toda página com cabeçalho ganha título na aba (Page com `titulo` explícito prevalece: efeito do pai roda depois).
+  useEffect(() => {
+    document.title = `${title} · Meridiano`;
+    return () => {
+      document.title = "Meridiano";
+    };
+  }, [title]);
+
   return (
     <header className={s.head}>
       <div>

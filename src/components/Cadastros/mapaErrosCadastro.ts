@@ -11,6 +11,7 @@ export const CAMPO_POR_CODIGO: Record<string, string> = {
   referencia_invalida: "grupoId",
   grupo_tipo_invalido: "tipo",
   cnpj_invalido: "cnpj",
+  cnpj_duplicado: "cnpj",
   tipo_invalido: "tipo",
   percentual_invalido: "percentualComissaoPadrao",
   prazo_invalido: "prazoComissaoDias",

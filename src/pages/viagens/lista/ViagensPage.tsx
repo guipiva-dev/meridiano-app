@@ -57,7 +57,12 @@ export function ViagensPage() {
   const { pode } = useAuth();
   const { filtro, idaPreset, definir, limpar, ativos } = useFiltrosViagens();
   const vendedoresQ = useQuery({ queryKey: chaves.vendedores, queryFn: viagensApi.vendedores });
-  const fornecedoresQ = useQuery({ queryKey: chaves.fornecedores, queryFn: viagensApi.fornecedores });
+  // M4: vendedor externo não tem fornecedor.ver — sem o gate, /fornecedores voltava 403 na lista.
+  const fornecedoresQ = useQuery({
+    queryKey: chaves.fornecedores,
+    queryFn: viagensApi.fornecedores,
+    enabled: pode("fornecedor.ver"),
+  });
   const listaQ = useQuery({
     queryKey: chaves.viagens(filtro),
     queryFn: () => viagensApi.listar(filtro),

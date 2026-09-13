@@ -1,10 +1,19 @@
-/* R02: auto-fit substitui a coluna fixa — quebra de linha sozinha abaixo de ~4×14rem, sem rolagem
-   horizontal (ex.: 390 px). */
+/* I1: colunas explícitas por breakpoint (4 → 2 → 1) para a grade fechar linhas inteiras. */
 .kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--space-3);
   margin-bottom: var(--space-4);
+}
+@media (max-width: 1024px) {
+  .kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .kpis {
+    grid-template-columns: 1fr;
+  }
 }
 
 .filtros {

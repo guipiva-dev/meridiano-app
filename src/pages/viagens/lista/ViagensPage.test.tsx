@@ -123,6 +123,20 @@ test("perfil financeiro (sem viagem.criar) não mostra 'Nova viagem' na sub-nav 
   expect(screen.queryByRole("button", { name: /Nova viagem/ })).toBeNull();
 });
 
+// M4: vendedor externo não tem fornecedor.ver — a lista carregava mesmo assim e /fornecedores voltava 403.
+test("sem fornecedor.ver não chama /fornecedores e a lista renderiza", async () => {
+  const urls: string[] = [];
+  vi.stubGlobal("fetch", (url: string) => {
+    urls.push(url);
+    if (url.includes("/viagens?")) return Promise.resolve(resposta(200, LISTA));
+    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, []));
+    return Promise.resolve(resposta(403, null));
+  });
+  montar("/viagens", { ...auth, pode: (p) => p !== "fornecedor.ver" });
+  expect(await screen.findByText("Carlos Mendes")).toBeInTheDocument();
+  expect(urls.some((u) => u.includes("/fornecedores"))).toBe(false);
+});
+
 test("sem vendaTotal no payload não mostra a coluna Venda", async () => {
   montar();
   await screen.findByText("Carlos Mendes");

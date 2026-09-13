@@ -19,8 +19,13 @@ export function Page({
   const [salvando, setSalvando] = useState(false);
 
   // F06: aba do navegador sempre dizia "Meridiano" — sem contexto de qual página/registro estava aberto.
+  // I3: só escreve quando há `titulo` — o efeito do pai roda depois do filho e sobrescreveria o PageHeader.
   useEffect(() => {
-    document.title = titulo ? `${titulo} · Meridiano` : "Meridiano";
+    if (!titulo) return;
+    document.title = `${titulo} · Meridiano`;
+    return () => {
+      document.title = "Meridiano";
+    };
   }, [titulo]);
 
   async function salvarESair() {

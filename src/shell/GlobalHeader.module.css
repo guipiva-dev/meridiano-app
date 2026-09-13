@@ -64,7 +64,7 @@
     display: none;
   }
 }
-@media (max-width: 480px) {
+@media (max-width: 700px) {
   /* R02: sem espaço pro atalho "Ctrl K" nessa largura (senão sobrepõe o texto digitado); o
      placeholder que sobrar é cortado pelo próprio input (text-overflow), sem precisar encurtá-lo
      no componente. */

@@ -8,8 +8,8 @@
 
 html {
   /* U03/AC01: `font: var(--type-body)` aqui fazia 1rem = 14px (12,5% menor que o contrato) — todo
-     token em rem (tipografia, ícones, etc.) saía errado. 100% mantém 1rem = 16px de verdade. */
-  font-size: 100%;
+     token em rem (tipografia, ícones, etc.) saía errado. Sem font-size no root, 1rem = 16px (default
+     do navegador) e o corpo recebe o token em `body`. */
   color: var(--color-text-primary);
   background: var(--color-bg-page);
   -webkit-font-smoothing: antialiased;

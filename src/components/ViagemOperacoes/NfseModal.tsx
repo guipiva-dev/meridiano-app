@@ -69,7 +69,11 @@ export function NfseModal({ open, reserva, viagem, onClose, onSalva, onRecarrega
       return;
     }
     setErroNumeroLocal(undefined);
-    if (status === "emitido" && dataEmissao && dataEmissao > hojeIso()) {
+    if (status === "emitido" && !dataEmissao) {
+      setErroDataLocal("Informe a data de emissão");
+      return;
+    }
+    if (status === "emitido" && dataEmissao > hojeIso()) {
       setErroDataLocal("Data de emissão não pode ser no futuro");
       return;
     }
@@ -147,17 +151,19 @@ export function NfseModal({ open, reserva, viagem, onClose, onSalva, onRecarrega
             }}
           />
         </Field>
-        <Field label="Número" error={erroNumeroLocal ?? erros.numero}>
+        <Field label="Número" required={status === "emitido"} error={erroNumeroLocal ?? erros.numero}>
           <Input
             className={s.mono}
+            required={status === "emitido"}
             value={numero}
             onChange={(e) => {
               setNumero(e.target.value);
             }}
           />
         </Field>
-        <Field label="Emissão" error={erroDataLocal ?? erros.dataEmissao}>
+        <Field label="Emissão" required={status === "emitido"} error={erroDataLocal ?? erros.dataEmissao}>
           <DateInput
+            required={status === "emitido"}
             max={hojeIso()}
             value={dataEmissao}
             onChange={(e) => {

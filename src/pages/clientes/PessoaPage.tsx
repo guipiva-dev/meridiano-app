@@ -11,6 +11,7 @@ import { Alert, Badge } from "@/components/display";
 import { ConfirmModal, Skeleton } from "@/components/feedback";
 import { Page, PageHeader, Subnav } from "@/components/shell";
 import { formatarCpf } from "@/lib/documentos";
+import { plural } from "@/lib/plural";
 import { useAtalho } from "@/lib/useAtalho";
 import { subnavs } from "@/shell/navegacao";
 import { DadosPessoaForm } from "./DadosPessoaForm";
@@ -98,7 +99,7 @@ export function PessoaPage() {
   const partes: string[] = [];
   if (v.dto?.cpf) partes.push(formatarCpf(v.dto.cpf));
   if (v.dto?.grupoNome) partes.push(v.dto.grupoNome);
-  if (resumo) partes.push(`${resumo.viagens} viagens`, `cliente desde ${resumo.clienteDesde}`);
+  if (resumo) partes.push(plural(resumo.viagens, "viagem", "viagens"), `cliente desde ${resumo.clienteDesde}`);
 
   const temVinculos = (resumo?.viagens ?? 0) > 0;
 

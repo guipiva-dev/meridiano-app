@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ConflictError } from "@/api/errors";
+import { ConflictError, ValidationError } from "@/api/errors";
 import type * as ViagensApi from "@/api/viagens";
 import type { CancelarReservaRequest, ReservaDto, ViagemDto } from "@/api/viagens";
 import { CancelarReservaModal } from "./CancelarReservaModal";
@@ -155,6 +155,33 @@ test("A23: recebido > 0 mas comissão mantida marcada não mostra o aviso", asyn
   await user.click(screen.getByLabelText("Operadora mantém a comissão"));
 
   expect(screen.queryByText(/Já entraram/)).toBeNull();
+});
+
+// 422 valor_acima_da_venda cai no campo do desfecho atual: reembolso → Valor do reembolso; crédito → Valor do crédito.
+async function submeter422AcimaDaVenda(desfecho: "reembolso" | "credito", rotuloCampo: string) {
+  const user = userEvent.setup();
+  const r = reserva();
+  cancelarReserva.mockRejectedValue(new ValidationError(422, "valor_acima_da_venda", "Valor acima da venda"));
+  render(<CancelarReservaModal open reserva={r} viagem={viagem(r)} onClose={vi.fn()} onCancelada={vi.fn()} />);
+
+  await user.type(screen.getByLabelText(/Motivo/), "Cliente desistiu");
+  await user.selectOptions(screen.getByLabelText("Desfecho"), desfecho);
+  const campo = screen.getByLabelText(rotuloCampo);
+  await user.click(campo);
+  await user.type(campo, "100");
+  await user.click(screen.getByRole("button", { name: "Cancelar reserva" }));
+
+  const erro = await screen.findByRole("alert");
+  expect(erro).toHaveTextContent("Valor acima da venda");
+  expect(screen.getByLabelText(rotuloCampo)).toHaveAttribute("aria-describedby", erro.id);
+}
+
+test("422 valor_acima_da_venda com reembolso aparece sob Valor do reembolso", async () => {
+  await submeter422AcimaDaVenda("reembolso", "Valor do reembolso");
+});
+
+test("422 valor_acima_da_venda com crédito aparece sob Valor do crédito", async () => {
+  await submeter422AcimaDaVenda("credito", "Valor do crédito");
 });
 
 test("409 mostra Alert com botão Recarregar que chama onRecarregar", async () => {

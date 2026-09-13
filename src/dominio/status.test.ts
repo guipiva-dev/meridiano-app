@@ -15,6 +15,10 @@ test("reserva pendente aparece como Em emissão", () => {
   expect(apresentacaoStatus("reserva", "pendente").texto).toBe("Em emissão");
 });
 
+test("repasse cancelado tem rótulo neutro (nunca texto cru)", () => {
+  expect(apresentacaoStatus("repasse", "cancelado")).toEqual({ texto: "Cancelado", tone: "neutral" });
+});
+
 test("repasse a_pagar é Liberado", () => {
   expect(apresentacaoStatus("repasse", "a_pagar")).toEqual({ texto: "Liberado", tone: "warning" });
 });

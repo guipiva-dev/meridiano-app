@@ -1,5 +1,5 @@
 .primary {
-  max-width: 34rem;
+  max-width: 30rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -9,7 +9,7 @@
 .secondary {
   display: flex;
   align-items: baseline;
-  max-width: 34rem;
+  max-width: 30rem;
   font: var(--type-helper);
   color: var(--color-text-secondary);
 }
