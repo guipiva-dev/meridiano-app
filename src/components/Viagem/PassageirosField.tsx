@@ -3,7 +3,7 @@ import { type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
 import { mensagemDeErro } from "@/api/errors";
 import type { ClienteBuscaDto } from "@/api/viagens";
 import { Button, Field, IconButton, Input } from "@/components";
-import { Chip } from "@/components/display";
+import { Badge } from "@/components/display";
 import { cx } from "@/lib/cx";
 import { formatarData } from "@/lib/datas";
 import { formatarCpf, formatarTelefone } from "@/lib/documentos";
@@ -26,6 +26,16 @@ interface PassageirosFieldProps {
 }
 
 const DEBOUNCE_MS = 250;
+
+function iniciais(nome: string): string {
+  const partes = nome
+    .trim()
+    .split(/\s+/)
+    .filter((t) => /\p{L}/u.test(t));
+  const primeira = partes[0]?.[0] ?? "";
+  const ultima = partes.length > 1 ? (partes[partes.length - 1]?.[0] ?? "") : "";
+  return (primeira + ultima).toUpperCase();
+}
 
 export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }: PassageirosFieldProps) {
   const [query, setQuery] = useState("");
@@ -127,18 +137,32 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
               .filter(Boolean)
               .join(" · ");
             return (
-              <span key={p.clienteId} className={s.passChip}>
-                <Chip
-                  selected
-                  className={cx(p.titular && s.titular, meta && s.chipDuasLinhas)}
+              <span key={p.clienteId} className={cx(s.passChip, p.titular && s.titular)}>
+                <button
+                  type="button"
+                  className={s.passBtn}
+                  aria-pressed={p.titular}
+                  title={p.titular ? "Titular: contato da viagem" : "Tornar titular"}
                   onClick={() => {
                     tornarTitular(p.clienteId);
                   }}
                 >
-                  {p.nome}
-                  {p.titular && <span className={s.srOnly}> titular</span>}
-                  {meta && <span className={s.chipMeta}>{meta}</span>}
-                </Chip>
+                  <span className={s.avatar} aria-hidden="true">
+                    {iniciais(p.nome)}
+                  </span>
+                  <span className={s.passTexto}>
+                    <span className={s.passNome}>
+                      {p.nome}
+                      {p.titular && <span className={s.srOnly}> titular</span>}
+                    </span>
+                    {meta && <span className={s.chipMeta}>{meta}</span>}
+                  </span>
+                  {p.titular && (
+                    <Badge tone="warning" className={s.passBadge}>
+                      Titular
+                    </Badge>
+                  )}
+                </button>
                 <IconButton
                   label={`Remover ${p.nome}`}
                   icon={<X size={14} />}

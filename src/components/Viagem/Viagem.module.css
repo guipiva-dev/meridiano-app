@@ -23,21 +23,67 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
 }
-.chipDuasLinhas {
+.passChip:hover {
+  border-color: var(--color-border-strong);
+}
+.passBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: var(--type-label);
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.avatar {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+  font: var(--type-caption);
+  letter-spacing: 0.02em;
+}
+.passTexto {
+  display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  height: auto;
-  padding-block: var(--space-2);
+  min-width: 0;
+  line-height: 1.25;
+}
+.passNome {
+  font: var(--type-label);
+  color: var(--color-text-primary);
 }
 .chipMeta {
   display: block;
   font: var(--type-helper);
   color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.passBadge {
+  margin-left: var(--space-1);
 }
 .titular {
-  outline: 2px solid var(--color-action-business);
-  outline-offset: 1px;
+  border-color: var(--color-action-business);
+  box-shadow: inset 3px 0 0 var(--color-action-business);
+}
+.titular .avatar {
+  background: var(--color-warning-soft);
+  color: var(--color-warning-text);
 }
 .buscaWrap {
   position: relative;

@@ -227,3 +227,24 @@ test("resposta atrasada de busca anterior não sobrescreve as opções da busca 
   expect(screen.getByRole("option")).toHaveTextContent("Lúcia Mendes");
   vi.useRealTimers();
 });
+
+test("cartão do passageiro mostra iniciais (ignora tokens numéricos) e badge Titular", () => {
+  const value = [
+    {
+      clienteId: "1",
+      nome: "QA Nova Auditoria 20260912 1205",
+      titular: true,
+      cpf: "52998224725",
+      dataNascimento: "1990-01-15",
+    },
+    { clienteId: "2", nome: "Carlos Mendes", titular: false },
+  ];
+  render(
+    <PassageirosField value={value} onChange={vi.fn()} buscar={vi.fn()} onNovaPessoa={vi.fn()} erro={undefined} />,
+  );
+  const titular = screen.getByRole("button", { name: /QA Nova Auditoria 20260912 1205/, pressed: true });
+  expect(titular).toHaveAttribute("aria-pressed", "true");
+  expect(titular).toHaveTextContent(/^QA/); // iniciais "QA" (ignora "20260912"/"1205")
+  expect(screen.getByText("Titular")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Carlos Mendes/, pressed: false })).toHaveTextContent(/^CM/);
+});
