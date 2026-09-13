@@ -72,7 +72,7 @@ test("repete todo mês revela o campo Repetir até", async () => {
   expect(screen.getByLabelText("Repetir até")).toBeInTheDocument();
 });
 
-test("escolher uma viagem desliga 'Repete todo mês' e desabilita o campo (despesa recorrente não pode ficar ligada a viagem)", async () => {
+test("escolher uma viagem esconde 'Repete todo mês' (despesa ligada a viagem não repete) (U08)", async () => {
   const user = userEvent.setup();
   criar.mockResolvedValue(resultado());
   const onSalva = vi.fn();
@@ -89,10 +89,8 @@ test("escolher uma viagem desliga 'Repete todo mês' e desabilita o campo (despe
   const opcao = await screen.findByRole("option", { name: /Lisboa/ });
   await user.click(opcao);
 
-  const repeteSelect = screen.getByLabelText("Repete todo mês");
-  expect(repeteSelect).toHaveValue("nao");
-  expect(repeteSelect).toBeDisabled();
-  expect(screen.getByText("Despesa ligada a viagem não repete")).toBeInTheDocument();
+  expect(screen.queryByLabelText("Repete todo mês")).not.toBeInTheDocument();
+  expect(screen.queryByText("Despesa ligada a viagem não repete")).not.toBeInTheDocument();
 
   await user.click(screen.getByRole("button", { name: "Lançar despesa" }));
 
@@ -114,7 +112,7 @@ test("escolher uma viagem desliga 'Repete todo mês' e desabilita o campo (despe
   expect(onSalva).toHaveBeenCalledWith(expect.objectContaining({ id: "d1" }), null);
 });
 
-test("despesa com viagem fixa (lançada na aba da viagem) já abre com 'Repete todo mês' desabilitado", () => {
+test("despesa com viagem fixa (lançada na aba da viagem) já abre sem 'Repete todo mês' (U08)", () => {
   render(
     <DespesaModal
       open
@@ -125,8 +123,8 @@ test("despesa com viagem fixa (lançada na aba da viagem) já abre com 'Repete t
     />,
   );
 
-  expect(screen.getByLabelText("Repete todo mês")).toBeDisabled();
-  expect(screen.getByText("Despesa ligada a viagem não repete")).toBeInTheDocument();
+  expect(screen.queryByLabelText("Repete todo mês")).not.toBeInTheDocument();
+  expect(screen.queryByText("Despesa ligada a viagem não repete")).not.toBeInTheDocument();
 });
 
 test("descrição tem maxLength 200", () => {

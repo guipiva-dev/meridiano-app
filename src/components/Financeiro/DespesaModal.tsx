@@ -37,7 +37,6 @@ const OPCOES_SITUACAO = [
 ];
 const AJUDA_RECORRENTE =
   "Ao pagar, o sistema cria a mesma despesa para o mês seguinte. Sem data limite, repete indefinidamente.";
-const AJUDA_RECORRENTE_COM_VIAGEM = "Despesa ligada a viagem não repete";
 
 export function DespesaModal({ open, despesa, viagemFixa, fornecedores, onClose, onSalva }: DespesaModalProps) {
   const [descricao, setDescricao] = useState(despesa?.descricao ?? "");
@@ -202,21 +201,23 @@ export function DespesaModal({ open, despesa, viagemFixa, fornecedores, onClose,
             }}
           />
         </Field>
-        <Field
-          label="Repete todo mês"
-          tooltip={temViagem ? AJUDA_RECORRENTE_COM_VIAGEM : AJUDA_RECORRENTE}
-          helper={temViagem ? AJUDA_RECORRENTE_COM_VIAGEM : AJUDA_RECORRENTE}
-          error={erro("recorrente")}
-        >
-          <Select
-            options={OPCOES_SIM_NAO}
-            value={recorrenteEfetivo ? "sim" : "nao"}
-            disabled={temViagem}
-            onChange={(e) => {
-              setRecorrente(e.target.value === "sim");
-            }}
-          />
-        </Field>
+        {/* U08: despesa ligada a viagem não repete — esconder em vez de mostrar select + aviso desabilitados. */}
+        {!temViagem && (
+          <Field
+            label="Repete todo mês"
+            tooltip={AJUDA_RECORRENTE}
+            helper={AJUDA_RECORRENTE}
+            error={erro("recorrente")}
+          >
+            <Select
+              options={OPCOES_SIM_NAO}
+              value={recorrenteEfetivo ? "sim" : "nao"}
+              onChange={(e) => {
+                setRecorrente(e.target.value === "sim");
+              }}
+            />
+          </Field>
+        )}
         {recorrenteEfetivo && (
           <Field label="Repetir até" helper="Opcional: em branco repete sem prazo">
             <DateInput

@@ -72,7 +72,12 @@ export function DivergenciaModal({ open, item, onClose, onEncerrada }: Divergenc
           A reserva sai da conciliação com {formatarDinheiro(item.recebido)} recebidos (esperado{" "}
           {formatarDinheiro(item.esperado)}). O repasse é reavaliado.
         </p>
-        <MotivoField value={m.motivo} onChange={m.setMotivo} erro={erroLocal ?? m.erros.motivo} />
+        <MotivoField
+          value={m.motivo}
+          onChange={m.setMotivo}
+          erro={erroLocal ?? m.erros.motivo}
+          helper="O motivo vai para a auditoria."
+        />
       </div>
     </Modal>
   );

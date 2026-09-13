@@ -235,6 +235,13 @@ test("erro ao carregar as pendentes mostra alerta com tentar de novo, sem abrir 
   expect(screen.getByRole("button", { name: "Tentar de novo" })).toBeInTheDocument();
 });
 
+test("rótulo da receita recebida é 'entradas de caixa', não 'recebida' (M01)", async () => {
+  montar();
+  await screen.findByText("Março");
+  expect(within(linha("Março")).getByText("R$ 9.150,00 entradas de caixa")).toBeInTheDocument();
+  expect(screen.queryByText(/R\$ [\d.,]+ recebida\b/)).toBeNull();
+});
+
 test("trocar o ano refaz a busca de períodos", async () => {
   montar();
   await screen.findByText("Março");

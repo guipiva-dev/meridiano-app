@@ -11,6 +11,8 @@ export interface KpisRelatorioDto {
   despesasPagas: number;
   despesasFixas: number;
   despesasViagens: number;
+  /** A36: soma de repasses pagos no ano; opcional até o back (B5) preencher em todo ambiente. */
+  repassesPagos?: number;
   resultadoOperacional: number;
   margemOperacionalPct: number | null;
   margemComercialPct: number | null;

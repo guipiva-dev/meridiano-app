@@ -139,11 +139,11 @@ export function RelatoriosPage() {
             <KpiCard
               label="Receita recebida"
               value={formatarDinheiro(dto.kpis.receitaRecebida)}
-              contexto={
+              contexto={`todas as entradas de caixa (operadora + cliente) · ${
                 dto.kpis.recebidoDeAnosAnteriores > 0
                   ? `prevista ${formatarDinheiro(dto.kpis.receitaPrevista)} · inclui ${formatarDinheiro(dto.kpis.recebidoDeAnosAnteriores)} de ${anoAnterior}`
                   : `prevista ${formatarDinheiro(dto.kpis.receitaPrevista)}`
-              }
+              }`}
             />
             <KpiCard
               label="Despesas pagas"
@@ -157,7 +157,11 @@ export function RelatoriosPage() {
             <KpiCard
               label="Resultado operacional"
               value={<MoneyValue value={dto.kpis.resultadoOperacional} emphasis="result" />}
-              contexto="receita recebida − despesas pagas"
+              contexto={
+                dto.kpis.repassesPagos !== undefined
+                  ? `receita recebida − despesas pagas − repasses pagos · repasses pagos ${formatarDinheiro(dto.kpis.repassesPagos)}`
+                  : "receita recebida − despesas pagas − repasses pagos"
+              }
             />
             <KpiCard
               label="Margem operacional"

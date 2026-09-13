@@ -4,6 +4,7 @@ import { Button, Checkbox, type Coluna, DataTable, DateCell, MoneyCell, StatusCe
 import { Badge } from "@/components/display";
 import { EmptyState } from "@/components/feedback";
 import { type ItemMenu, MenuAcoes } from "@/components/Menu/MenuAcoes";
+import { formatarDinheiro } from "@/lib/dinheiro";
 import s from "./Conciliacao.module.css";
 
 interface TabelaConciliacaoProps {
@@ -127,12 +128,18 @@ export function TabelaConciliacao({
       : {
           id: "situacao",
           titulo: "Situação",
-          render: (i) =>
-            i.diasAtraso !== null && i.diasAtraso > 0 ? (
+          render: (i) => {
+            // A46: recebido além do esperado (estorno de operadora, p.ex.) não é mais uma divergência
+            // silenciosa — o mesmo estilo de aviso da divergência, mas com o quanto passou.
+            if (recebidas && i.recebido > i.esperado) {
+              return <Badge tone="warning">Recebida · +{formatarDinheiro(i.recebido - i.esperado)} acima</Badge>;
+            }
+            return i.diasAtraso !== null && i.diasAtraso > 0 ? (
               <Badge tone="danger">{i.diasAtraso} dias de atraso</Badge>
             ) : (
               <StatusCell entidade="comissao" valor={i.situacaoComissao} />
-            ),
+            );
+          },
         },
     { id: "esperado", titulo: "Esperado", alinhar: "right", render: (i) => <MoneyCell value={i.esperado} /> },
     { id: "recebido", titulo: "Recebido", alinhar: "right", render: (i) => <MoneyCell value={i.recebido} /> },
@@ -153,6 +160,19 @@ export function TabelaConciliacao({
               {i.recebido > 0 ? "Receber saldo" : "Receber"}
             </Button>
           )}
+          {/* X02: linha parcial (já recebeu algo) ganha a ação de encerrar divergência visível, ao
+              lado de "Receber saldo" — some no kebab só quem precisa procurar. */}
+          {podeConciliar && !i.conciliacaoEncerrada && !recebidas && !divergencias && i.recebido > 0 && (
+            <Button
+              variant="tertiary"
+              size="sm"
+              onClick={() => {
+                onDivergencia(i);
+              }}
+            >
+              Encerrar divergência…
+            </Button>
+          )}
           <MenuAcoes label={`Mais ações de ${i.localizador ?? i.codigo}`} itens={menu(i)} />
         </div>
       ),
@@ -161,7 +181,7 @@ export function TabelaConciliacao({
 
   return (
     <DataTable
-      legenda="Comissões a receber"
+      legenda={recebidas ? "Comissões recebidas" : divergencias ? "Divergências" : "Comissões a receber"}
       colunas={colunas}
       linhas={itens}
       chave={(i) => i.reservaId}

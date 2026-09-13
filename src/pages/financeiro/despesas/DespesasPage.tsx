@@ -99,7 +99,7 @@ export function DespesasPage() {
             definir({ situacao: "vencida" });
           }}
         />
-        <KpiCard label="Fixos" value={formatarDinheiro(kpis.fixosValor)} contexto="DAS, sistema, telefone" />
+        <KpiCard label="Fixos" value={formatarDinheiro(kpis.fixosValor)} contexto="despesas fixas (categoria Fixo)" />
         <KpiCard
           label="Ligadas a viagens"
           value={formatarDinheiro(kpis.ligadasViagemValor)}
