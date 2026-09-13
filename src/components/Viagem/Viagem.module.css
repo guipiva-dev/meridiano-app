@@ -10,14 +10,22 @@
 /* PassageirosField */
 .passageiros {
   display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.buscaLinha {
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
 }
-.chips {
+.cards {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 .passChip {
   display: inline-flex;
@@ -30,20 +38,6 @@
 }
 .passChip:hover {
   border-color: var(--color-border-strong);
-}
-.passBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-text-primary);
-  font: var(--type-label);
-  text-align: left;
-  cursor: pointer;
-  border-radius: var(--radius-sm);
 }
 .avatar {
   flex: none;
@@ -74,21 +68,11 @@
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
 }
-.passBadge {
-  margin-left: var(--space-1);
-}
-.titular {
-  border-color: var(--color-action-business);
-  box-shadow: inset 3px 0 0 var(--color-action-business);
-}
-.titular .avatar {
-  background: var(--color-warning-soft);
-  color: var(--color-warning-text);
-}
 .buscaWrap {
   position: relative;
   min-width: 200px;
   flex: 1 1 200px;
+  max-width: 32rem;
 }
 .listbox {
   position: absolute;

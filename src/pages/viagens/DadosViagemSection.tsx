@@ -55,7 +55,7 @@ export function DadosViagemSection({
   const observacoes = (form.watch("observacoes") as string | undefined) ?? "";
   return (
     <div className="grid-form">
-      <div className="span-6">
+      <div className="span-12">
         <PassageirosField
           value={passageiros}
           onChange={(v) => {

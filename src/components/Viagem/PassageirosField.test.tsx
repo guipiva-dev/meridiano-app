@@ -1,5 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { NetworkError } from "@/api/errors";
 import type { ClienteBuscaDto } from "@/api/viagens";
 import { PassageirosField } from "./PassageirosField";
@@ -152,25 +151,6 @@ test("chip do passageiro sem permissão de ver CPF mostra só a data de nascimen
   expect(screen.getByText("nasc. 05/05/1980")).toBeInTheDocument();
 });
 
-test("clicar em outro chip troca o titular (exatamente um)", async () => {
-  const user = userEvent.setup();
-  const onChange = vi.fn();
-  const value = [
-    { clienteId: "1", nome: "Carlos Mendes", titular: true },
-    { clienteId: "2", nome: "Lúcia Mendes", titular: false },
-  ];
-  render(
-    <PassageirosField value={value} onChange={onChange} buscar={vi.fn()} onNovaPessoa={vi.fn()} erro={undefined} />,
-  );
-
-  await user.click(screen.getByRole("button", { name: "Lúcia Mendes" }));
-
-  expect(onChange).toHaveBeenCalledWith([
-    { clienteId: "1", nome: "Carlos Mendes", titular: false },
-    { clienteId: "2", nome: "Lúcia Mendes", titular: true },
-  ]);
-});
-
 test("X09: opção mostra telefone e CPF mascarado para distinguir homônimos", async () => {
   vi.useFakeTimers();
   const buscar = vi.fn().mockResolvedValue([
@@ -228,7 +208,7 @@ test("resposta atrasada de busca anterior não sobrescreve as opções da busca 
   vi.useRealTimers();
 });
 
-test("cartão do passageiro mostra iniciais (ignora tokens numéricos) e badge Titular", () => {
+test("cartão do passageiro mostra iniciais (ignora tokens numéricos), documento e nascimento; sem badge de titular", () => {
   const value = [
     {
       clienteId: "1",
@@ -242,9 +222,11 @@ test("cartão do passageiro mostra iniciais (ignora tokens numéricos) e badge T
   render(
     <PassageirosField value={value} onChange={vi.fn()} buscar={vi.fn()} onNovaPessoa={vi.fn()} erro={undefined} />,
   );
-  const titular = screen.getByRole("button", { name: /QA Nova Auditoria 20260912 1205/, pressed: true });
-  expect(titular).toHaveAttribute("aria-pressed", "true");
-  expect(titular).toHaveTextContent(/^QA/); // iniciais "QA" (ignora "20260912"/"1205")
-  expect(screen.getByText("Titular")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: /Carlos Mendes/, pressed: false })).toHaveTextContent(/^CM/);
+  const lista = screen.getByRole("list", { name: "Passageiros adicionados" });
+  const itens = within(lista).getAllByRole("listitem");
+  expect(itens[0]).toHaveTextContent(/^QA/); // iniciais "QA" (ignora "20260912"/"1205")
+  expect(itens[0]).toHaveTextContent("529.982.247-25 · nasc. 15/01/1990");
+  expect(itens[1]).toHaveTextContent(/^CM/);
+  expect(screen.queryByText("Titular")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Remover Carlos Mendes" })).toBeInTheDocument();
 });

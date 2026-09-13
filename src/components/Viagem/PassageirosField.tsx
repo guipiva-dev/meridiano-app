@@ -3,7 +3,6 @@ import { type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
 import { mensagemDeErro } from "@/api/errors";
 import type { ClienteBuscaDto } from "@/api/viagens";
 import { Button, Field, IconButton, Input } from "@/components";
-import { Badge } from "@/components/display";
 import { cx } from "@/lib/cx";
 import { formatarData } from "@/lib/datas";
 import { formatarCpf, formatarTelefone } from "@/lib/documentos";
@@ -85,18 +84,14 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
   function adicionar(c: ClienteBuscaDto) {
     clearTimeout(timer.current);
     seq.current++;
-    if (value.some((p) => p.clienteId === c.id)) return;
+    setQuery("");
+    setOpcoes([]);
+    setAberto(false);
+    if (value.some((p) => p.clienteId === c.id)) return; // já está na lista: só limpa a busca
     onChange([
       ...value,
       { clienteId: c.id, nome: c.nome, titular: value.length === 0, cpf: c.cpf, dataNascimento: c.dataNascimento },
     ]);
-    setQuery("");
-    setOpcoes([]);
-    setAberto(false);
-  }
-
-  function tornarTitular(id: string) {
-    onChange(value.map((p) => ({ ...p, titular: p.clienteId === id })));
   }
 
   function remover(id: string) {
@@ -129,101 +124,87 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
   }
 
   return (
-    <Field label="Passageiros" tooltip="O titular (contorno laranja) é o contato da viagem" error={erro ?? erroBusca}>
+    <Field label="Passageiros" error={erro ?? erroBusca}>
       <div className={s.passageiros}>
-        <div className={s.chips}>
-          {value.map((p) => {
-            const meta = [p.cpf && formatarCpf(p.cpf), p.dataNascimento && `nasc. ${formatarData(p.dataNascimento)}`]
-              .filter(Boolean)
-              .join(" · ");
-            return (
-              <span key={p.clienteId} className={cx(s.passChip, p.titular && s.titular)}>
-                <button
-                  type="button"
-                  className={s.passBtn}
-                  aria-pressed={p.titular}
-                  title={p.titular ? "Titular: contato da viagem" : "Tornar titular"}
-                  onClick={() => {
-                    tornarTitular(p.clienteId);
-                  }}
-                >
+        <div className={s.buscaLinha}>
+          <div className={s.buscaWrap}>
+            <Input
+              role="combobox"
+              aria-expanded={aberto}
+              aria-controls={aberto ? listboxId : undefined}
+              aria-activedescendant={ativo >= 0 ? `${listboxId}-${ativo}` : undefined}
+              autoComplete="off"
+              placeholder="Buscar pessoa…"
+              value={query}
+              onChange={(e) => {
+                mudarQuery(e.target.value);
+              }}
+              onKeyDown={teclado}
+              onBlur={() => {
+                setAberto(false);
+              }}
+            />
+            {aberto && opcoes.length > 0 && (
+              <ul role="listbox" id={listboxId} className={s.listbox}>
+                {opcoes.map((c, i) => (
+                  <li
+                    key={c.id}
+                    id={`${listboxId}-${i}`}
+                    role="option"
+                    aria-selected={i === ativo}
+                    className={cx(s.option, i === ativo && s.optionAtivo)}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      adicionar(c);
+                    }}
+                  >
+                    {c.nome}
+                    {/* X09: sem isso, dois clientes com o mesmo nome ficam indistinguíveis na lista. */}
+                    {(c.telefone ?? c.cpf) && (
+                      <span className={s.optionMeta}>
+                        {" "}
+                        ·{" "}
+                        {[c.telefone && formatarTelefone(c.telefone), c.cpf && formatarCpf(c.cpf)]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <Button variant="tertiary" size="sm" onClick={onNovaPessoa}>
+            + pessoa
+          </Button>
+        </div>
+        {value.length > 0 && (
+          <ul className={s.cards} aria-label="Passageiros adicionados">
+            {value.map((p) => {
+              const meta = [p.cpf && formatarCpf(p.cpf), p.dataNascimento && `nasc. ${formatarData(p.dataNascimento)}`]
+                .filter(Boolean)
+                .join(" · ");
+              return (
+                <li key={p.clienteId} className={s.passChip}>
                   <span className={s.avatar} aria-hidden="true">
                     {iniciais(p.nome)}
                   </span>
                   <span className={s.passTexto}>
-                    <span className={s.passNome}>
-                      {p.nome}
-                      {p.titular && <span className={s.srOnly}> titular</span>}
-                    </span>
+                    <span className={s.passNome}>{p.nome}</span>
                     {meta && <span className={s.chipMeta}>{meta}</span>}
                   </span>
-                  {p.titular && (
-                    <Badge tone="warning" className={s.passBadge}>
-                      Titular
-                    </Badge>
-                  )}
-                </button>
-                <IconButton
-                  label={`Remover ${p.nome}`}
-                  icon={<X size={14} />}
-                  onClick={() => {
-                    remover(p.clienteId);
-                  }}
-                />
-              </span>
-            );
-          })}
-        </div>
-        <div className={s.buscaWrap}>
-          <Input
-            role="combobox"
-            aria-expanded={aberto}
-            aria-controls={aberto ? listboxId : undefined}
-            aria-activedescendant={ativo >= 0 ? `${listboxId}-${ativo}` : undefined}
-            autoComplete="off"
-            placeholder="Buscar pessoa…"
-            value={query}
-            onChange={(e) => {
-              mudarQuery(e.target.value);
-            }}
-            onKeyDown={teclado}
-            onBlur={() => {
-              setAberto(false);
-            }}
-          />
-          {aberto && opcoes.length > 0 && (
-            <ul role="listbox" id={listboxId} className={s.listbox}>
-              {opcoes.map((c, i) => (
-                <li
-                  key={c.id}
-                  id={`${listboxId}-${i}`}
-                  role="option"
-                  aria-selected={i === ativo}
-                  className={cx(s.option, i === ativo && s.optionAtivo)}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    adicionar(c);
-                  }}
-                >
-                  {c.nome}
-                  {/* X09: sem isso, dois clientes com o mesmo nome ficam indistinguíveis na lista. */}
-                  {(c.telefone ?? c.cpf) && (
-                    <span className={s.optionMeta}>
-                      {" "}
-                      ·{" "}
-                      {[c.telefone && formatarTelefone(c.telefone), c.cpf && formatarCpf(c.cpf)]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                  )}
+                  <IconButton
+                    label={`Remover ${p.nome}`}
+                    icon={<X size={14} />}
+                    onClick={() => {
+                      remover(p.clienteId);
+                    }}
+                  />
                 </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <Button variant="tertiary" size="sm" onClick={onNovaPessoa}>
-          + pessoa
-        </Button>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </Field>
   );
