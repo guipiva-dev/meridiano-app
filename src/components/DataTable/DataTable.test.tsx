@@ -110,3 +110,17 @@ test("Espaço na linha focada chama onLinha sem rolar a página", () => {
   expect(evento).toBe(false); // preventDefault() foi chamado
   expect(onLinha).toHaveBeenCalledWith(linhas[1]);
 });
+
+test("aplica classe de sombra quando há rolagem horizontal pendente", () => {
+  const { container } = render(<DataTable colunas={colunas} linhas={linhas} chave={(l) => l.id} legenda="Pessoas" />);
+  const wrap = container.querySelector("table")?.parentElement as HTMLElement;
+  Object.defineProperty(wrap, "scrollWidth", { value: 1000, configurable: true });
+  Object.defineProperty(wrap, "clientWidth", { value: 500, configurable: true });
+  Object.defineProperty(wrap, "scrollLeft", { value: 0, writable: true, configurable: true });
+  fireEvent.scroll(wrap);
+  expect(wrap.className).toMatch(/comSombra/);
+
+  Object.defineProperty(wrap, "scrollLeft", { value: 500, writable: true, configurable: true });
+  fireEvent.scroll(wrap);
+  expect(wrap.className).not.toMatch(/comSombra/);
+});

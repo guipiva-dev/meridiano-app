@@ -1,8 +1,10 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { KeyboardEvent, ReactNode } from "react";
+import { useRef } from "react";
 import { Skeleton } from "@/components/Skeleton/Skeleton";
 import { cx } from "@/lib/cx";
 import s from "./DataTable.module.css";
+import { useScrollShadow } from "./useScrollShadow";
 
 export interface Coluna<T> {
   id: string;
@@ -47,6 +49,8 @@ export function DataTable<T>({
   rodape,
   legenda,
 }: DataTableProps<T>) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const { direita } = useScrollShadow(wrapRef);
   function ordenarPor(id: string) {
     const proxima: "asc" | "desc" = ordenacao?.campo === id && ordenacao.direcao === "asc" ? "desc" : "asc";
     onOrdenar?.({ campo: id, direcao: proxima });
@@ -60,7 +64,7 @@ export function DataTable<T>({
   }
 
   return (
-    <div className={s.wrap}>
+    <div ref={wrapRef} className={cx(s.wrap, direita && s.comSombra)}>
       <table className={s.table}>
         <caption className={s.visuallyHidden}>{legenda}</caption>
         <thead>
