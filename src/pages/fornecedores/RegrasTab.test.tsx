@@ -86,8 +86,25 @@ test("F02-front: versão com vigenteDesde no futuro vira 'Próxima versão' e so
     vigente: false,
   };
   montar({ ...FORNECEDOR, regras: [...FORNECEDOR.regras, proxima] });
-  expect(screen.getByText("Próxima versão (a partir de 01/01)")).toBeInTheDocument();
+  expect(screen.getByText("Próxima versão (a partir de 01/01/2099)")).toBeInTheDocument();
   expect(screen.getByText("Versões anteriores (1)")).toBeInTheDocument();
+});
+
+test("F02-front: todas as versões futuras aparecem, em ordem crescente de data", () => {
+  const vigenteAtual = { vigenteDesde: "2026-01-01", janelas: [], vigente: true };
+  const regras = [
+    { vigenteDesde: "2027-02-01", janelas: [], vigente: false },
+    { vigenteDesde: "2027-01-01", janelas: [], vigente: false },
+    vigenteAtual,
+  ];
+  montar({ ...FORNECEDOR, regras, regraVigente: vigenteAtual });
+  const titulos = screen
+    .getAllByText(/^Próxima versão \(a partir de/)
+    .map((el) => el.textContent);
+  expect(titulos).toEqual([
+    "Próxima versão (a partir de 01/01/2027)",
+    "Próxima versão (a partir de 01/02/2027)",
+  ]);
 });
 
 test("F02-front: campo vigente do B6 decide mesmo quando regraVigente (legado) aponta para outra", () => {
