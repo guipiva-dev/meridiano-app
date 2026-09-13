@@ -64,97 +64,99 @@ export function DataTable<T>({
   }
 
   return (
-    <div ref={wrapRef} className={cx(s.wrap, direita && s.comSombra)}>
-      <table className={s.table}>
-        <caption className={s.visuallyHidden}>{legenda}</caption>
-        <thead>
-          <tr>
-            {colunas.map((c) => {
-              const ativa = ordenacao?.campo === c.id;
-              const ariaSort = c.ordenavel
-                ? ativa
-                  ? ordenacao.direcao === "asc"
-                    ? "ascending"
-                    : "descending"
-                  : "none"
-                : undefined;
-              return (
-                <th
-                  key={c.id}
-                  style={{ width: c.largura }}
-                  className={cx(c.alinhar === "right" && s.right, c.classe)}
-                  aria-sort={ariaSort}
-                >
-                  {c.ordenavel ? (
-                    <button
-                      type="button"
-                      className={s.sortBtn}
-                      onClick={() => {
-                        ordenarPor(c.id);
-                      }}
-                    >
-                      {c.titulo}
-                      {ativa &&
-                        (ordenacao.direcao === "asc" ? (
-                          <ChevronUp size={16} aria-hidden />
-                        ) : (
-                          <ChevronDown size={16} aria-hidden />
-                        ))}
-                    </button>
-                  ) : (
-                    c.titulo
-                  )}
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          {carregando ? (
+    <div className={cx(s.outer, direita && s.comSombra)}>
+      <div ref={wrapRef} className={s.wrap}>
+        <table className={s.table}>
+          <caption className={s.visuallyHidden}>{legenda}</caption>
+          <thead>
             <tr>
-              <td colSpan={colunas.length}>
-                <Skeleton.Block height="table" />
-              </td>
+              {colunas.map((c) => {
+                const ativa = ordenacao?.campo === c.id;
+                const ariaSort = c.ordenavel
+                  ? ativa
+                    ? ordenacao.direcao === "asc"
+                      ? "ascending"
+                      : "descending"
+                    : "none"
+                  : undefined;
+                return (
+                  <th
+                    key={c.id}
+                    style={{ width: c.largura }}
+                    className={cx(c.alinhar === "right" && s.right, c.classe)}
+                    aria-sort={ariaSort}
+                  >
+                    {c.ordenavel ? (
+                      <button
+                        type="button"
+                        className={s.sortBtn}
+                        onClick={() => {
+                          ordenarPor(c.id);
+                        }}
+                      >
+                        {c.titulo}
+                        {ativa &&
+                          (ordenacao.direcao === "asc" ? (
+                            <ChevronUp size={16} aria-hidden />
+                          ) : (
+                            <ChevronDown size={16} aria-hidden />
+                          ))}
+                      </button>
+                    ) : (
+                      c.titulo
+                    )}
+                  </th>
+                );
+              })}
             </tr>
-          ) : linhas.length === 0 ? (
-            <tr>
-              <td colSpan={colunas.length} className={s.vazio}>
-                {vazio}
-              </td>
-            </tr>
-          ) : (
-            linhas.map((l) => (
-              <tr
-                key={chave(l)}
-                tabIndex={onLinha ? 0 : undefined}
-                className={cx(onLinha && s.clicavel)}
-                aria-label={rotuloLinha?.(l)}
-                onClick={
-                  onLinha
-                    ? () => {
-                        onLinha(l);
-                      }
-                    : undefined
-                }
-                onKeyDown={
-                  onLinha
-                    ? (e) => {
-                        teclaLinha(e, l);
-                      }
-                    : undefined
-                }
-              >
-                {colunas.map((c) => (
-                  <td key={c.id} className={cx(c.alinhar === "right" && s.right, c.classe)}>
-                    {c.render(l)}
-                  </td>
-                ))}
+          </thead>
+          <tbody>
+            {carregando ? (
+              <tr>
+                <td colSpan={colunas.length}>
+                  <Skeleton.Block height="table" />
+                </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-      {rodape && <div className={s.rodape}>{rodape}</div>}
+            ) : linhas.length === 0 ? (
+              <tr>
+                <td colSpan={colunas.length} className={s.vazio}>
+                  {vazio}
+                </td>
+              </tr>
+            ) : (
+              linhas.map((l) => (
+                <tr
+                  key={chave(l)}
+                  tabIndex={onLinha ? 0 : undefined}
+                  className={cx(onLinha && s.clicavel)}
+                  aria-label={rotuloLinha?.(l)}
+                  onClick={
+                    onLinha
+                      ? () => {
+                          onLinha(l);
+                        }
+                      : undefined
+                  }
+                  onKeyDown={
+                    onLinha
+                      ? (e) => {
+                          teclaLinha(e, l);
+                        }
+                      : undefined
+                  }
+                >
+                  {colunas.map((c) => (
+                    <td key={c.id} className={cx(c.alinhar === "right" && s.right, c.classe)}>
+                      {c.render(l)}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+        {rodape && <div className={s.rodape}>{rodape}</div>}
+      </div>
     </div>
   );
 }

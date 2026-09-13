@@ -12,6 +12,9 @@ export function useScrollShadow(ref: RefObject<HTMLElement | null>) {
     el.addEventListener("scroll", medir, { passive: true });
     const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(medir) : null;
     ro?.observe(el);
+    // o wrap raramente muda de tamanho sozinho; é o conteúdo (a tabela) que cresce/encolhe e
+    // muda o scrollWidth do wrap — observar só o wrap perde essas mudanças.
+    if (el.firstElementChild) ro?.observe(el.firstElementChild);
     return () => {
       el.removeEventListener("scroll", medir);
       ro?.disconnect();
