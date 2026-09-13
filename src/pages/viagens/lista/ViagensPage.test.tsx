@@ -128,3 +128,31 @@ test("sem vendaTotal no payload não mostra a coluna Venda", async () => {
   await screen.findByText("Carlos Mendes");
   expect(screen.queryByRole("columnheader", { name: "Venda" })).toBeNull();
 });
+
+test("1ª coluna trunca (A01): classe + title com o texto completo, código nunca cortado", async () => {
+  montar();
+  const titular = await screen.findByText("Carlos Mendes");
+  expect(titular).toHaveClass("primary");
+  expect(titular).toHaveAttribute("title", "Carlos Mendes");
+
+  const codigo = screen.getByText("VG-2026-0001");
+  const linhaSecundaria = codigo.parentElement;
+  expect(linhaSecundaria).toHaveClass("secondary");
+  expect(linhaSecundaria).toHaveAttribute("title", "VG-2026-0001 · Lisboa · Internacional");
+  // o <code> vem antes do destino: com nowrap + ellipsis, o corte cai no destino, nunca no código.
+  expect(linhaSecundaria?.firstElementChild?.tagName).toBe("CODE");
+});
+
+test("contador no singular (U11): '1 viagem', não '1 viagens'", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    if (url.includes("/viagens?"))
+      return Promise.resolve(
+        resposta(200, { ...LISTA, itens: [LISTA.itens[0]], total: 1, contadores: { ...LISTA.contadores, todas: 1 } }),
+      );
+    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, []));
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, []));
+    return Promise.resolve(resposta(200, null));
+  });
+  montar();
+  expect(await screen.findByText("1 viagem · 1 em emissão · 0 com comissão atrasada")).toBeInTheDocument();
+});

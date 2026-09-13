@@ -1,31 +1,19 @@
 .acoes {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-3);
 }
 .select {
   min-width: 140px;
 }
 
+/* R02: auto-fit substitui os breakpoints fixos — cada card nunca fica menor que 14rem, então a
+   grade quebra de linha sozinha em telas estreitas (390 px incluso) em vez de rolar. */
 .kpis {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
   gap: var(--space-3);
-}
-@media (max-width: 1366px) {
-  .kpis {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-@media (max-width: 1024px) {
-  .kpis {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (max-width: 700px) {
-  .kpis {
-    grid-template-columns: 1fr;
-  }
 }
 
 .tetoWrap {

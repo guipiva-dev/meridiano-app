@@ -16,6 +16,7 @@ import { Button, type Coluna, DataTable, DateCell, MoneyCell, Paginacao, StatusC
 import { Alert } from "@/components/display";
 import { EmptyState } from "@/components/feedback";
 import { Page, PageHeader, Subnav, Tabs } from "@/components/shell";
+import { plural } from "@/lib/plural";
 import { subnavs } from "@/shell/navegacao";
 import { FiltrosViagens } from "./FiltrosViagens";
 import { useFiltrosViagens } from "./useFiltrosViagens";
@@ -72,14 +73,21 @@ export function ViagensPage() {
       {
         id: "viagem",
         titulo: "Viagem",
-        render: (l) => (
-          <div>
-            <div className={s.primary}>{l.titular}</div>
-            <div className={s.secondary}>
-              {l.destino} · {ROTULO_TIPO[l.tipo]} · <code>{l.codigo}</code>
+        render: (l) => {
+          const destinoTipo = `${l.destino} · ${ROTULO_TIPO[l.tipo]}`;
+          return (
+            <div>
+              <div className={s.primary} title={l.titular}>
+                {l.titular}
+              </div>
+              {/* código antes do destino: com nowrap + ellipsis na linha inteira, o corte fica
+                  sempre no destino (à direita), nunca no código do localizador. */}
+              <div className={s.secondary} title={`${l.codigo} · ${destinoTipo}`}>
+                <code>{l.codigo}</code> · {destinoTipo}
+              </div>
             </div>
-          </div>
-        ),
+          );
+        },
       },
       { id: "ida", titulo: "Ida", ordenavel: true, render: (l) => <DateCell value={l.dataIda} /> },
       { id: "vendedor", titulo: "Vendedor", render: (l) => l.vendedorNome },
@@ -113,7 +121,11 @@ export function ViagensPage() {
     <Page>
       <PageHeader
         title="Viagens"
-        subtitle={`${fmtContador(contadores.todas, listaQ.isLoading)} viagens · ${fmtContador(contadores.emEmissao, listaQ.isLoading)} em emissão · ${fmtContador(contadores.comissaoAtrasada, listaQ.isLoading)} com comissão atrasada`}
+        subtitle={
+          listaQ.isLoading
+            ? "— viagens · — em emissão · — com comissão atrasada"
+            : `${plural(contadores.todas, "viagem", "viagens")} · ${contadores.emEmissao} em emissão · ${contadores.comissaoAtrasada} com comissão atrasada`
+        }
         actions={
           pode("viagem.criar") && (
             <Button

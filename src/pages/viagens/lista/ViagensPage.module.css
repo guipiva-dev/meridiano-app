@@ -1,3 +1,10 @@
+.primary,
+.secondary {
+  max-width: 34rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .primary {
   font: var(--type-component);
   color: var(--color-text-heading);
