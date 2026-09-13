@@ -78,6 +78,54 @@ test("U06: sem verValores (nem resumo), Receita prevista some junto com o resto 
   expect(screen.queryByText("Receita prevista")).toBeNull();
 });
 
+test("passageiro com cpf e dataNascimento mostra a linha secundária 'CPF · nasc. dd/mm/aaaa'", () => {
+  render(
+    <ResumoTab
+      viagem={{
+        ...VIAGEM,
+        passageiros: [
+          { clienteId: "c1", nome: "Carlos Mendes", titular: true, cpf: "11144477735", dataNascimento: "1980-05-05" },
+        ],
+      }}
+      verValores={true}
+      pendencias={[]}
+      onAbrirReserva={noop}
+      onVerPendencias={noop}
+    />,
+  );
+  expect(screen.getByText("111.444.777-35 · nasc. 05/05/1980")).toBeInTheDocument();
+});
+
+test("passageiro sem cpf (sem ver_documento) mostra só a data de nascimento", () => {
+  render(
+    <ResumoTab
+      viagem={{
+        ...VIAGEM,
+        passageiros: [{ clienteId: "c1", nome: "Carlos Mendes", titular: true, dataNascimento: "1980-05-05" }],
+      }}
+      verValores={true}
+      pendencias={[]}
+      onAbrirReserva={noop}
+      onVerPendencias={noop}
+    />,
+  );
+  expect(screen.getByText("nasc. 05/05/1980")).toBeInTheDocument();
+});
+
+test("passageiro sem cpf nem dataNascimento não mostra linha secundária", () => {
+  render(
+    <ResumoTab
+      viagem={{ ...VIAGEM, passageiros: [{ clienteId: "c1", nome: "Carlos Mendes", titular: true }] }}
+      verValores={true}
+      pendencias={[]}
+      onAbrirReserva={noop}
+      onVerPendencias={noop}
+    />,
+  );
+  expect(screen.getByText("Carlos Mendes")).toBeInTheDocument();
+  expect(screen.queryByText(/nasc\./)).toBeNull();
+});
+
 test("P02: vendedor externo (sem resumo, sem verValores) vê 'Seu repasse' com valor e status", () => {
   render(
     <ResumoTab

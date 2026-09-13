@@ -67,7 +67,7 @@ function paraForm(dto: ViagemDto, anteriores: ReservaForm[], abrirSomente?: stri
     agenteId: dto.agenteId ?? "",
     ocasiao: dto.ocasiao ?? "",
     observacoes: dto.observacoes ?? "",
-    passageiros: dto.passageiros.map((p) => ({ clienteId: p.clienteId, nome: p.nome, titular: p.titular })),
+    passageiros: dto.passageiros.map((p) => ({ ...p, dataNascimento: p.dataNascimento ?? undefined })),
     repasseValor: dto.repasse?.valor ?? null,
     reservas: dto.reservas.map((r, i) => {
       if (abrirSomente) return { ...deDto(r), aberta: r.id === abrirSomente };

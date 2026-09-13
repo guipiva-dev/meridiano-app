@@ -104,6 +104,10 @@
 .linhaValor {
   margin-left: auto;
 }
+.passageiroMeta {
+  font: var(--type-helper);
+  color: var(--color-text-secondary);
+}
 
 /* Timeline (auditoria da viagem) */
 .timeline {
