@@ -187,7 +187,13 @@ export function NovaViagemPage() {
         }}
         onCriada={(c) => {
           const atuais = v.form.getValues("passageiros");
-          const novo = { clienteId: c.id, nome: c.nome, titular: atuais.length === 0 };
+          const novo = {
+            clienteId: c.id,
+            nome: c.nome,
+            titular: atuais.length === 0,
+            cpf: c.cpf,
+            dataNascimento: c.dataNascimento,
+          };
           v.form.setValue("passageiros", [...atuais, novo], { shouldDirty: true });
         }}
         criar={viagensApi.criarCliente}
