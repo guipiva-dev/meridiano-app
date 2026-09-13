@@ -5,7 +5,7 @@ export function useScrollShadow(ref: RefObject<HTMLElement | null>) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const medir = () => setDireita(el.scrollWidth - el.clientWidth - el.scrollLeft > 1);
+    const medir = () => { setDireita(el.scrollWidth - el.clientWidth - el.scrollLeft > 1); };
     medir();
     el.addEventListener("scroll", medir, { passive: true });
     const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(medir) : null;
