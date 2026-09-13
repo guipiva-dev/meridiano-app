@@ -6,6 +6,7 @@ import { Badge, StatusBadge } from "@/components/display";
 import { EmptyState } from "@/components/feedback";
 import { FaixaResumo, type ItemFaixa } from "@/components/viagem";
 import { formatarData } from "@/lib/datas";
+import { formatarCpf } from "@/lib/documentos";
 import s from "./Viagem.module.css";
 
 export const TOOLTIP_RECEBIDA = "Soma de todos os movimentos da viagem";
@@ -126,12 +127,20 @@ export function ResumoTab({ viagem, verValores, pendencias, onAbrirReserva, onVe
         </Bloco>
 
         <Bloco titulo="Passageiros" meta={viagem.passageiros.length}>
-          {viagem.passageiros.map((p) => (
-            <div key={p.clienteId} className={s.linha}>
-              <span className={s.linhaTitulo}>{p.nome}</span>
-              {p.titular && <Badge tone="neutral">titular</Badge>}
-            </div>
-          ))}
+          {viagem.passageiros.map((p) => {
+            const meta = [p.cpf && formatarCpf(p.cpf), p.dataNascimento && `nasc. ${formatarData(p.dataNascimento)}`]
+              .filter(Boolean)
+              .join(" · ");
+            return (
+              <div key={p.clienteId} className={s.linha}>
+                <span className={s.linhaTexto}>
+                  <span className={s.linhaTitulo}>{p.nome}</span>
+                  {meta && <span className={s.passageiroMeta}>{meta}</span>}
+                </span>
+                {p.titular && <Badge tone="neutral">titular</Badge>}
+              </div>
+            );
+          })}
         </Bloco>
       </div>
 

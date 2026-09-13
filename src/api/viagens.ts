@@ -140,6 +140,8 @@ export interface PassageiroDto {
   clienteId: string;
   nome: string;
   titular: boolean;
+  cpf?: string;
+  dataNascimento?: string | null;
 }
 
 export interface ReservaDto {

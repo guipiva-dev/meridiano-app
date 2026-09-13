@@ -134,7 +134,7 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
               aria-controls={aberto ? listboxId : undefined}
               aria-activedescendant={ativo >= 0 ? `${listboxId}-${ativo}` : undefined}
               autoComplete="off"
-              placeholder="Buscar pessoa…"
+              placeholder="Buscar por nome, CPF ou RG…"
               value={query}
               onChange={(e) => {
                 mudarQuery(e.target.value);
