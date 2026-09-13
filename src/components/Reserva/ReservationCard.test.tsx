@@ -46,6 +46,13 @@ test("header mostra 'Reserva 1', fornecedor e total; fechado não renderiza camp
   expect(screen.queryByLabelText("Total da reserva")).not.toBeInTheDocument();
 });
 
+test("review 2: venda ao cliente vazia mostra 'receita —' no header recolhido, nunca em branco", () => {
+  const semVenda: ReservaForm = { ...reservaPreenchida(false), valorCliente: null };
+  render(<ReservationCard {...base({ value: semVenda })} />);
+  const region = screen.getByRole("region", { name: "Reserva 1" });
+  expect(region).toHaveTextContent("receita —");
+});
+
 test("'Expandir' chama onToggle", async () => {
   const user = userEvent.setup();
   const onToggle = vi.fn();
