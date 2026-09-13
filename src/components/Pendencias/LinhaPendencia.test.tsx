@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import type { PendenciaDto } from "@/api/pendencias";
 import { LinhaPendencia } from "./LinhaPendencia";
 
@@ -49,4 +49,14 @@ test("sem responsável não sobra separador solto", () => {
   const meta = document.querySelector(".meta");
   const texto = meta?.textContent ?? "";
   expect(texto.trim().endsWith("·")).toBe(false);
+});
+
+test("AC03: concluída mostra o badge 'Concluída', não só o risco no título", () => {
+  montar(pendencia({ status: "concluida" }));
+  expect(screen.getByText("Concluída")).toBeInTheDocument();
+});
+
+test("AC03: aberta não mostra o badge 'Concluída'", () => {
+  montar(pendencia({ status: "aberta" }));
+  expect(screen.queryByText("Concluída")).toBeNull();
 });

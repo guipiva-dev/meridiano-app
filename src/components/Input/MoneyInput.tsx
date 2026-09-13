@@ -66,7 +66,10 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function
     ultimoEmitido.current = value;
     setEditando(true);
     setErro(null);
-    requestAnimationFrame(() => {
+    // X10: rAF só roda no próximo repaint — digitação rápida (ou automação sem loop de
+    // repaint visível) pode chegar antes, digitando por cima do valor ainda não selecionado.
+    // Microtask roda logo após este handler, sempre antes do próximo keydown.
+    queueMicrotask(() => {
       e.target.select();
     });
     onFocus?.(e);

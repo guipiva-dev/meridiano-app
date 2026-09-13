@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { useState } from "react";
-import { MemoryRouter } from "react-router";
+import { createMemoryRouter, MemoryRouter, RouterProvider, useLocation } from "react-router";
 import type { CreditoDto, ViagemDto } from "@/api/viagens";
 import { VIAGEM } from "./fixtures";
 import { ModaisViagem } from "./modais";
@@ -109,4 +109,28 @@ test("Cancelar reserva… no card 1 abre o modal daquela reserva", () => {
   fireEvent.click(screen.getAllByRole("button", { name: "Expandir" })[0]!);
   fireEvent.click(screen.getByRole("button", { name: "Cancelar reserva…" }));
   expect(screen.getByRole("dialog")).toHaveTextContent("Cancelar reserva 1");
+});
+
+/** F03: sinaliza para `useNovaViagem` abrir já com uma reserva em branco, sem precisar clicar de novo lá. */
+function ProbeEditar() {
+  const estado = useLocation().state as { novaReserva?: boolean } | null;
+  return <p>novaReserva={String(estado?.novaReserva)}</p>;
+}
+
+test("F03: + Adicionar reserva navega para editar já sinalizando novaReserva", () => {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const router = createMemoryRouter(
+    [
+      { path: "/viagens/v1", element: <Tela creditos={[]} /> },
+      { path: "/viagens/v1/editar", element: <ProbeEditar /> },
+    ],
+    { initialEntries: ["/viagens/v1"] },
+  );
+  render(
+    <QueryClientProvider client={qc}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "+ Adicionar reserva" }));
+  expect(screen.getByText("novaReserva=true")).toBeInTheDocument();
 });

@@ -34,6 +34,8 @@ function faixaDaViagem(
       itens: [
         { label: "Venda total", value: r.vendaTotal },
         { label: "Custo dos fornecedores", value: r.custoFornecedores },
+        // U06: sem esta linha o usuário faz "Venda − Custo" e lê errado (esse resultado é bruto, não a receita da agência).
+        { label: "Receita prevista", value: r.receitaPrevista },
         {
           label: "Comissão do vendedor",
           value: r.repasseValor,

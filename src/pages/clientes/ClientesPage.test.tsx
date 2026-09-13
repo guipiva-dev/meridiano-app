@@ -136,6 +136,31 @@ test("+ Nova pessoa navega para /clientes/nova", async () => {
   expect(await screen.findByText("Nova pessoa")).toBeInTheDocument();
 });
 
+test("P06: sem cliente.ver (vendedor externo), some '· N grupos' e não chama GET /grupos", async () => {
+  const chamadas: string[] = [];
+  vi.stubGlobal("fetch", (url: string) => {
+    chamadas.push(url);
+    if (url.includes("/clientes?")) return Promise.resolve(resposta(200, LISTA));
+    if (url.includes("/grupos?")) return Promise.resolve(resposta(403, { codigo: "sem_permissao" }));
+    return Promise.resolve(resposta(200, null));
+  });
+  const authVendedor: AuthValue = { ...auth, pode: (p: string) => p !== "cliente.ver" };
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const router = createMemoryRouter([{ path: "/clientes", element: <ClientesPage /> }], {
+    initialEntries: ["/clientes"],
+  });
+  render(
+    <QueryClientProvider client={qc}>
+      <AuthContext.Provider value={authVendedor}>
+        <RouterProvider router={router} />
+      </AuthContext.Provider>
+    </QueryClientProvider>,
+  );
+
+  expect(await screen.findByText("3 pessoas · 1 passaportes vencendo")).toBeInTheDocument();
+  expect(chamadas.some((u) => u.includes("/grupos?"))).toBe(false);
+});
+
 test("contadores mostram — enquanto a lista carrega (não 0)", () => {
   vi.stubGlobal(
     "fetch",

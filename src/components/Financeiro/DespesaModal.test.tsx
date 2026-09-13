@@ -153,6 +153,7 @@ test("422 texto_longo em observacao vira erro inline no campo Observação, sem 
   render(<DespesaModal open fornecedores={[]} onClose={vi.fn()} onSalva={vi.fn()} />);
 
   await user.type(screen.getByLabelText(/^Descrição/), "Aluguel");
+  await user.type(screen.getByLabelText(/^Valor/), "100");
   fireEvent.change(screen.getByLabelText(/^Vencimento/), { target: { value: "2026-04-10" } });
   await user.click(screen.getByRole("button", { name: "Lançar despesa" }));
 
@@ -160,4 +161,23 @@ test("422 texto_longo em observacao vira erro inline no campo Observação, sem 
     expect(screen.getByLabelText("Observação")).toHaveAccessibleDescription(/no máximo 2000/);
   });
   expect(screen.getByRole("alert")).toHaveTextContent("observacao deve ter no máximo 2000 caracteres");
+});
+
+test("X10: Valor vazio ou zero mostra 'Informe um valor maior que zero' e não chama a API", async () => {
+  const user = userEvent.setup();
+  render(<DespesaModal open fornecedores={[]} onClose={vi.fn()} onSalva={vi.fn()} />);
+
+  await user.type(screen.getByLabelText(/^Descrição/), "Aluguel");
+  fireEvent.change(screen.getByLabelText(/^Vencimento/), { target: { value: "2026-04-10" } });
+  await user.click(screen.getByRole("button", { name: "Lançar despesa" }));
+
+  expect(criar).not.toHaveBeenCalled();
+  expect(screen.getByText("Informe um valor maior que zero")).toBeInTheDocument();
+
+  await user.click(screen.getByLabelText(/^Valor/));
+  await user.keyboard("0");
+  await user.click(screen.getByRole("button", { name: "Lançar despesa" }));
+
+  expect(criar).not.toHaveBeenCalled();
+  expect(screen.getByText("Informe um valor maior que zero")).toBeInTheDocument();
 });

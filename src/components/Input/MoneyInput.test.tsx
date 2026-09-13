@@ -144,6 +144,19 @@ test("mais de 10 dígitos inteiros bloqueia a digitação", async () => {
   expect(screen.getByRole("alert")).toHaveTextContent("Valor acima do limite de R$ 9.999.999.999,99");
 });
 
+test("X10: digitar 0 logo após focar (antes do rAF de seleção) substitui o valor, não mantém o anterior", async () => {
+  // Sem esperar o requestAnimationFrame que dispara o select-all: digitação rápida (ou automação
+  // sem repaint visível) chegava antes da seleção, e o "0" só se anexava ao final do texto antigo.
+  const user = userEvent.setup({ delay: null });
+  render(<Harness inicial={500} />);
+  const input = screen.getByLabelText("Valor");
+  await user.click(input);
+  await user.keyboard("0");
+  await user.tab();
+  expect(input).toHaveValue("R$ 0,00");
+  expect(screen.getByRole("status")).toHaveTextContent("0");
+});
+
 test("aceita colar valor formatado com sinal U+2212", async () => {
   const user = userEvent.setup();
   render(<Harness allowNegative />);

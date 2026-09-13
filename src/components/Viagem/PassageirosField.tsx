@@ -5,7 +5,7 @@ import type { ClienteBuscaDto } from "@/api/viagens";
 import { Button, Field, IconButton, Input } from "@/components";
 import { Chip } from "@/components/display";
 import { cx } from "@/lib/cx";
-import { formatarTelefone } from "@/lib/documentos";
+import { formatarCpf, formatarTelefone } from "@/lib/documentos";
 import s from "./Viagem.module.css";
 
 export interface PassageiroForm {
@@ -170,7 +170,16 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
                   }}
                 >
                   {c.nome}
-                  {c.telefone && <span className={s.optionMeta}> · {formatarTelefone(c.telefone)}</span>}
+                  {/* X09: sem isso, dois clientes com o mesmo nome ficam indistinguíveis na lista. */}
+                  {(c.telefone ?? c.cpf) && (
+                    <span className={s.optionMeta}>
+                      {" "}
+                      ·{" "}
+                      {[c.telefone && formatarTelefone(c.telefone), c.cpf && formatarCpf(c.cpf)]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

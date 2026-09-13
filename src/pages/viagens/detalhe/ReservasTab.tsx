@@ -91,7 +91,8 @@ export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaA
           <Button
             variant="business"
             onClick={() => {
-              void nav(`/viagens/${viagem.id}/editar`);
+              // F03: mesmo sinal que AvisoViagemSemelhante usa para abrir já com uma reserva em branco.
+              void nav(`/viagens/${viagem.id}/editar`, { state: { novaReserva: true } });
             }}
           >
             + Adicionar reserva

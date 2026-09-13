@@ -75,6 +75,8 @@ export function DespesaModal({ open, despesa, viagemFixa, fornecedores, onClose,
   async function enviarForm() {
     const locais: Record<string, string> = {};
     if (!descricao.trim()) locais.descricao = "Descrição é obrigatória";
+    // X10: servidor já rejeita valor <= 0; aviso inline evita a viagem de ida e volta ao servidor.
+    if (valor === null || valor <= 0) locais.valor = "Informe um valor maior que zero";
     if (!vencimento) locais.vencimento = "Vencimento é obrigatório";
     if (pago && !pagoEm) locais.pagoEm = "Informe a data do pagamento";
     if (pago && !forma) locais.formaPagamento = "Informe a forma de pagamento";
