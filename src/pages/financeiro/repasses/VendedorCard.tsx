@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { mensagemDeErro } from "@/api/errors";
+import { plural } from "@/lib/plural";
 import type { RepasseItemDto, VendedorRepassesDto } from "@/api/repasses";
 import { repassesApi } from "@/api/repasses";
 import { Button, MoneyInput, MoneyValue } from "@/components";
@@ -112,12 +113,12 @@ export function VendedorCard({ vendedor, ano, historico, podePagar, onPagar, onV
         <div className={s.identidade}>
           <span className={s.nome}>{vendedor.nome}</span>
           <span className={s.secundario}>
-            vendedor(a) externo(a) · {vendedor.viagensAno} viagens em {ano}
+            vendedor(a) externo(a) · {plural(vendedor.viagensAno, "viagem", "viagens")} em {ano}
           </span>
         </div>
         <div className={s.total}>
           <MoneyValue value={vendedor.aPagarValor} />
-          <span className={s.secundario}>a pagar · {vendedor.aPagarViagens} viagens</span>
+          <span className={s.secundario}>a pagar · {plural(vendedor.aPagarViagens, "viagem", "viagens")}</span>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { plural } from "@/lib/plural";
 import { useSearchParams } from "react-router";
 import { mensagemDeErro } from "@/api/errors";
 import type { RepasseItemDto, VendedorRepassesDto } from "@/api/repasses";
@@ -96,7 +97,7 @@ export function RepassesPage() {
           <KpiCard
             label="A pagar agora"
             value={formatarDinheiro(kpis.aPagarValor)}
-            actionLabel={`${kpis.aPagarVendedores} vendedores · ${kpis.aPagarViagens} viagens →`}
+            actionLabel={`${plural(kpis.aPagarVendedores, "vendedor", "vendedores")} · ${plural(kpis.aPagarViagens, "viagem", "viagens")} →`}
             onAction={() => {
               scrollParaVendedor(primeiroAPagar);
             }}
@@ -104,7 +105,7 @@ export function RepassesPage() {
           <KpiCard
             label="Bloqueado"
             value={formatarDinheiro(kpis.bloqueadoValor)}
-            contexto={`aguardando comissão de ${kpis.bloqueadoViagens} viagens`}
+            contexto={`aguardando comissão de ${plural(kpis.bloqueadoViagens, "viagem", "viagens")}`}
           />
           <KpiCard
             label="Sem valor definido"
