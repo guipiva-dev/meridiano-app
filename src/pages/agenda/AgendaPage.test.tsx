@@ -214,12 +214,16 @@ test("troca para 'Embarques e retornos' mostra Ana Beatriz Souza e Retornos", as
   expect(screen.getByText("Retornos")).toBeInTheDocument();
 });
 
-test("'Documentos vencendo' mostra Passaporte não cadastrado e chip 'só no cadastro'", async () => {
+// U11: coluna "Pendência" e chip "só no cadastro" pareciam repetir a aba Pendências, sem dizer que
+// aquilo não virou tarefa na Agenda.
+test("'Documentos vencendo' mostra Passaporte não cadastrado e coluna Alerta 'sem pendência criada'", async () => {
   montar();
   await screen.findByText("Atrasadas 2");
   fireEvent.click(screen.getByRole("tab", { name: /Documentos vencendo/ }));
   expect(await screen.findByText("Passaporte não cadastrado")).toBeInTheDocument();
-  expect(screen.getByText("só no cadastro")).toBeInTheDocument();
+  expect(screen.getByRole("columnheader", { name: "Alerta" })).toBeInTheDocument();
+  expect(screen.getByText("sem pendência criada")).toBeInTheDocument();
+  expect(screen.queryByText("só no cadastro")).not.toBeInTheDocument();
 });
 
 test("'Créditos vencendo' mostra R$ 5.100,00", async () => {

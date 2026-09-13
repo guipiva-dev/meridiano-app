@@ -25,6 +25,9 @@ interface CabecalhoViagemProps {
 export function CabecalhoViagem({ viagem, pode, onTransferir, onCancelar }: CabecalhoViagemProps) {
   const nav = useNavigate();
   const comissao = apresentacaoStatus("comissao", viagem.faseFinanceira);
+  // A24: `sem_reserva` é uma fase só, mas "nunca teve reserva" (Rascunho) e "só reservas
+  // canceladas" (Sem reserva ativa) contam histórias diferentes — a viagem tem reservas.
+  const semReservaAtiva = viagem.faseOperacional === "sem_reserva" && viagem.reservas.length > 0;
   const subtitle = [
     formatarPeriodo(viagem.dataIda, viagem.dataVolta),
     ROTULO_TIPO[viagem.tipo],
@@ -45,7 +48,11 @@ export function CabecalhoViagem({ viagem, pode, onTransferir, onCancelar }: Cabe
         }
         status={
           <>
-            <StatusBadge entidade="fase_viagem" valor={viagem.faseOperacional} />
+            {semReservaAtiva ? (
+              <Badge tone="neutral">Sem reserva ativa</Badge>
+            ) : (
+              <StatusBadge entidade="fase_viagem" valor={viagem.faseOperacional} />
+            )}
             <span title={TOOLTIP_COMISSAO}>
               <Badge tone={comissao.tone}>{`Comissão: ${comissao.texto}`}</Badge>
             </span>

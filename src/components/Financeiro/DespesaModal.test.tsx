@@ -72,7 +72,7 @@ test("repete todo mês revela o campo Repetir até", async () => {
   expect(screen.getByLabelText("Repetir até")).toBeInTheDocument();
 });
 
-test("escolher uma viagem desliga 'Repete todo mês' e desabilita o campo (despesa recorrente não pode ficar ligada a viagem)", async () => {
+test("escolher uma viagem esconde 'Repete todo mês' (despesa ligada a viagem não repete) (U08)", async () => {
   const user = userEvent.setup();
   criar.mockResolvedValue(resultado());
   const onSalva = vi.fn();
@@ -89,10 +89,8 @@ test("escolher uma viagem desliga 'Repete todo mês' e desabilita o campo (despe
   const opcao = await screen.findByRole("option", { name: /Lisboa/ });
   await user.click(opcao);
 
-  const repeteSelect = screen.getByLabelText("Repete todo mês");
-  expect(repeteSelect).toHaveValue("nao");
-  expect(repeteSelect).toBeDisabled();
-  expect(screen.getByText("Despesa ligada a viagem não repete")).toBeInTheDocument();
+  expect(screen.queryByLabelText("Repete todo mês")).not.toBeInTheDocument();
+  expect(screen.queryByText("Despesa ligada a viagem não repete")).not.toBeInTheDocument();
 
   await user.click(screen.getByRole("button", { name: "Lançar despesa" }));
 
@@ -114,7 +112,7 @@ test("escolher uma viagem desliga 'Repete todo mês' e desabilita o campo (despe
   expect(onSalva).toHaveBeenCalledWith(expect.objectContaining({ id: "d1" }), null);
 });
 
-test("despesa com viagem fixa (lançada na aba da viagem) já abre com 'Repete todo mês' desabilitado", () => {
+test("despesa com viagem fixa (lançada na aba da viagem) já abre sem 'Repete todo mês' (U08)", () => {
   render(
     <DespesaModal
       open
@@ -125,8 +123,8 @@ test("despesa com viagem fixa (lançada na aba da viagem) já abre com 'Repete t
     />,
   );
 
-  expect(screen.getByLabelText("Repete todo mês")).toBeDisabled();
-  expect(screen.getByText("Despesa ligada a viagem não repete")).toBeInTheDocument();
+  expect(screen.queryByLabelText("Repete todo mês")).not.toBeInTheDocument();
+  expect(screen.queryByText("Despesa ligada a viagem não repete")).not.toBeInTheDocument();
 });
 
 test("descrição tem maxLength 200", () => {
@@ -155,6 +153,7 @@ test("422 texto_longo em observacao vira erro inline no campo Observação, sem 
   render(<DespesaModal open fornecedores={[]} onClose={vi.fn()} onSalva={vi.fn()} />);
 
   await user.type(screen.getByLabelText(/^Descrição/), "Aluguel");
+  await user.type(screen.getByLabelText(/^Valor/), "100");
   fireEvent.change(screen.getByLabelText(/^Vencimento/), { target: { value: "2026-04-10" } });
   await user.click(screen.getByRole("button", { name: "Lançar despesa" }));
 
@@ -162,4 +161,23 @@ test("422 texto_longo em observacao vira erro inline no campo Observação, sem 
     expect(screen.getByLabelText("Observação")).toHaveAccessibleDescription(/no máximo 2000/);
   });
   expect(screen.getByRole("alert")).toHaveTextContent("observacao deve ter no máximo 2000 caracteres");
+});
+
+test("X10: Valor vazio ou zero mostra 'Informe um valor maior que zero' e não chama a API", async () => {
+  const user = userEvent.setup();
+  render(<DespesaModal open fornecedores={[]} onClose={vi.fn()} onSalva={vi.fn()} />);
+
+  await user.type(screen.getByLabelText(/^Descrição/), "Aluguel");
+  fireEvent.change(screen.getByLabelText(/^Vencimento/), { target: { value: "2026-04-10" } });
+  await user.click(screen.getByRole("button", { name: "Lançar despesa" }));
+
+  expect(criar).not.toHaveBeenCalled();
+  expect(screen.getByText("Informe um valor maior que zero")).toBeInTheDocument();
+
+  await user.click(screen.getByLabelText(/^Valor/));
+  await user.keyboard("0");
+  await user.click(screen.getByRole("button", { name: "Lançar despesa" }));
+
+  expect(criar).not.toHaveBeenCalled();
+  expect(screen.getByText("Informe um valor maior que zero")).toBeInTheDocument();
 });

@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type * as EquipeApi from "@/api/equipe";
 import { equipeApi } from "@/api/equipe";
 import { ValidationError } from "@/api/errors";
+import { ToastHost } from "@/components/feedback";
 import { ConvidarModal } from "./ConvidarModal";
 
 vi.mock("@/api/equipe", async (importar) => {
@@ -13,10 +14,15 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-test("envia nome, e-mail e perfil para POST /auth/convites", async () => {
+test("envia nome, e-mail e perfil para POST /auth/convites e mostra o toast de sucesso", async () => {
   const convidado = vi.fn();
   vi.mocked(equipeApi.convidarNovo).mockResolvedValue({ usuarioId: "u9" });
-  render(<ConvidarModal open onClose={() => undefined} onConvidado={convidado} />);
+  render(
+    <>
+      <ConvidarModal open onClose={() => undefined} onConvidado={convidado} />
+      <ToastHost />
+    </>,
+  );
 
   fireEvent.change(screen.getByLabelText(/Nome/), { target: { value: "Nova Pessoa" } });
   fireEvent.change(screen.getByLabelText(/E-mail/), { target: { value: "nova@x.com" } });
@@ -31,6 +37,7 @@ test("envia nome, e-mail e perfil para POST /auth/convites", async () => {
     });
   });
   expect(convidado).toHaveBeenCalled();
+  expect(await screen.findByText("Convite enviado para nova@x.com")).toBeInTheDocument();
 });
 
 test("422 email_ja_cadastrado mostra o erro no campo e-mail", async () => {

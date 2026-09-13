@@ -51,11 +51,15 @@ export function erroDeResposta(status: number, problem: ProblemDetails | null): 
 }
 
 export function mensagemDeErro(e: unknown): string {
-  if (e instanceof NetworkError) return "Sem conexão. Verifique a internet e tente de novo.";
+  if (e instanceof NetworkError) return "Sem conexão com o servidor.";
   if (e instanceof ConflictError)
     return "Alguém alterou este registro enquanto você editava. Recarregue e tente de novo.";
   if (e instanceof PermissionError) return "Você não tem permissão para isso.";
   if (e instanceof UnauthenticatedError) return "Sua sessão expirou. Entre de novo.";
+  // Só substitui quando o servidor não deu detalhe nenhum (502/503 de infra, corpo vazio ou não-JSON);
+  // um 5xx da própria aplicação com `detail` específico (ex.: RegraDeNegocioException) continua mostrando esse texto.
+  if (e instanceof ApiError && e.status >= 500 && e.detalhe === "Erro inesperado")
+    return `O servidor não respondeu (erro ${e.status}). Tente de novo em instantes.`;
   if (e instanceof ApiError) return e.detalhe;
   return "Erro inesperado. Tente de novo.";
 }

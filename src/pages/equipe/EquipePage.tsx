@@ -6,7 +6,7 @@ import { chavesEquipe, equipeApi } from "@/api/equipe";
 import { mensagemDeErro } from "@/api/errors";
 import { Button, type Coluna, DataTable } from "@/components";
 import { Alert, Badge } from "@/components/display";
-import { toast } from "@/components/feedback";
+import { ConfirmModal, toast } from "@/components/feedback";
 import { Page, PageHeader } from "@/components/shell";
 import { apresentacaoStatus } from "@/dominio/status";
 import { formatarCarimboRelativo } from "@/lib/datas";
@@ -42,6 +42,8 @@ export function EquipePage() {
   const nav = useNavigate();
   const qc = useQueryClient();
   const [convidarAberto, setConvidarAberto] = useState(false);
+  const [cancelarAlvo, setCancelarAlvo] = useState<ColaboradorDto | null>(null);
+  const [cancelando, setCancelando] = useState(false);
 
   const listaQ = useQuery({ queryKey: chavesEquipe.lista(), queryFn: equipeApi.listar });
   const itens = listaQ.data?.itens ?? [];
@@ -57,6 +59,21 @@ export function EquipePage() {
       invalidar();
     } catch (e) {
       toast.error(mensagemDeErro(e));
+    }
+  }
+
+  async function cancelarConvite() {
+    if (!cancelarAlvo) return;
+    setCancelando(true);
+    try {
+      await equipeApi.cancelarConvite(cancelarAlvo.id);
+      toast.success("Convite cancelado");
+      invalidar();
+      setCancelarAlvo(null);
+    } catch (e) {
+      toast.error(mensagemDeErro(e));
+    } finally {
+      setCancelando(false);
     }
   }
 
@@ -98,19 +115,32 @@ export function EquipePage() {
       id: "acao",
       titulo: "",
       alinhar: "right",
-      render: (c) =>
-        c.acesso === "sem_acesso" || c.acesso === "convite_pendente" ? (
-          <Button
-            variant="tertiary"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              void convidar(c);
-            }}
-          >
-            {c.acesso === "sem_acesso" && !conviteExpirado(c) ? "Convidar" : "Reenviar"}
-          </Button>
-        ) : (
+      render: (c) => (
+        <div className={s.acoes}>
+          {(c.acesso === "sem_acesso" || c.acesso === "convite_pendente") && (
+            <Button
+              variant="tertiary"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                void convidar(c);
+              }}
+            >
+              {c.acesso === "sem_acesso" && !conviteExpirado(c) ? "Convidar" : "Reenviar"}
+            </Button>
+          )}
+          {c.acesso === "convite_pendente" && (
+            <Button
+              variant="tertiary"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCancelarAlvo(c);
+              }}
+            >
+              Cancelar convite
+            </Button>
+          )}
           <Button
             variant="tertiary"
             size="sm"
@@ -121,7 +151,8 @@ export function EquipePage() {
           >
             Editar
           </Button>
-        ),
+        </div>
+      ),
     },
   ];
 
@@ -194,6 +225,23 @@ export function EquipePage() {
         }}
         onConvidado={invalidar}
       />
+
+      {cancelarAlvo && (
+        <ConfirmModal
+          open
+          title={`Cancelar o convite de ${cancelarAlvo.nome}?`}
+          impact="A pessoa deixa de poder aceitar este convite."
+          confirmLabel="Cancelar convite"
+          tone="danger"
+          loading={cancelando}
+          onConfirm={() => {
+            void cancelarConvite();
+          }}
+          onCancel={() => {
+            setCancelarAlvo(null);
+          }}
+        />
+      )}
     </Page>
   );
 }

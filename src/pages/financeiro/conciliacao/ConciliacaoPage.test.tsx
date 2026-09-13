@@ -192,6 +192,14 @@ test("mostra os quatro KPIs do protótipo", async () => {
   expect(screen.getByText(/▲ 12 % vs/)).toBeInTheDocument();
 });
 
+test("KPI 'recebido no mês' vira 'Comissões recebidas no mês' com o subtítulo de escopo (M01)", async () => {
+  montar();
+  await screen.findByText("R$ 18.420,00");
+  expect(screen.getByText("Comissões recebidas no mês")).toBeInTheDocument();
+  expect(screen.queryByText("Recebido no mês")).toBeNull();
+  expect(screen.getByText(/só recebimentos e estornos de operadora/)).toBeInTheDocument();
+});
+
 test("as abas mostram os contadores", async () => {
   montar();
   await screen.findByText("R$ 18.420,00");
@@ -319,4 +327,44 @@ test("em divergências a linha inteira leva à viagem", async () => {
 test("aba recebidas troca Previsto por Recebido em", async () => {
   montar(() => true, "/financeiro?aba=recebidas");
   expect(await screen.findByRole("columnheader", { name: "Recebido em" })).toBeInTheDocument();
+});
+
+test("aba recebidas com recebido acima do esperado mostra o badge de acima (A46)", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    if (url.includes("/conciliacao?")) {
+      return Promise.resolve(
+        resposta(200, {
+          ...CONCILIACAO,
+          itens: [item({ reservaId: "r9", titular: "Ana Cliente", esperado: 500, recebido: 650 })],
+        }),
+      );
+    }
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
+    return Promise.resolve(resposta(200, null));
+  });
+  montar(() => true, "/financeiro?aba=recebidas");
+  expect(await screen.findByText("Recebida · +R$ 150,00 acima")).toBeInTheDocument();
+});
+
+test("linha parcial mostra 'Encerrar divergência…' como ação visível ao lado de 'Receber saldo' (X02)", async () => {
+  montar();
+  await screen.findByText("Marcos e Renata Lima · Noronha");
+  const l = linha("Marcos e Renata Lima");
+  expect(within(l).getByRole("button", { name: "Receber saldo" })).toBeInTheDocument();
+  expect(within(l).getByRole("button", { name: "Encerrar divergência…" })).toBeInTheDocument();
+});
+
+test("abrir 'Encerrar divergência…' mostra o hint do motivo sem 'Período fechado ou exclusão' (X02)", async () => {
+  const user = userEvent.setup();
+  montar();
+  await screen.findByText("Marcos e Renata Lima · Noronha");
+  await user.click(within(linha("Marcos e Renata Lima")).getByRole("button", { name: "Encerrar divergência…" }));
+  const dialogo = screen.getByRole("dialog");
+  expect(within(dialogo).getByText("O motivo vai para a auditoria.")).toBeInTheDocument();
+  expect(within(dialogo).queryByText(/Período fechado ou exclusão/)).toBeNull();
+});
+
+test("caption da tabela muda por aba: Recebidas e Divergências (U07)", async () => {
+  montar(() => true, "/financeiro?aba=recebidas");
+  expect(await screen.findByText("Comissões recebidas", { selector: "caption" })).toBeInTheDocument();
 });

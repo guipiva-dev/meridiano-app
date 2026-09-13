@@ -114,6 +114,21 @@ test("mostra os seis KPIs do ano", async () => {
   expect(screen.getByText("34 %")).toBeInTheDocument();
 });
 
+test("'Receita recebida' ganha o subtítulo de escopo e 'Resultado operacional' inclui repasses pagos (M01/A36)", async () => {
+  respostaAtual = dto({ kpis: { ...dto().kpis, repassesPagos: 1200, resultadoOperacional: 16590 } });
+  montar();
+  await screen.findByText("R$ 187.400,00");
+  expect(screen.getByText(/todas as entradas de caixa \(operadora \+ cliente\)/)).toBeInTheDocument();
+  expect(screen.getByText(/receita recebida − despesas pagas − repasses pagos/)).toBeInTheDocument();
+  expect(screen.getByText(/repasses pagos R\$ 1\.200,00/)).toBeInTheDocument();
+});
+
+test("sem repassesPagos (compatibilidade antes do B5) não quebra o subtítulo do resultado", async () => {
+  montar();
+  await screen.findByText("R$ 187.400,00");
+  expect(screen.getByText(/receita recebida − despesas pagas − repasses pagos/)).toBeInTheDocument();
+});
+
 test("mostra a tabela de fornecedores com receita e margem", async () => {
   montar();
   expect(await screen.findByText("CVC Operadora")).toBeInTheDocument();
@@ -179,7 +194,7 @@ test("Exportar CSV com falha mostra Alert com a mensagem de erro (MED-04)", asyn
   montar();
   await screen.findByText("R$ 187.400,00");
   fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent("Sem conexão. Verifique a internet e tente de novo.");
+  expect(await screen.findByRole("alert")).toHaveTextContent("Sem conexão com o servidor.");
 });
 
 test("teto MEI em alerta mostra tone de aviso", async () => {

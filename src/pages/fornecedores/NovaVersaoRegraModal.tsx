@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import { useState } from "react";
-import { type FornecedorDetalheDto, fornecedoresApi, type JanelaDto } from "@/api/fornecedores";
+import { type FornecedorDetalheDto, fornecedoresApi, type JanelaDto, type VersaoRegraDto } from "@/api/fornecedores";
 import { Button, DateInput, Field, IconButton, Input } from "@/components";
 import { errosDeCadastro } from "@/components/Cadastros/mapaErrosCadastro";
 import { Alert } from "@/components/display";
@@ -48,20 +48,50 @@ function validar(linhas: LinhaJanela[]): { janelas: JanelaDto[] } | { erro: stri
 interface NovaVersaoRegraModalProps {
   open: boolean;
   fornecedorId: string;
+  /** F02-front: pré-carrega as janelas da regra vigente ao abrir. */
+  regraVigente: VersaoRegraDto | null;
   onClose: () => void;
   onSalva: (f: FornecedorDetalheDto) => void;
 }
 
-export function NovaVersaoRegraModal({ open, fornecedorId, onClose, onSalva }: NovaVersaoRegraModalProps) {
+function linhasDaRegra(regraVigente: VersaoRegraDto | null): LinhaJanela[] {
+  if (!regraVigente || regraVigente.janelas.length === 0) return [LINHA_VAZIA];
+  return regraVigente.janelas.map((j) => ({
+    diaInicial: String(j.diaInicial),
+    diaFinal: String(j.diaFinal),
+    diaPagamento: String(j.diaPagamento),
+    mesesAFrente: String(j.mesesAFrente),
+  }));
+}
+
+export function NovaVersaoRegraModal({
+  open,
+  fornecedorId,
+  regraVigente,
+  onClose,
+  onSalva,
+}: NovaVersaoRegraModalProps) {
   const [vigenteDesde, setVigenteDesde] = useState(hojeIso());
-  const [linhas, setLinhas] = useState<LinhaJanela[]>([LINHA_VAZIA]);
+  const [linhas, setLinhas] = useState<LinhaJanela[]>(() => linhasDaRegra(regraVigente));
   const [erroData, setErroData] = useState<string | undefined>(undefined);
   const [erroBloco, setErroBloco] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [abertoAntes, setAbertoAntes] = useState(open);
+
+  // Modal fica montado permanentemente (só alterna `open`); ao reabrir, reseta durante a
+  // renderização (padrão do React para "ajustar estado quando uma prop muda") para não herdar
+  // estado de uma edição anterior nem perder o pré-carregamento se `regraVigente` mudou.
+  if (open !== abertoAntes) {
+    setAbertoAntes(open);
+    if (open) {
+      setVigenteDesde(hojeIso());
+      setLinhas(linhasDaRegra(regraVigente));
+    }
+  }
 
   function fechar() {
     setVigenteDesde(hojeIso());
-    setLinhas([LINHA_VAZIA]);
+    setLinhas(linhasDaRegra(regraVigente));
     setErroData(undefined);
     setErroBloco(null);
     setSalvando(false);

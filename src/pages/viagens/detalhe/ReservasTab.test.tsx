@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { useState } from "react";
-import { MemoryRouter } from "react-router";
-import type { CreditoDto } from "@/api/viagens";
+import { createMemoryRouter, MemoryRouter, RouterProvider, useLocation } from "react-router";
+import type { CreditoDto, ViagemDto } from "@/api/viagens";
 import { VIAGEM } from "./fixtures";
 import { ModaisViagem } from "./modais";
 import { ReservasTab } from "./ReservasTab";
@@ -32,12 +32,12 @@ const CREDITO: CreditoDto = {
 };
 
 /** Espelha o par ReservasTab + ModaisViagem que a `ViagemPage` monta. */
-function Tela({ creditos }: { creditos: CreditoDto[] }) {
+function Tela({ creditos, viagem = VIAGEM }: { creditos: CreditoDto[]; viagem?: ViagemDto }) {
   const [modal, setModal] = useState<ModalViagem | null>(null);
   return (
     <>
       <ReservasTab
-        viagem={VIAGEM}
+        viagem={viagem}
         creditos={creditos}
         verValores
         podeEditar
@@ -46,7 +46,7 @@ function Tela({ creditos }: { creditos: CreditoDto[] }) {
       />
       <ModaisViagem
         modal={modal}
-        viagem={VIAGEM}
+        viagem={viagem}
         vendedores={[]}
         creditos={creditos}
         aplicar={() => undefined}
@@ -59,12 +59,12 @@ function Tela({ creditos }: { creditos: CreditoDto[] }) {
   );
 }
 
-function montar(creditos: CreditoDto[] = []) {
+function montar(creditos: CreditoDto[] = [], viagem?: ViagemDto) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={qc}>
       <MemoryRouter initialEntries={["/viagens/v1"]}>
-        <Tela creditos={creditos} />
+        <Tela creditos={creditos} viagem={viagem} />
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -98,9 +98,39 @@ test("crédito sem valor (vendedor externo) mostra só a contagem", () => {
   expect(within(alerta).queryByText(/R\$/)).toBeNull();
 });
 
+test("X01: viagem cancelada não oferece Usar crédito… mesmo com crédito disponível", () => {
+  montar([CREDITO], { ...VIAGEM, cancelada: true });
+  expect(screen.getByText(/Crédito disponível: 1/)).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Usar crédito…" })).toBeNull();
+});
+
 test("Cancelar reserva… no card 1 abre o modal daquela reserva", () => {
   montar();
   fireEvent.click(screen.getAllByRole("button", { name: "Expandir" })[0]!);
   fireEvent.click(screen.getByRole("button", { name: "Cancelar reserva…" }));
   expect(screen.getByRole("dialog")).toHaveTextContent("Cancelar reserva 1");
+});
+
+/** F03: sinaliza para `useNovaViagem` abrir já com uma reserva em branco, sem precisar clicar de novo lá. */
+function ProbeEditar() {
+  const estado = useLocation().state as { novaReserva?: boolean } | null;
+  return <p>novaReserva={String(estado?.novaReserva)}</p>;
+}
+
+test("F03: + Adicionar reserva navega para editar já sinalizando novaReserva", () => {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const router = createMemoryRouter(
+    [
+      { path: "/viagens/v1", element: <Tela creditos={[]} /> },
+      { path: "/viagens/v1/editar", element: <ProbeEditar /> },
+    ],
+    { initialEntries: ["/viagens/v1"] },
+  );
+  render(
+    <QueryClientProvider client={qc}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "+ Adicionar reserva" }));
+  expect(screen.getByText("novaReserva=true")).toBeInTheDocument();
 });

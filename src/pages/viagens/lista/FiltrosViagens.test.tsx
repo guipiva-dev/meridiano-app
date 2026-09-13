@@ -50,6 +50,13 @@ test("painel abre por padrão quando já há filtros avançados ativos", () => {
   expect(screen.getByRole("button", { name: "CVC" })).toBeInTheDocument();
 });
 
+test("U04: select Ida sempre mostra o prefixo, mesmo para os presets sem período nomeado", () => {
+  montar();
+  const select = screen.getByRole("combobox", { name: "Ida" });
+  const rotulos = Array.from(select.querySelectorAll("option")).map((o) => o.textContent);
+  expect(rotulos).toEqual(["Ida: próximos 90 dias", "Ida: este mês", "Ida: qualquer"]);
+});
+
 test('mostra "Limpar" só quando há filtro ativo', () => {
   montar();
   expect(screen.queryByRole("button", { name: "Limpar" })).toBeNull();

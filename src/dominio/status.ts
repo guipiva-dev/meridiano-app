@@ -31,6 +31,7 @@ const repasse: Mapa = {
   bloqueado: { texto: "Bloqueado", tone: "neutral" },
   a_pagar: { texto: "Liberado", tone: "warning" },
   pago: { texto: "Pago", tone: "success" },
+  cancelado: { texto: "Cancelado", tone: "neutral" },
 };
 const despesa: Mapa = {
   a_pagar: { texto: "A pagar", tone: "info" },

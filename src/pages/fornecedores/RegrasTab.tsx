@@ -4,7 +4,7 @@ import { Button } from "@/components";
 import { Alert } from "@/components/display";
 import { EmptyState } from "@/components/feedback";
 import { Section } from "@/components/shell";
-import { formatarData } from "@/lib/datas";
+import { formatarData, hojeIso } from "@/lib/datas";
 import { plural } from "@/lib/plural";
 import s from "./Fornecedores.module.css";
 import { NovaVersaoRegraModal } from "./NovaVersaoRegraModal";
@@ -31,14 +31,33 @@ interface RegrasTabProps {
   onMudou: (f: FornecedorDetalheDto) => void;
 }
 
+/** F02-front: B6 já manda `vigente` em cada versão (exatamente uma `true`, nenhuma se todas forem
+ * futuras) — só falta separar as futuras ("próxima") das que já venceram ("anterior"). */
+function classificarRegras(fornecedor: FornecedorDetalheDto) {
+  const hoje = hojeIso();
+  function classificar(r: VersaoRegraDto): "proxima" | "vigente" | "anterior" {
+    if (r.vigenteDesde > hoje) return "proxima";
+    return r.vigente ? "vigente" : "anterior";
+  }
+  return {
+    proxima: fornecedor.regras.find((r) => classificar(r) === "proxima"),
+    vigente: fornecedor.regras.find((r) => classificar(r) === "vigente") ?? fornecedor.regraVigente,
+    anteriores: fornecedor.regras.filter((r) => classificar(r) === "anterior"),
+  };
+}
+
 export function RegrasTab({ fornecedor, podeEditar, onMudou }: RegrasTabProps) {
   const [aberto, setAberto] = useState(false);
-  const vigente = fornecedor.regraVigente;
-  const anteriores = fornecedor.regras.filter((r) => r.vigenteDesde !== vigente?.vigenteDesde);
+  const { proxima, vigente, anteriores } = classificarRegras(fornecedor);
 
   return (
     <Section title="Quando paga a comissão" description="Define a data prevista de cada reserva na conciliação">
       <div className={s.blocoRegras}>
+        {proxima && (
+          <Alert tone="info" title={`Próxima versão (a partir de ${formatarData(proxima.vigenteDesde).slice(0, 5)})`}>
+            <Janelas regra={proxima} />
+          </Alert>
+        )}
         {vigente ? (
           <>
             <Alert tone="neutral" title={`Regra vigente desde ${formatarData(vigente.vigenteDesde)}`}>
@@ -89,6 +108,7 @@ export function RegrasTab({ fornecedor, podeEditar, onMudou }: RegrasTabProps) {
       <NovaVersaoRegraModal
         open={aberto}
         fornecedorId={fornecedor.id}
+        regraVigente={vigente}
         onClose={() => {
           setAberto(false);
         }}

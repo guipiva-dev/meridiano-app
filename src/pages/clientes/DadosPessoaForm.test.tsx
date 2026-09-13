@@ -25,6 +25,32 @@ function Wrapper({ erros = {} }: { erros?: Record<string, string> }) {
   return <DadosPessoaForm form={form} grupos={[]} erros={erros} verDocumento onNovoGrupo={vi.fn()} />;
 }
 
+function WrapperSemDocumento() {
+  const form = useForm<FormPessoa>({
+    defaultValues: {
+      nome: "",
+      cpf: "",
+      dataNascimento: "",
+      grupoId: "",
+      cidade: "",
+      uf: "",
+      origemLead: "",
+      whatsapp: "",
+      telefone: "",
+      email: "",
+      contatoEmergencia: "",
+      tags: [],
+      observacoes: "",
+    },
+  });
+  return <DadosPessoaForm form={form} grupos={[]} erros={{}} verDocumento={false} onNovoGrupo={vi.fn()} />;
+}
+
+test("verDocumento false esconde o campo CPF", () => {
+  render(<WrapperSemDocumento />);
+  expect(screen.queryByLabelText(/^CPF/)).not.toBeInTheDocument();
+});
+
 test("CPF com dígito verificador inválido mostra erro local", async () => {
   const user = userEvent.setup();
   render(<Wrapper />);

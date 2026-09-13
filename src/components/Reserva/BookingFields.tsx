@@ -46,6 +46,10 @@ export function BookingFields({
             onChange={(e: ChangeEvent<HTMLSelectElement>) => {
               onChange({ fornecedorId: e.target.value });
             }}
+            onBlur={() => {
+              // A04: só depois de tocar o campo (ou tentar salvar) o erro "Escolha o fornecedor" aparece.
+              onChange({ fornecedorTocado: true });
+            }}
           />
           <Button variant="tertiary" size="sm" disabled={readOnly} onClick={onNovoFornecedor}>
             + novo

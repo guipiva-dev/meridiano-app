@@ -37,7 +37,13 @@ export function ClientesPage() {
   const { pode } = useAuth();
   const { filtro, definir, limpar, ativos } = useFiltrosClientes();
 
-  const gruposQ = useQuery({ queryKey: chavesGrupos.lista("", 1), queryFn: () => gruposApi.listar("", 1) });
+  // P06: GET /grupos exige `cliente.ver` — vendedor externo (só `cliente.ver_proprios`) recebe 403.
+  const podeVerGrupos = pode("cliente.ver");
+  const gruposQ = useQuery({
+    queryKey: chavesGrupos.lista("", 1),
+    queryFn: () => gruposApi.listar("", 1),
+    enabled: podeVerGrupos,
+  });
   const listaQ = useQuery({
     queryKey: chavesClientes.lista(filtro),
     queryFn: () => clientesApi.listar(filtro),
@@ -79,7 +85,13 @@ export function ClientesPage() {
     <Page>
       <PageHeader
         title="Clientes"
-        subtitle={`${n(contadores.pessoas)} pessoas · ${n(contadores.grupos)} grupos · ${n(contadores.passaportesVencendo)} passaportes vencendo`}
+        subtitle={[
+          `${n(contadores.pessoas)} pessoas`,
+          podeVerGrupos && `${n(contadores.grupos)} grupos`,
+          `${n(contadores.passaportesVencendo)} passaportes vencendo`,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
         actions={
           pode("cliente.editar") && (
             <Button

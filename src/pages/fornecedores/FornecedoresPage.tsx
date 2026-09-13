@@ -25,6 +25,12 @@ const ATIVO_POR_SITUACAO: Record<Situacao, boolean | undefined> = {
   inativos: false,
   todos: undefined,
 };
+// U09: "N cadastrados" era fixo — parecia contar todo mundo mesmo filtrando por ativos/inativos.
+const ROTULO_POR_SITUACAO: Record<Situacao, string> = {
+  ativos: "ativos",
+  inativos: "inativos",
+  todos: "cadastrados",
+};
 
 export function FornecedoresPage() {
   const nav = useNavigate();
@@ -88,7 +94,7 @@ export function FornecedoresPage() {
     <Page>
       <PageHeader
         title="Fornecedores"
-        subtitle={`${listaQ.isLoading ? "—" : (listaQ.data?.total ?? 0)} cadastrados · a regra de pagamento define quando a comissão é esperada`}
+        subtitle={`${listaQ.isLoading ? "—" : (listaQ.data?.total ?? 0)} ${ROTULO_POR_SITUACAO[situacao]} · a regra de pagamento define quando a comissão é esperada`}
         actions={
           pode("fornecedor.editar") && (
             <Button

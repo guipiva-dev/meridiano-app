@@ -130,3 +130,9 @@ test("um passageiro no singular", async () => {
   montar();
   expect(await screen.findByText(/· 1 passageiro ·/)).toBeInTheDocument();
 });
+
+test("F07: título da aba traz código · destino depois de carregar", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Carlos Mendes · Lisboa/ });
+  expect(document.title).toBe("VG-2026-0042 · Lisboa · Meridiano");
+});

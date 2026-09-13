@@ -16,6 +16,7 @@ import { Button, type Coluna, DataTable, DateCell, MoneyCell, Paginacao, StatusC
 import { Alert } from "@/components/display";
 import { EmptyState } from "@/components/feedback";
 import { Page, PageHeader, Subnav, Tabs } from "@/components/shell";
+import { plural } from "@/lib/plural";
 import { subnavs } from "@/shell/navegacao";
 import { FiltrosViagens } from "./FiltrosViagens";
 import { useFiltrosViagens } from "./useFiltrosViagens";
@@ -56,7 +57,12 @@ export function ViagensPage() {
   const { pode } = useAuth();
   const { filtro, idaPreset, definir, limpar, ativos } = useFiltrosViagens();
   const vendedoresQ = useQuery({ queryKey: chaves.vendedores, queryFn: viagensApi.vendedores });
-  const fornecedoresQ = useQuery({ queryKey: chaves.fornecedores, queryFn: viagensApi.fornecedores });
+  // M4: vendedor externo não tem fornecedor.ver — sem o gate, /fornecedores voltava 403 na lista.
+  const fornecedoresQ = useQuery({
+    queryKey: chaves.fornecedores,
+    queryFn: viagensApi.fornecedores,
+    enabled: pode("fornecedor.ver"),
+  });
   const listaQ = useQuery({
     queryKey: chaves.viagens(filtro),
     queryFn: () => viagensApi.listar(filtro),
@@ -72,14 +78,26 @@ export function ViagensPage() {
       {
         id: "viagem",
         titulo: "Viagem",
-        render: (l) => (
-          <div>
-            <div className={s.primary}>{l.titular}</div>
-            <div className={s.secondary}>
-              {l.destino} · {ROTULO_TIPO[l.tipo]} · <code>{l.codigo}</code>
+        classe: s.celulaViagem,
+        render: (l) => {
+          const destinoTipo = `${l.destino} · ${ROTULO_TIPO[l.tipo]}`;
+          return (
+            <div>
+              <div className={s.primary} title={l.titular}>
+                {l.titular}
+              </div>
+              {/* Ordem congelada do protótipo (destino · tipo · código): quem trunca é só o
+                  destino+tipo (flex:1, ellipsis); o código fica com flex:none e nunca corta. */}
+              <div className={s.secondary}>
+                <span className={s.secondaryDestino} title={destinoTipo}>
+                  {destinoTipo}
+                </span>
+                <span className={s.separator}> · </span>
+                <code>{l.codigo}</code>
+              </div>
             </div>
-          </div>
-        ),
+          );
+        },
       },
       { id: "ida", titulo: "Ida", ordenavel: true, render: (l) => <DateCell value={l.dataIda} /> },
       { id: "vendedor", titulo: "Vendedor", render: (l) => l.vendedorNome },
@@ -113,7 +131,11 @@ export function ViagensPage() {
     <Page>
       <PageHeader
         title="Viagens"
-        subtitle={`${fmtContador(contadores.todas, listaQ.isLoading)} viagens · ${fmtContador(contadores.emEmissao, listaQ.isLoading)} em emissão · ${fmtContador(contadores.comissaoAtrasada, listaQ.isLoading)} com comissão atrasada`}
+        subtitle={
+          listaQ.isLoading
+            ? "— viagens · — em emissão · — com comissão atrasada"
+            : `${plural(contadores.todas, "viagem", "viagens")} · ${contadores.emEmissao} em emissão · ${contadores.comissaoAtrasada} com comissão atrasada`
+        }
         actions={
           pode("viagem.criar") && (
             <Button

@@ -85,6 +85,13 @@ export function FinancialFields({
           onChange={(v) => {
             onChange({ valorTotal: v });
           }}
+          onBlur={() => {
+            // A03: venda ainda vazia, ou ainda sugerida (usuário não digitou à mão) — sugere/ressincroniza
+            // venda = total. Nunca sobrescreve o que o usuário já digitou (vendaSugerida vira false ao digitar).
+            if (!readOnly && value.valorTotal && (value.valorCliente === null || value.vendaSugerida)) {
+              onChange({ valorCliente: value.valorTotal, vendaSugerida: true });
+            }
+          }}
         />
       </Field>
       <Field label="Do total, quanto é taxa" className="span-2" error={erros.valorTaxas}>
@@ -129,8 +136,9 @@ export function FinancialFields({
         <MoneyInput
           value={value.valorCliente}
           readOnly={readOnly}
+          calculated={value.vendaSugerida}
           onChange={(v) => {
-            onChange({ valorCliente: v });
+            onChange({ valorCliente: v, vendaSugerida: false });
           }}
         />
       </Field>

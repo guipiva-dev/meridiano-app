@@ -29,14 +29,16 @@ export function somarReservas(reservas: ReservaValores[]): {
     const valorCliente = r.valorCliente ?? 0;
     vendaTotal += valorCliente;
     custo += valorTotal;
-    receitaPrevista += calcularReserva({
-      valorTotal,
-      valorComissao: r.valorComissao ?? 0,
-      ravOperadora: r.ravOperadora ?? 0,
-      valorCliente,
-      taxaServico: r.taxaServico ?? 0,
-      viaOperadora: r.ravClienteModo === "via_operadora",
-    }).receitaPrevista;
+    receitaPrevista +=
+      // valorCliente acima já é um number (nunca null): receitaPrevista nunca vem null aqui, só satisfaz o tipo.
+      calcularReserva({
+        valorTotal,
+        valorComissao: r.valorComissao ?? 0,
+        ravOperadora: r.ravOperadora ?? 0,
+        valorCliente,
+        taxaServico: r.taxaServico ?? 0,
+        viaOperadora: r.ravClienteModo === "via_operadora",
+      }).receitaPrevista ?? 0;
   }
   return {
     vendaTotal: arredondar2(vendaTotal),

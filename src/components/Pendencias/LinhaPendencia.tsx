@@ -59,6 +59,8 @@ export function LinhaPendencia({
       </div>
       {p.prioridade === "urgente" && aberta && <StatusBadge entidade="prioridade" valor="urgente" />}
       {p.atrasada && aberta && <StatusBadge entidade="pendencia" valor="atrasada" />}
+      {/* AC03: "Mostrar concluídas" só riscava o título — sem texto, não dá para confirmar o estado. */}
+      {p.status === "concluida" && <StatusBadge entidade="pendencia" valor="concluida" />}
       {podeEditar && aberta && (
         <div className={s.acoes}>
           <Button variant="secondary" size="sm" onClick={onConcluir}>

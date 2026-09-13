@@ -3,7 +3,7 @@ import { equipeApi } from "@/api/equipe";
 import { mensagemDeErro, ValidationError } from "@/api/errors";
 import { Button, Field, Input, Select } from "@/components";
 import { Alert } from "@/components/display";
-import { Modal } from "@/components/feedback";
+import { Modal, toast } from "@/components/feedback";
 import { OPCOES_PERFIL } from "./perfis";
 
 interface ConvidarModalProps {
@@ -47,6 +47,7 @@ export function ConvidarModal({ open, onClose, onConvidado }: ConvidarModalProps
     setEnviando(true);
     try {
       await equipeApi.convidarNovo({ nome: nome.trim(), email: email.trim(), perfil });
+      toast.success(`Convite enviado para ${email.trim()}`);
       onConvidado();
       fechar();
     } catch (erroConvite) {

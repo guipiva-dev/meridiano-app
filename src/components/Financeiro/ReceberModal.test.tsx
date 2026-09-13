@@ -111,3 +111,16 @@ test("422 recebimento_acima_esperado do servidor mostra o aviso com o excedente 
   expect(await screen.findByText("R$ 50,00 acima do esperado")).toBeInTheDocument();
   expect(screen.getByRole("checkbox", { name: "Registrar mesmo assim" })).toBeInTheDocument();
 });
+
+test("422 recebimento_acima_esperado sem confirmar mostra erro e foca a checkbox (F01)", async () => {
+  const user = userEvent.setup();
+  lancar.mockRejectedValue(
+    new ValidationError(422, "recebimento_acima_esperado", "Valor acima do esperado", { excedente: 50 }),
+  );
+  render(<ReceberModal open item={item} onClose={vi.fn()} onRecebido={vi.fn()} />);
+
+  await user.click(screen.getByRole("button", { name: "Confirmar recebimento" }));
+
+  expect(await screen.findByText("Marque 'Registrar mesmo assim' para confirmar")).toBeInTheDocument();
+  expect(screen.getByRole("checkbox", { name: "Registrar mesmo assim" })).toHaveFocus();
+});

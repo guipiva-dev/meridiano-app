@@ -46,3 +46,40 @@ test("mudar a validade propaga onChange", () => {
   fireEvent.change(screen.getByLabelText("Validade"), { target: { value: "2030-01-01" } });
   expect(onChange).toHaveBeenCalledWith({ ...credito("2030-01-01") });
 });
+
+function reembolso(valor: number | null): DesfechoValue {
+  return { desfecho: "reembolso", valorReembolso: valor, comissaoMantida: false, credito: null };
+}
+
+test("A22-front: reembolso acima da venda ao cliente mostra erro inline", () => {
+  render(
+    <DesfechoFields value={reembolso(600)} onChange={vi.fn()} erros={{}} passageiros={passageiros} valorVenda={500} />,
+  );
+  expect(screen.getByText("Não pode passar de R$ 500,00 (venda ao cliente)")).toBeInTheDocument();
+});
+
+test("A22-front: reembolso dentro da venda ao cliente não mostra erro", () => {
+  render(
+    <DesfechoFields value={reembolso(400)} onChange={vi.fn()} erros={{}} passageiros={passageiros} valorVenda={500} />,
+  );
+  expect(screen.queryByText(/venda ao cliente/)).toBeNull();
+});
+
+test("A22-front: crédito acima da venda ao cliente mostra erro inline", () => {
+  render(
+    <DesfechoFields value={credito(null)} onChange={vi.fn()} erros={{}} passageiros={passageiros} valorVenda={50} />,
+  );
+  expect(screen.getByText("Não pode passar de R$ 50,00 (venda ao cliente)")).toBeInTheDocument();
+});
+
+test("A22-front: erro do servidor valor_acima_da_venda aparece sob o campo", () => {
+  render(
+    <DesfechoFields
+      value={reembolso(100)}
+      onChange={vi.fn()}
+      erros={{ valorReembolso: "Não pode passar do valor da venda" }}
+      passageiros={passageiros}
+    />,
+  );
+  expect(screen.getByText("Não pode passar do valor da venda")).toBeInTheDocument();
+});

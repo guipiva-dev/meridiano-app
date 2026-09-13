@@ -4,6 +4,7 @@ import { viagensApi } from "@/api/viagens";
 import { Button, Field, useField } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
+import { formatarDinheiro } from "@/lib/dinheiro";
 import { DesfechoFields, type DesfechoValue } from "./DesfechoFields";
 import s from "./Operacoes.module.css";
 import { useOperacao } from "./useOperacao";
@@ -63,7 +64,8 @@ export function CancelarReservaModal({
   const [erroMotivoLocal, setErroMotivoLocal] = useState<string>();
   const { salvando, erros, erroBloco, conflito, enviar, limpar } = useOperacao<CancelarReservaRequest>(
     (req) => viagensApi.cancelarReserva(reserva.id, req),
-    MAPA,
+    // `valor_acima_da_venda` vale para reembolso e crédito: cai no campo do desfecho atual.
+    { ...MAPA, valor_acima_da_venda: desfecho.desfecho === "credito" ? "credito.valor" : "valorReembolso" },
   );
 
   function fechar() {
@@ -143,10 +145,22 @@ export function CancelarReservaModal({
         )}
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
         <p className={s.impacto}>Zera comissão prevista (salvo comissão mantida) e reavalia o repasse.</p>
+        {(reserva.recebidoOperadora ?? 0) > 0 && !desfecho.comissaoMantida && (
+          <Alert tone="warning">
+            Já entraram {formatarDinheiro(reserva.recebidoOperadora ?? 0)} desta reserva. Se a operadora vai cobrar de
+            volta, lance um &apos;Estorno da operadora&apos; depois do cancelamento.
+          </Alert>
+        )}
         <Field label="Motivo" required error={erroMotivoLocal ?? erros.motivo}>
           <Motivo value={motivo} onChange={setMotivo} />
         </Field>
-        <DesfechoFields value={desfecho} onChange={setDesfecho} erros={erros} passageiros={viagem.passageiros} />
+        <DesfechoFields
+          value={desfecho}
+          onChange={setDesfecho}
+          erros={erros}
+          passageiros={viagem.passageiros}
+          valorVenda={reserva.valorCliente}
+        />
       </div>
     </Modal>
   );

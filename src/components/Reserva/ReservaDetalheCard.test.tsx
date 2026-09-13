@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { chavesAuditoria } from "@/api/auditoria";
@@ -155,6 +155,16 @@ test("histórico não afirma 'sem alterações' antes de a query resolver", asyn
   montar();
   expect(screen.queryByText("Sem alterações registradas.")).toBeNull();
   expect(await screen.findByText("Sem alterações registradas.")).toBeInTheDocument();
+});
+
+test("NFSe emitida mostra número e data de emissão; sem data mostra só o número", () => {
+  montar({ reserva: reservaDto({ nfseStatus: "emitido", nfseNumero: "4521", nfseDataEmissao: "2026-03-15" }) });
+  expect(screen.getByText("4521")).toBeInTheDocument();
+  expect(screen.getByText("emitida em 15/03/2026")).toBeInTheDocument();
+  cleanup();
+  montar({ reserva: reservaDto({ nfseStatus: "emitido", nfseNumero: "4521", nfseDataEmissao: null }) });
+  expect(screen.getByText("4521")).toBeInTheDocument();
+  expect(screen.queryByText(/emitida em/)).toBeNull();
 });
 
 test("cancelada mostra o bloco Cancelamento e esconde as ações", () => {

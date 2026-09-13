@@ -1,7 +1,7 @@
 import type { EventoAuditoriaDto } from "@/api/auditoria";
 import { Modal } from "@/components/feedback";
 import s from "./Auditoria.module.css";
-import { valorDoCampo } from "./valorDoCampo";
+import { rotuloCampo, valorDoCampo } from "./valorDoCampo";
 
 export function DetalhesEventoModal({ evento, onClose }: { evento: EventoAuditoriaDto; onClose: () => void }) {
   const campos = Object.entries(evento.alteracoes);
@@ -18,7 +18,7 @@ export function DetalhesEventoModal({ evento, onClose }: { evento: EventoAuditor
         <tbody>
           {campos.map(([campo, alteracao]) => (
             <tr key={campo}>
-              <th scope="row">{campo}</th>
+              <th scope="row">{rotuloCampo(campo)}</th>
               <td>{valorDoCampo(campo, alteracao.de)}</td>
               <td>{valorDoCampo(campo, alteracao.para)}</td>
             </tr>

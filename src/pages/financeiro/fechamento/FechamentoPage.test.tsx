@@ -228,9 +228,18 @@ test("erro ao carregar as pendentes mostra alerta com tentar de novo, sem abrir 
   montar();
   await screen.findByText("Março");
   fireEvent.click(screen.getByRole("button", { name: "Fechar Março…" }));
-  expect(await screen.findByText("Erro inesperado")).toBeInTheDocument();
+  expect(
+    await screen.findByText("O servidor não respondeu (erro 500). Tente de novo em instantes."),
+  ).toBeInTheDocument();
   expect(screen.queryByRole("dialog")).toBeNull();
   expect(screen.getByRole("button", { name: "Tentar de novo" })).toBeInTheDocument();
+});
+
+test("rótulo da receita recebida é 'entradas de caixa', não 'recebida' (M01)", async () => {
+  montar();
+  await screen.findByText("Março");
+  expect(within(linha("Março")).getByText("R$ 9.150,00 entradas de caixa")).toBeInTheDocument();
+  expect(screen.queryByText(/R\$ [\d.,]+ recebida\b/)).toBeNull();
 });
 
 test("trocar o ano refaz a busca de períodos", async () => {

@@ -226,6 +226,25 @@ test("edição mostra '{titular} · {destino}' como título e 'Vendedor:' sem '(
   expect(screen.queryByText(/Vendedor\(a\)/)).toBeNull();
 });
 
+test("A05: banner de viagem semelhante nunca aparece na edição, mesmo com semelhante encontrada", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
+    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, VENDEDORES));
+    if (url.includes("/agencia")) return Promise.resolve(resposta(200, AGENCIA));
+    if (url.includes("/viagens/semelhantes")) {
+      return Promise.resolve(
+        resposta(200, [{ id: "vOutra", codigo: "VG-2026-0001", destino: "Lisboa", faseOperacional: "em_emissao" }]),
+      );
+    }
+    if (/\/viagens\/[^/?]+$/.test(url)) return Promise.resolve(resposta(200, viagemEdicao()));
+    return Promise.resolve(resposta(200, null));
+  });
+  montar("/viagens/v9/editar");
+  await screen.findByRole("heading", { name: /Lisboa/ });
+  await new Promise((r) => setTimeout(r, 450));
+  expect(screen.queryByText(/Encontramos uma viagem semelhante/)).toBeNull();
+});
+
 test("rótulo 'Comissão do vendedor' no resumo", async () => {
   montar();
   await screen.findByRole("heading", { name: /Nova viagem/ });

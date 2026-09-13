@@ -22,6 +22,9 @@ export interface JanelaDto {
 export interface VersaoRegraDto {
   vigenteDesde: string;
   janelas: JanelaDto[];
+  /** B6: `regras` vem ordenado `vigenteDesde desc`; exatamente um item com `vigente: true`
+   * (nenhum se todos forem futuros). */
+  vigente: boolean;
 }
 
 export interface FornecedorRequest {

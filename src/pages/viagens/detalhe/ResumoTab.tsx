@@ -34,6 +34,8 @@ function faixaDaViagem(
       itens: [
         { label: "Venda total", value: r.vendaTotal },
         { label: "Custo dos fornecedores", value: r.custoFornecedores },
+        // U06: sem esta linha o usuário faz "Venda − Custo" e lê errado (esse resultado é bruto, não a receita da agência).
+        { label: "Receita prevista", value: r.receitaPrevista },
         {
           label: "Comissão do vendedor",
           value: r.repasseValor,
@@ -68,6 +70,9 @@ interface ResumoTabProps {
 
 export function ResumoTab({ viagem, verValores, pendencias, onAbrirReserva, onVerPendencias }: ResumoTabProps) {
   const faixa = faixaDaViagem(viagem, verValores);
+  // P02: vendedor externo recebe `repasse` mas não `resumo` nem `verValores` — sem faixa (nenhuma
+  // das duas condições de `faixaDaViagem`), mas ainda mostra o próprio repasse.
+  const meuRepasse = !faixa ? viagem.repasse : null;
   const reservasAtivas = viagem.reservas.filter((r) => r.status !== "cancelada").length;
   const reservasTotal = viagem.reservas.length;
   const metaReservas =
@@ -82,6 +87,15 @@ export function ResumoTab({ viagem, verValores, pendencias, onAbrirReserva, onVe
   return (
     <div className={s.resumo}>
       {faixa && <FaixaResumo itens={faixa.itens} extra={faixa.extra} />}
+
+      {meuRepasse && (
+        <Bloco titulo="Seu repasse">
+          <div className={s.linha}>
+            <MoneyValue value={meuRepasse.valor} className={s.linhaValor} />
+            <StatusBadge entidade="repasse" valor={meuRepasse.status} />
+          </div>
+        </Bloco>
+      )}
 
       <div className={s.split}>
         <Bloco titulo="Reservas" meta={metaReservas}>

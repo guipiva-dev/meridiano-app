@@ -2,6 +2,7 @@ import type { ChangeEvent } from "react";
 import type { Desfecho, PassageiroDto } from "@/api/viagens";
 import { Checkbox, DateInput, Field, MoneyInput, Select } from "@/components";
 import { hojeIso } from "@/lib/datas";
+import { formatarDinheiro } from "@/lib/dinheiro";
 
 export interface CreditoValor {
   valor: number | null;
@@ -21,6 +22,8 @@ interface DesfechoFieldsProps {
   onChange: (v: DesfechoValue) => void;
   erros: Record<string, string>;
   passageiros: PassageiroDto[];
+  /** A22: venda ao cliente da reserva — crédito/reembolso não pode passar disso. */
+  valorVenda?: number;
 }
 
 const OPCOES_DESFECHO = [
@@ -29,7 +32,12 @@ const OPCOES_DESFECHO = [
   { value: "credito", label: "Crédito" },
 ];
 
-export function DesfechoFields({ value, onChange, erros, passageiros }: DesfechoFieldsProps) {
+export function DesfechoFields({ value, onChange, erros, passageiros, valorVenda }: DesfechoFieldsProps) {
+  function excedeVenda(valor: number | null): string | undefined {
+    if (valorVenda === undefined || valor === null || valor <= valorVenda) return undefined;
+    return `Não pode passar de ${formatarDinheiro(valorVenda)} (venda ao cliente)`;
+  }
+
   function mudarDesfecho(desfecho: Desfecho) {
     if (desfecho === "credito") {
       const titular = passageiros.find((p) => p.titular);
@@ -63,7 +71,7 @@ export function DesfechoFields({ value, onChange, erros, passageiros }: Desfecho
         />
       </Field>
       {value.desfecho === "reembolso" && (
-        <Field label="Valor do reembolso" error={erros.valorReembolso}>
+        <Field label="Valor do reembolso" error={erros.valorReembolso ?? excedeVenda(value.valorReembolso)}>
           <MoneyInput
             value={value.valorReembolso}
             onChange={(v) => {
@@ -80,7 +88,7 @@ export function DesfechoFields({ value, onChange, erros, passageiros }: Desfecho
           const validadePassada = credito.validade !== null && credito.validade < hoje;
           return (
             <>
-              <Field label="Valor do crédito" error={erros["credito.valor"]}>
+              <Field label="Valor do crédito" error={erros["credito.valor"] ?? excedeVenda(credito.valor)}>
                 <MoneyInput
                   value={credito.valor}
                   onChange={(v) => {

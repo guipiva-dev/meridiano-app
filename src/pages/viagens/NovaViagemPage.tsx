@@ -110,7 +110,8 @@ export function NovaViagemPage() {
       )}
       {v.erroBloco !== null && <Alert tone="danger">{v.erroBloco}</Alert>}
 
-      {semelhante && titular && (
+      {/* A05: banner de viagem semelhante só faz sentido ao criar; na edição a viagem já existe. */}
+      {!id && semelhante && titular && (
         <AvisoViagemSemelhante
           item={semelhante}
           titularNome={titular.nome}

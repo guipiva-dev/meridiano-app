@@ -1,4 +1,4 @@
-import { ConflictError, ValidationError } from "@/api/errors";
+import { ApiError, ConflictError, NetworkError, ValidationError } from "@/api/errors";
 import { errosDeCadastro } from "./mapaErrosCadastro";
 
 test("422 fornecedor_duplicado (caminho normal: RegraDeNegocioException) mapeia para o campo nome", () => {
@@ -89,4 +89,18 @@ test("422 texto_longo usa extensions.campo (código genérico, qualquer campo)",
 test("422 texto_longo sem extensions.campo cai no erro de bloco", () => {
   const erro = new ValidationError(422, "texto_longo", "Campo muito longo");
   expect(errosDeCadastro(erro)).toEqual({ campos: {}, bloco: "Campo muito longo", conflito: false });
+});
+
+test("502 cai no erro de bloco com a mensagem de servidor (F01: nunca fica em silêncio)", () => {
+  const erro = new ApiError(502, "erro", "Erro inesperado");
+  expect(errosDeCadastro(erro)).toEqual({
+    campos: {},
+    bloco: "O servidor não respondeu (erro 502). Tente de novo em instantes.",
+    conflito: false,
+  });
+});
+
+test("erro de rede cai no erro de bloco (F01: nunca fica em silêncio)", () => {
+  const erro = new NetworkError();
+  expect(errosDeCadastro(erro)).toEqual({ campos: {}, bloco: "Sem conexão com o servidor.", conflito: false });
 });

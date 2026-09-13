@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { ConflictError, ValidationError } from "@/api/errors";
+import { ApiError, ConflictError, NetworkError, ValidationError } from "@/api/errors";
 import { CAMPO_POR_CODIGO_FIN } from "./mapaErrosFinanceiro";
 import { useMutacaoFinanceira } from "./useMutacaoFinanceira";
 
@@ -68,6 +68,7 @@ test("422 recebimento_acima_esperado expõe o excedente sem virar erro de bloco"
   expect(result.current.excedente).toBe(110);
   expect(result.current.erroBloco).toBeNull();
   expect(result.current.erros).toEqual({});
+  expect(result.current.precisaConfirmarExcedente).toBe(true);
 });
 
 test("409 vira conflito e limpar reseta tudo", async () => {
@@ -86,6 +87,7 @@ test("409 vira conflito e limpar reseta tudo", async () => {
   expect(result.current.conflito).toBe(false);
   expect(result.current.motivo).toBe("");
   expect(result.current.excedente).toBeNull();
+  expect(result.current.precisaConfirmarExcedente).toBe(false);
 });
 
 test("422 recebimento_acima_esperado sem excedente numérico vira erro de bloco, nunca silêncio", async () => {
@@ -116,4 +118,26 @@ test("422 texto_longo com extensions.campo vira erro inline no campo, não bloco
 
   expect(result.current.erros).toEqual({ observacao: "observacao deve ter no máximo 2000 caracteres" });
   expect(result.current.erroBloco).toBeNull();
+});
+
+test("502 vira erro de bloco com a mensagem de servidor (F01: nunca fica em silêncio)", async () => {
+  const executar = vi.fn().mockRejectedValue(new ApiError(502, "erro", "Erro inesperado"));
+  const { result } = renderHook(() => useMutacaoFinanceira(executar, CAMPO_POR_CODIGO_FIN));
+
+  await act(async () => {
+    await result.current.enviar({});
+  });
+
+  expect(result.current.erroBloco).toBe("O servidor não respondeu (erro 502). Tente de novo em instantes.");
+});
+
+test("erro de rede vira erro de bloco (F01: nunca fica em silêncio)", async () => {
+  const executar = vi.fn().mockRejectedValue(new NetworkError());
+  const { result } = renderHook(() => useMutacaoFinanceira(executar, CAMPO_POR_CODIGO_FIN));
+
+  await act(async () => {
+    await result.current.enviar({});
+  });
+
+  expect(result.current.erroBloco).toBe("Sem conexão com o servidor.");
 });

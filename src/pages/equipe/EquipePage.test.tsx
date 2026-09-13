@@ -204,6 +204,48 @@ test("convite expirado (sem_acesso + conviteExpiraEm no passado) mostra o rótul
   expect(screen.queryByRole("button", { name: "Convidar" })).toBeNull();
 });
 
+test("Editar aparece em todas as linhas, inclusive sem acesso e convite pendente", async () => {
+  montar();
+  await screen.findByText("Guilherme Piva");
+  expect(screen.getAllByRole("button", { name: "Editar" })).toHaveLength(EQUIPE.itens.length);
+});
+
+test("convite pendente ganha Cancelar convite; confirma, chama DELETE e mostra toast", async () => {
+  montar();
+  await screen.findByText("Bruno Sales");
+
+  const linhaBruno = screen.getByText("Bruno Sales").closest("tr");
+  if (!linhaBruno) throw new Error("linha do Bruno não encontrada");
+  fireEvent.click(within(linhaBruno).getByRole("button", { name: "Cancelar convite" }));
+
+  const dialogo = await screen.findByRole("dialog");
+  fireEvent.click(within(dialogo).getByRole("button", { name: "Cancelar convite" }));
+
+  await waitFor(() => {
+    expect(chamadas.some((c) => c.url === "/api/v1/usuarios/u-bruno/convite" && c.method === "DELETE")).toBe(true);
+  });
+  expect(await screen.findByText("Convite cancelado")).toBeInTheDocument();
+});
+
+test("422 ja_tem_acesso ao cancelar convite mostra o erro num toast", async () => {
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    if (url.endsWith("/convite") && init?.method === "DELETE") {
+      return Promise.resolve(resposta(422, { codigo: "ja_tem_acesso", detail: "Este colaborador já tem acesso" }));
+    }
+    return Promise.resolve(resposta(200, EQUIPE));
+  });
+  montar();
+  await screen.findByText("Bruno Sales");
+
+  const linhaBruno = screen.getByText("Bruno Sales").closest("tr");
+  if (!linhaBruno) throw new Error("linha do Bruno não encontrada");
+  fireEvent.click(within(linhaBruno).getByRole("button", { name: "Cancelar convite" }));
+  const dialogo = await screen.findByRole("dialog");
+  fireEvent.click(within(dialogo).getByRole("button", { name: "Cancelar convite" }));
+
+  expect(await screen.findByText("Este colaborador já tem acesso")).toBeInTheDocument();
+});
+
 test("422 ao convidar mostra o erro num toast", async () => {
   vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
     if (url.endsWith("/convite") && init?.method === "POST") {

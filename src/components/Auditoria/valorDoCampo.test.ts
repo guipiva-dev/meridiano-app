@@ -1,4 +1,4 @@
-import { rotuloDominio, valorDoCampo } from "./valorDoCampo";
+import { rotuloCampo, rotuloDominio, valorDoCampo } from "./valorDoCampo";
 
 test("campo `valor` (sem prefixo) e negativos saem como dinheiro", () => {
   expect(valorDoCampo("valor", -1550)).toBe("−R$ 1.550,00");
@@ -20,4 +20,15 @@ test("data ISO vira dd/mm/aaaa", () => {
 test("rotuloDominio traduz subtítulo cru e devolve o resto como está", () => {
   expect(rotuloDominio("recebimento_operadora")).toBe("Recebimento da operadora");
   expect(rotuloDominio("CVC Operadora · K7X2PQ")).toBe("CVC Operadora · K7X2PQ");
+});
+
+// F07: "Ver detalhes" expunha nomes técnicos de coluna (divergencia_motivo, conciliacao_encerrada).
+test("rotuloCampo traduz campos conhecidos", () => {
+  expect(rotuloCampo("divergencia_motivo")).toBe("Motivo da divergência");
+  expect(rotuloCampo("conciliacao_encerrada")).toBe("Conciliação encerrada");
+  expect(rotuloCampo("valor_total")).toBe("Total da reserva");
+});
+
+test("rotuloCampo desconhecido vira snake_case com espaço e primeira letra maiúscula", () => {
+  expect(rotuloCampo("campo_qualquer_novo")).toBe("Campo qualquer novo");
 });

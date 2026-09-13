@@ -144,6 +144,9 @@ export function ReservaDetalheCard({
             <Leitura rotulo="NFSe">
               <StatusBadge entidade="nfse" valor={reserva.nfseStatus} />
               {reserva.nfseNumero && <span className={s.mono}>{reserva.nfseNumero}</span>}
+              {reserva.nfseStatus === "emitido" && reserva.nfseDataEmissao && (
+                <span>emitida em {formatarData(reserva.nfseDataEmissao)}</span>
+              )}
             </Leitura>
             <Leitura rotulo="Formas de pagamento">{formas || "—"}</Leitura>
             <Leitura rotulo="Fluxo">{ROTULO_FLUXO[reserva.fluxoPagamento]}</Leitura>

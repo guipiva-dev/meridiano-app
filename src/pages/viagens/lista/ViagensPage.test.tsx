@@ -123,8 +123,54 @@ test("perfil financeiro (sem viagem.criar) não mostra 'Nova viagem' na sub-nav 
   expect(screen.queryByRole("button", { name: /Nova viagem/ })).toBeNull();
 });
 
+// M4: vendedor externo não tem fornecedor.ver — a lista carregava mesmo assim e /fornecedores voltava 403.
+test("sem fornecedor.ver não chama /fornecedores e a lista renderiza", async () => {
+  const urls: string[] = [];
+  vi.stubGlobal("fetch", (url: string) => {
+    urls.push(url);
+    if (url.includes("/viagens?")) return Promise.resolve(resposta(200, LISTA));
+    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, []));
+    return Promise.resolve(resposta(403, null));
+  });
+  montar("/viagens", { ...auth, pode: (p) => p !== "fornecedor.ver" });
+  expect(await screen.findByText("Carlos Mendes")).toBeInTheDocument();
+  expect(urls.some((u) => u.includes("/fornecedores"))).toBe(false);
+});
+
 test("sem vendaTotal no payload não mostra a coluna Venda", async () => {
   montar();
   await screen.findByText("Carlos Mendes");
   expect(screen.queryByRole("columnheader", { name: "Venda" })).toBeNull();
+});
+
+test("1ª coluna trunca (A01): classe + title com o texto completo, código nunca cortado", async () => {
+  montar();
+  const titular = await screen.findByText("Carlos Mendes");
+  expect(titular).toHaveClass("primary");
+  expect(titular).toHaveAttribute("title", "Carlos Mendes");
+
+  // Ordem congelada do protótipo: destino · tipo · código. Quem trunca (ellipsis + title) é só o
+  // span do destino/tipo; o <code> fica com flex:none, sempre por último, nunca cortado.
+  const destino = screen.getByText("Lisboa · Internacional");
+  expect(destino).toHaveClass("secondaryDestino");
+  expect(destino).toHaveAttribute("title", "Lisboa · Internacional");
+
+  const linhaSecundaria = destino.parentElement;
+  expect(linhaSecundaria).toHaveClass("secondary");
+  expect(linhaSecundaria?.lastElementChild?.tagName).toBe("CODE");
+  expect(linhaSecundaria?.lastElementChild).toHaveTextContent("VG-2026-0001");
+});
+
+test("contador no singular (U11): '1 viagem', não '1 viagens'", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    if (url.includes("/viagens?"))
+      return Promise.resolve(
+        resposta(200, { ...LISTA, itens: [LISTA.itens[0]], total: 1, contadores: { ...LISTA.contadores, todas: 1 } }),
+      );
+    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, []));
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, []));
+    return Promise.resolve(resposta(200, null));
+  });
+  montar();
+  expect(await screen.findByText("1 viagem · 1 em emissão · 0 com comissão atrasada")).toBeInTheDocument();
 });

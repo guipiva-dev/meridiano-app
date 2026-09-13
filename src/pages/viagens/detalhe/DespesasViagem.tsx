@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { DespesaDto } from "@/api/despesas";
 import { chavesDespesas, despesasApi } from "@/api/despesas";
 import { chaves, type ViagemDto, viagensApi } from "@/api/viagens";
+import { useAuth } from "@/auth/useAuth";
 import { Button, MoneyValue, StatusCell } from "@/components";
 import { DespesaModal, ExcluirDespesaModal, PagarDespesaModal } from "@/components/financeiro";
 import { apresentacaoStatus } from "@/dominio/status";
@@ -31,7 +32,13 @@ export function DespesasViagem({ viagem, podeMovimentar, onMudou }: DespesasViag
     queryKey: chavesDespesas.daViagem(viagem.id),
     queryFn: () => despesasApi.listar({ viagemId: viagem.id }),
   });
-  const fornecedoresQ = useQuery({ queryKey: chaves.fornecedores, queryFn: viagensApi.fornecedores });
+  const { pode } = useAuth();
+  // M4: mesmo gate da lista — sem fornecedor.ver, /fornecedores volta 403.
+  const fornecedoresQ = useQuery({
+    queryKey: chaves.fornecedores,
+    queryFn: viagensApi.fornecedores,
+    enabled: pode("fornecedor.ver"),
+  });
   const itens = q.data?.itens ?? [];
   const viagemFixa = { id: viagem.id, rotulo: viagem.codigo };
 

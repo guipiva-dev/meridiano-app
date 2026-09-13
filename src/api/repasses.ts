@@ -1,6 +1,6 @@
 import { api } from "./http";
 
-export type StatusRepasse = "bloqueado" | "a_pagar" | "pago";
+export type StatusRepasse = "bloqueado" | "a_pagar" | "pago" | "cancelado";
 
 export interface RepasseItemDto {
   id: string;

@@ -4,6 +4,7 @@ import { viagensApi } from "@/api/viagens";
 import { Button, DateInput, Field, MoneyInput, useField } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
+import { calcularReserva } from "@/dominio/calculoReserva";
 import { hojeIso } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
 import s from "./Operacoes.module.css";
@@ -22,7 +23,10 @@ const MAPA: Record<string, string> = {
   descricao_obrigatoria: "descricao",
   valor_negativo: "valorNovo",
   datas_incoerentes: "novaDataVolta",
+  // A12: back confirma o mesmo cálculo checado localmente antes de enviar.
+  esperado_negativo: "novoValorCliente",
 };
+const MSG_ESPERADO_NEGATIVO = "Com RAV via operadora a venda não pode ficar abaixo do custo";
 
 function Descricao({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const f = useField();
@@ -76,6 +80,7 @@ export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada, onR
       return;
     }
     setErroDescricaoLocal(undefined);
+    if (esperadoNegativo) return;
     const req: RemarcarRequest = {
       dataAlteracao,
       descricao: descricao.trim(),
@@ -97,6 +102,18 @@ export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada, onR
   const helperValor = reserva.valorTotal !== undefined ? `Atual: ${formatarDinheiro(reserva.valorTotal)}` : undefined;
   // Remarcar muda o custo sem tocar a venda: avisa antes de o RAV do cliente ficar negativo.
   const vendaAbaixoDoCusto = valorNovo !== null && novaVenda !== null && valorNovo > novaVenda;
+  // A12: mesma checagem de "esperado da operadora < 0" da tela de reserva, com o novo valor/nova venda.
+  const esperadoNegativo =
+    reserva.valorCliente !== undefined &&
+    reserva.ravClienteModo === "via_operadora" &&
+    (calcularReserva({
+      valorTotal: valorNovo ?? reserva.valorTotal ?? 0,
+      valorComissao: reserva.valorComissao ?? 0,
+      ravOperadora: reserva.ravOperadora ?? 0,
+      valorCliente: novaVenda ?? reserva.valorCliente,
+      taxaServico: 0,
+      viaOperadora: true,
+    }).valorEsperadoOperadora ?? 0) < 0;
 
   return (
     <Modal
@@ -154,7 +171,7 @@ export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada, onR
           <Field
             label="Nova venda ao cliente"
             helper="Deixe como está para manter a venda atual"
-            error={erros.novoValorCliente}
+            error={erros.novoValorCliente ?? (esperadoNegativo ? MSG_ESPERADO_NEGATIVO : undefined)}
           >
             <MoneyInput value={novaVenda} onChange={setNovaVenda} />
           </Field>

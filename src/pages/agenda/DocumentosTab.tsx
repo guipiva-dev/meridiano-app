@@ -39,10 +39,10 @@ const COLUNAS: Coluna<DocumentoVencendoDto>[] = [
   },
   {
     id: "pendencia",
-    titulo: "Pendência",
+    titulo: "Alerta",
     render: (d) => (
       <Badge tone={d.situacao === "na_agenda" ? "info" : "neutral"}>
-        {d.situacao === "na_agenda" ? "na agenda" : "só no cadastro"}
+        {d.situacao === "na_agenda" ? "na agenda" : "sem pendência criada"}
       </Badge>
     ),
   },

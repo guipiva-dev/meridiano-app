@@ -120,6 +120,25 @@ test("mostra os itens do protótipo com a comissão recebida e o badge de valor 
   expect(screen.getByText("informar valor")).toBeInTheDocument();
 });
 
+test("bloqueado com aguardando 0 mostra 'aguardando comissões da viagem' (A35)", () => {
+  const vendedor: VendedorRepassesDto = {
+    ...VENDEDOR,
+    itens: [item({ id: "rp5", status: "bloqueado", valor: null, aguardando: 0 })],
+  };
+  render(
+    <VendedorCard
+      vendedor={vendedor}
+      ano={2026}
+      historico={false}
+      podePagar
+      onPagar={vi.fn()}
+      onValorSalvo={vi.fn()}
+    />,
+  );
+  expect(screen.getByText(/aguardando comissões da viagem/)).toBeInTheDocument();
+  expect(screen.queryByText(/aguardando 0 comiss/)).toBeNull();
+});
+
 test("digitar valor e Enter chama definirValor com a versão do item", async () => {
   definirValor.mockResolvedValue(item({ id: "rp4", versao: "3", valor: 300 }));
   const onValorSalvo = vi.fn();

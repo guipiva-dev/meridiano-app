@@ -1,12 +1,35 @@
+.celulaViagem {
+  width: 100%;
+  max-width: 0;
+}
 .primary {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font: var(--type-component);
   color: var(--color-text-heading);
 }
 .secondary {
+  display: flex;
+  align-items: baseline;
+  max-width: 100%;
   font: var(--type-helper);
   color: var(--color-text-secondary);
 }
+.secondaryDestino {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.separator {
+  flex: none;
+  white-space: pre;
+}
 .secondary code {
+  flex: none;
   font: var(--type-code);
 }
 

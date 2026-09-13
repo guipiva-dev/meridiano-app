@@ -4,7 +4,6 @@ import { type FornecedorDto, ROTULO_SERVICO } from "@/api/viagens";
 import { Button, MoneyValue } from "@/components";
 import { Alert, StatusBadge } from "@/components/display";
 import { calcularReserva } from "@/dominio/calculoReserva";
-import { formatarDinheiro } from "@/lib/dinheiro";
 import { BookingFields } from "./BookingFields";
 import { FinancialFields } from "./FinancialFields";
 import s from "./Reserva.module.css";
@@ -55,7 +54,9 @@ export function ReservationCard({
         {servicos && <span className={s.servicos}>{servicos}</span>}
         <span className={s.total}>
           <MoneyValue value={value.valorCliente} />
-          <small className={s.receitaSmall}>receita {formatarDinheiro(resultado.receitaPrevista)}</small>
+          <small className={s.receitaSmall}>
+            receita <MoneyValue value={resultado.receitaPrevista} />
+          </small>
         </span>
         <Button variant="tertiary" size="sm" aria-expanded={value.aberta} onClick={onToggle}>
           {value.aberta ? "Recolher" : "Expandir"}

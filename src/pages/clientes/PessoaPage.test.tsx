@@ -278,6 +278,7 @@ test("/clientes/nova não tem abas e salvar cria e navega para a pessoa", async 
 });
 
 test("Excluir cliente confirma, chama DELETE e volta para a lista", async () => {
+  cliente = { ...LUCIA, resumo: { ...LUCIA.resumo, viagens: 0 } };
   montar();
   await screen.findByDisplayValue("São Paulo");
 
@@ -294,6 +295,7 @@ test("Excluir cliente confirma, chama DELETE e volta para a lista", async () => 
 });
 
 test("Excluir cliente com vínculos mostra a mensagem do back e fecha o diálogo", async () => {
+  cliente = { ...LUCIA, resumo: { ...LUCIA.resumo, viagens: 0 } };
   montar();
   await screen.findByDisplayValue("São Paulo");
 
@@ -343,4 +345,53 @@ test("sem cliente.ver_documento o campo CPF não é renderizado", async () => {
 
   await screen.findByDisplayValue("São Paulo");
   expect(screen.queryByLabelText("CPF")).not.toBeInTheDocument();
+});
+
+// A21: a permissão manda, não a presença da chave `cpf` no DTO (B2 passa a mandar `cpf: null`).
+test("sem cliente.ver_documento o campo CPF não aparece mesmo com cpf: null no DTO", async () => {
+  cliente = { ...LUCIA, cpf: null };
+  montar("/clientes/p1", ["cliente.ver", "cliente.editar"]);
+
+  await screen.findByDisplayValue("São Paulo");
+  expect(screen.queryByLabelText("CPF")).not.toBeInTheDocument();
+});
+
+test("com cliente.ver_documento o campo CPF aparece mesmo sem a chave cpf no DTO", async () => {
+  const semCpf: Record<string, unknown> = { ...LUCIA };
+  delete semCpf.cpf;
+  cliente = semCpf;
+  montar("/clientes/p1", TODAS);
+
+  await screen.findByDisplayValue("São Paulo");
+  expect(screen.getByLabelText("CPF")).toBeInTheDocument();
+});
+
+// A29: cliente com viagens não pode ser excluído.
+test("Excluir cliente fica desabilitado com tooltip quando a pessoa tem viagens", async () => {
+  montar();
+  await screen.findByDisplayValue("São Paulo");
+
+  const botao = screen.getByRole("button", { name: "Excluir cliente" });
+  expect(botao).toBeDisabled();
+  expect(botao).toHaveAttribute("title", "Tem viagem ou crédito; não pode ser excluída");
+
+  fireEvent.click(botao);
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+// A30: 422 nao_encontrado tem mensagem própria e link para a lista, sem "Tentar de novo".
+test("pessoa não encontrada ou excluída mostra mensagem específica com link para a lista", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    if (url === "/api/v1/clientes/p1") {
+      return Promise.resolve(resposta(422, { codigo: "nao_encontrado", detail: "Pessoa não encontrada" }));
+    }
+    return Promise.resolve(resposta(200, []));
+  });
+  montar();
+
+  expect(await screen.findByText("Pessoa não encontrada ou excluída.")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Tentar de novo" })).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "Ver lista" }));
+  expect(await screen.findByText("Lista")).toBeInTheDocument();
 });

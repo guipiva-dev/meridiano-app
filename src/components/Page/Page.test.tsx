@@ -26,6 +26,29 @@ function montar() {
   return router;
 }
 
+function montarPagina(titulo?: string) {
+  const router = createMemoryRouter([{ path: "/a", element: <Page titulo={titulo}>conteúdo</Page> }], {
+    initialEntries: ["/a"],
+  });
+  const view = render(<RouterProvider router={router} />);
+  return view.unmount;
+}
+
+// F06: aba do navegador sempre dizia "Meridiano", sem contexto de qual página/registro estava aberto.
+test("titulo define o título da aba e desmontar volta ao nome do app", () => {
+  const desmontar = montarPagina("Viagem VG-2026-0042");
+  expect(document.title).toBe("Viagem VG-2026-0042 · Meridiano");
+  desmontar();
+  expect(document.title).toBe("Meridiano");
+});
+
+// I3: sem titulo, Page não mexe no título — o PageHeader filho é quem define (senão o pai sobrescrevia).
+test("sem titulo não sobrescreve o título definido por outro componente", () => {
+  document.title = "Relatórios · Meridiano";
+  montarPagina();
+  expect(document.title).toBe("Relatórios · Meridiano");
+});
+
 test("navegar com dirty abre o modal; continuar editando fecha sem navegar", async () => {
   const user = userEvent.setup();
   const router = montar();

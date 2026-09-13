@@ -6,10 +6,12 @@ import { apresentacaoStatus } from "@/dominio/status";
 import type { FiltrosViagensPatch, IdaPreset } from "./useFiltrosViagens";
 import s from "./ViagensPage.module.css";
 
+// U04: prefixo "Ida: " sempre visível (antes só o preset de 90 dias tinha; os outros dois
+// apareciam sem contexto no select fechado).
 const IDA_OPCOES = [
   { value: "90d", label: "Ida: próximos 90 dias" },
-  { value: "mes", label: "Este mês" },
-  { value: "qualquer", label: "Qualquer" },
+  { value: "mes", label: "Ida: este mês" },
+  { value: "qualquer", label: "Ida: qualquer" },
 ];
 const TIPO_OPCOES: { value: Tipo; label: string }[] = [
   { value: "nacional", label: "Nacional" },

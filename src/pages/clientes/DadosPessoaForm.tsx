@@ -14,7 +14,7 @@ interface DadosPessoaFormProps {
   form: UseFormReturn<FormPessoa>;
   grupos: ListaGrupoDto[];
   erros: Record<string, string>;
-  /** Sem `cliente.ver_documento` o DTO não traz `cpf`; o campo nem é renderizado. */
+  /** Vem só da permissão `cliente.ver_documento` (`/auth/me`) — independe de o DTO trazer `cpf`. */
   verDocumento: boolean;
   onNovoGrupo: () => void;
 }

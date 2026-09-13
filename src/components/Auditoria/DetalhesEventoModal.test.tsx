@@ -34,6 +34,18 @@ test("null vira travessão", () => {
   expect(screen.getByText("—")).toBeInTheDocument();
 });
 
+// F07: coluna "Campo" mostrava a chave técnica crua (divergencia_motivo) em vez de um rótulo legível.
+test("coluna Campo mostra o rótulo humano, não a chave técnica", () => {
+  render(
+    <DetalhesEventoModal
+      evento={evento({ divergencia_motivo: { de: null, para: "cliente pagou a menos" } })}
+      onClose={vi.fn()}
+    />,
+  );
+  expect(screen.getByText("Motivo da divergência")).toBeInTheDocument();
+  expect(screen.queryByText("divergencia_motivo")).not.toBeInTheDocument();
+});
+
 test("data ISO formatada", () => {
   render(
     <DetalhesEventoModal evento={evento({ validade: { de: "2026-04-01", para: "2026-05-01" } })} onClose={vi.fn()} />,

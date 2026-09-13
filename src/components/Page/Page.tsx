@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components";
 import { Modal } from "@/components/feedback";
 import { useBloqueioSaida } from "@/lib/useBloqueioSaida";
@@ -17,6 +17,16 @@ export function Page({
 }) {
   const saida = useBloqueioSaida(dirty);
   const [salvando, setSalvando] = useState(false);
+
+  // F06: aba do navegador sempre dizia "Meridiano" — sem contexto de qual página/registro estava aberto.
+  // I3: só escreve quando há `titulo` — o efeito do pai roda depois do filho e sobrescreveria o PageHeader.
+  useEffect(() => {
+    if (!titulo) return;
+    document.title = `${titulo} · Meridiano`;
+    return () => {
+      document.title = "Meridiano";
+    };
+  }, [titulo]);
 
   async function salvarESair() {
     if (!onSalvarESair) return;

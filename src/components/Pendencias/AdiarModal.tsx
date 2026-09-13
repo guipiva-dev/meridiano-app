@@ -77,7 +77,7 @@ export function AdiarModal({ open, pendencia, onClose, onAdiada }: AdiarModalPro
           label="Nova data"
           required
           error={erroData}
-          helper={`Hoje prevista para ${formatarData(pendencia.dataPrevista)}.`}
+          helper={`Prevista para ${formatarData(pendencia.dataPrevista)}.`}
         >
           <DateInput
             value={novaData}

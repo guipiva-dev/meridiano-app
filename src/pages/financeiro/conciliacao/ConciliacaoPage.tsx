@@ -90,9 +90,9 @@ export function ConciliacaoPage() {
           }}
         />
         <KpiCard
-          label="Recebido no mês"
+          label="Comissões recebidas no mês"
           value={formatarDinheiro(kpis.recebidoMes.valor)}
-          contexto={contextoRecebido(kpis.recebidoMes.variacaoPercentual, mes)}
+          contexto={`só recebimentos e estornos de operadora · ${contextoRecebido(kpis.recebidoMes.variacaoPercentual, mes)}`}
         />
       </div>
 

@@ -42,7 +42,7 @@ export function LinhaMes({
       <b className={s.mes}>{mes}</b>
       <span className={s.meta}>{meta}</span>
       <span className={s.valor}>{formatarDinheiro(periodo.receitaPrevista)} prevista</span>
-      <span className={s.valor}>{formatarDinheiro(periodo.receitaRecebida)} recebida</span>
+      <span className={s.valor}>{formatarDinheiro(periodo.receitaRecebida)} entradas de caixa</span>
       {periodo.corrente ? <Badge tone="info">aberto</Badge> : <StatusBadge entidade="periodo" valor={periodo.status} />}
       <div className={s.acoes}>
         {!periodo.corrente && !fechado && podeFechar && (

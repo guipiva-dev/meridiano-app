@@ -1,10 +1,26 @@
 .wrap {
   overflow-x: auto;
+  /* A01/R01: sombra à direita só quando há mais colunas para rolar. Truque em duas camadas: a
+     primeira ("cobertura", attachment: local) rola junto com o conteúdo e some por cima da sombra
+     assim que a rolagem chega ao fim; a segunda ("sombra", attachment: scroll) fica fixa na borda
+     visível. Sem JS/ResizeObserver — a cor precisa ficar aqui (não em .table) para não ser coberta. */
+  background-color: var(--color-bg-surface);
+  background-image:
+    linear-gradient(to left, var(--color-bg-surface) 40%, transparent),
+    linear-gradient(to left, var(--table-scroll-shadow), transparent);
+  background-repeat: no-repeat, no-repeat;
+  background-position:
+    right center,
+    right center;
+  background-size:
+    24px 100%,
+    24px 100%;
+  background-attachment: local, scroll;
 }
 .table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--color-bg-surface);
+  background: transparent;
 }
 .table th {
   background: var(--table-header-bg);

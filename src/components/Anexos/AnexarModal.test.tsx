@@ -134,7 +134,7 @@ test("422 tipo_arquivo_nao_permitido do iniciar vai para o campo Arquivo", async
   expect(chamadas).toEqual(["POST /api/v1/anexos"]);
 });
 
-test("PUT falha: mensagem clara e 'Tentar de novo' repete só o PUT e o confirmar", async () => {
+test("PUT falha: mensagem com o motivo e 'Tentar de novo' repete só o PUT e o confirmar", async () => {
   let putFalha = true;
   vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
     chamadas.push(`${init?.method ?? "GET"} ${url}`);
@@ -151,7 +151,7 @@ test("PUT falha: mensagem clara e 'Tentar de novo' repete só o PUT e o confirma
   fireEvent.click(screen.getByRole("button", { name: "Anexar" }));
 
   expect(
-    await screen.findByText("Não foi possível enviar o arquivo. Verifique a conexão e tente de novo."),
+    await screen.findByText("Não foi possível enviar o arquivo ao armazenamento (sem conexão com r2). Tente de novo."),
   ).toBeInTheDocument();
   expect(onEnviado).not.toHaveBeenCalled();
   expect(chamadas).toEqual(["POST /api/v1/anexos", "PUT https://r2/upload/a9"]);
@@ -168,4 +168,25 @@ test("PUT falha: mensagem clara e 'Tentar de novo' repete só o PUT e o confirma
     "PUT https://r2/upload/a9",
     "POST /api/v1/anexos/a9/confirmar",
   ]);
+});
+
+test("depois de 2 falhas de envio, a mensagem sugere contatar o suporte", async () => {
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    chamadas.push(`${init?.method ?? "GET"} ${url}`);
+    if (url.endsWith("/anexos")) {
+      return Promise.resolve(resposta(201, { anexo: { id: "a9" }, urlUpload: "https://r2/upload/a9" }));
+    }
+    if (init?.method === "PUT") return Promise.reject(new TypeError("Failed to fetch"));
+    return Promise.resolve(resposta(200, {}));
+  });
+  montar();
+  fireEvent.change(screen.getByLabelText(/Arquivo/), { target: { files: [arquivoDe("voucher.pdf", 1024)] } });
+
+  fireEvent.click(screen.getByRole("button", { name: "Anexar" }));
+  await screen.findByText(/sem conexão com r2/);
+  expect(screen.queryByText(/fale com o suporte/)).toBeNull();
+
+  fireEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
+
+  expect(await screen.findByText(/fale com o suporte/)).toBeInTheDocument();
 });

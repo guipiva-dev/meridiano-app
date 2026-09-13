@@ -125,6 +125,27 @@ test("clicar em outro chip troca o titular (exatamente um)", async () => {
   ]);
 });
 
+test("X09: opção mostra telefone e CPF mascarado para distinguir homônimos", async () => {
+  vi.useFakeTimers();
+  const buscar = vi.fn().mockResolvedValue([
+    { id: "1", nome: "Carlos Mendes", telefone: "11988887777", cpf: "12345678900" },
+    { id: "2", nome: "Carlos Mendes", telefone: null, cpf: "98765432100" },
+  ] satisfies ClienteBuscaDto[]);
+  render(<PassageirosField value={[]} onChange={vi.fn()} buscar={buscar} onNovaPessoa={vi.fn()} erro={undefined} />);
+
+  const input = screen.getByLabelText("Passageiros");
+  fireEvent.change(input, { target: { value: "car" } });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(250);
+  });
+
+  const opcoes = screen.getAllByRole("option");
+  expect(opcoes[0]).toHaveTextContent("(11) 98888-7777");
+  expect(opcoes[0]).toHaveTextContent("123.456.789-00");
+  expect(opcoes[1]).toHaveTextContent("987.654.321-00");
+  vi.useRealTimers();
+});
+
 test("resposta atrasada de busca anterior não sobrescreve as opções da busca atual", async () => {
   vi.useFakeTimers();
   let resolverPrimeira: (r: ClienteBuscaDto[]) => void = () => undefined;

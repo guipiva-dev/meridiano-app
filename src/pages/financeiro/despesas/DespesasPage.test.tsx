@@ -182,6 +182,13 @@ test("mostra os KPIs do protótipo no cabeçalho e nos cartões", async () => {
   expect(within(cardLigadas as HTMLElement).getByText("R$ 180,00")).toBeInTheDocument();
 });
 
+test("KPI 'Fixos' tem o subtítulo 'despesas fixas (categoria Fixo)', não exemplos que confundem com Imposto (U08)", async () => {
+  montar();
+  await screen.findByText("R$ 1.460,00");
+  expect(screen.getByText("despesas fixas (categoria Fixo)")).toBeInTheDocument();
+  expect(screen.queryByText("DAS, sistema, telefone")).toBeNull();
+});
+
 test("Marcar pago abre o modal de pagamento com o título da despesa", async () => {
   montar();
   await screen.findByText("Anúncios Instagram — abril");

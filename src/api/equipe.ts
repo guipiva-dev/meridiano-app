@@ -60,6 +60,7 @@ export const equipeApi = {
   criar: (r: NovoColaboradorRequest) => api.post<ColaboradorDto>("/usuarios", r),
   atualizar: (id: string, r: AtualizarUsuarioRequest) => api.put<ColaboradorDto>(`/usuarios/${id}`, r),
   convidar: (id: string) => api.post<ColaboradorDto>(`/usuarios/${id}/convite`),
+  cancelarConvite: (id: string) => api.delete(`/usuarios/${id}/convite`),
   convidarNovo: (r: ConviteNovoRequest) => api.post<{ usuarioId: string }>("/auth/convites", r),
   perfis: () => api.get<PerfilDto[]>("/usuarios/perfis"),
 };

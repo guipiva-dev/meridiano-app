@@ -71,6 +71,12 @@ test("convidarNovo envia POST /auth/convites", async () => {
   expect(ultima.method).toBe("POST");
 });
 
+test("cancelarConvite envia DELETE /usuarios/{id}/convite", async () => {
+  await equipeApi.cancelarConvite("u1");
+  expect(ultima.url).toBe("/api/v1/usuarios/u1/convite");
+  expect(ultima.method).toBe("DELETE");
+});
+
 test("perfis busca /usuarios/perfis", async () => {
   await equipeApi.perfis();
   expect(ultima.url).toBe("/api/v1/usuarios/perfis");

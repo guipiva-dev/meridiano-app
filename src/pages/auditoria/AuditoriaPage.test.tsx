@@ -191,7 +191,7 @@ test("Exportar CSV com falha mostra Alert com a mensagem de erro (MED-04)", asyn
   montar();
   await screen.findByText("1–7 de 412");
   fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent("Sem conexão. Verifique a internet e tente de novo.");
+  expect(await screen.findByRole("alert")).toHaveTextContent("Sem conexão com o servidor.");
 });
 
 test("proximoAntesDe null esconde o botão Mais antigas", async () => {

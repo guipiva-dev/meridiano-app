@@ -182,7 +182,7 @@ export interface ReservaDto {
 export interface RepasseDto {
   id: string;
   valor: number | null;
-  status: "bloqueado" | "a_pagar" | "pago";
+  status: "bloqueado" | "a_pagar" | "pago" | "cancelado";
 }
 
 export interface ResumoViagemDto {
