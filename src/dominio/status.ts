@@ -21,6 +21,8 @@ const comissao: Mapa = {
   atrasada: { texto: "Atrasada", tone: "danger" },
   recebida: { texto: "Recebida", tone: "success" },
   divergente: { texto: "Divergente", tone: "warning" },
+  // ALT-01: reserva cancelada com recebimento acima do esperado — aguarda estorno ou encerramento.
+  estorno_pendente: { texto: "Estorno pendente", tone: "warning" },
 };
 const reserva: Mapa = {
   pendente: { texto: "Em emissão", tone: "info" },

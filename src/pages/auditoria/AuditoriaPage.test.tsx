@@ -4,6 +4,7 @@ import { createMemoryRouter, RouterProvider } from "react-router";
 import type { AuditoriaDto, EventoAuditoriaDto } from "@/api/auditoria";
 import { NetworkError } from "@/api/errors";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
+import { toast } from "@/components/feedback";
 import { AuditoriaPage } from "./AuditoriaPage";
 
 vi.mock("@/lib/download");
@@ -209,4 +210,17 @@ test("filtros vêm da URL", async () => {
   await screen.findByText("1–7 de 412");
   expect(ultimaUrl).toContain("oque=valores");
   expect(ultimaUrl).toContain("de=2026-01-01");
+});
+
+test("Exportar CSV bem-sucedido mostra toast com o nome do arquivo (MED-07)", async () => {
+  const { baixarComFeedback } = await import("@/lib/download");
+  vi.mocked(baixarComFeedback).mockResolvedValue(undefined);
+  const sucesso = vi.spyOn(toast, "success");
+  montar();
+  await screen.findByText("1–7 de 412");
+  fireEvent.click(screen.getByRole("button", { name: "Exportar CSV" }));
+  await waitFor(() => {
+    expect(sucesso).toHaveBeenCalledWith("Arquivo pronto: auditoria.csv");
+  });
+  sucesso.mockRestore();
 });

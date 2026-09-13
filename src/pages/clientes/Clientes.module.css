@@ -7,6 +7,10 @@
   font: var(--type-helper);
   color: var(--color-text-secondary);
 }
+/* MED-08: telefone do contato numa linha só. */
+.nowrap {
+  white-space: nowrap;
+}
 .secondary code {
   font: var(--type-code);
 }

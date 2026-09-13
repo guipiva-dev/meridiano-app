@@ -253,3 +253,11 @@ test("Excluir grupo com falha fecha o diálogo (Alert não fica atrás do overla
   });
   expect(await screen.findByText("Falha ao excluir")).toBeInTheDocument();
 });
+
+test("subtítulo com 1 pessoa e 1 viagem usa singular (BAI-01)", async () => {
+  vi.stubGlobal("fetch", () =>
+    Promise.resolve(resposta(200, { ...GRUPO, pessoas: [{ id: "c1", nome: "Carlos", idade: 30 }], viagens: 1 })),
+  );
+  montar();
+  expect(await screen.findByText("Empresa · 1 pessoa · 1 viagem")).toBeInTheDocument();
+});

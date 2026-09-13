@@ -120,7 +120,11 @@ export function PessoaPage() {
       <PageHeader
         title={titulo}
         subtitle={partes.length > 0 ? partes.join(" · ") : undefined}
-        status={v.pendenciasAbertas > 0 && <Badge tone="warning">{v.pendenciasAbertas} pendências</Badge>}
+        status={
+          v.pendenciasAbertas > 0 && (
+            <Badge tone="warning">{plural(v.pendenciasAbertas, "pendência", "pendências")}</Badge>
+          )
+        }
         dirty={dirty}
         salvoEm={v.salvamento.salvoEm}
         actions={

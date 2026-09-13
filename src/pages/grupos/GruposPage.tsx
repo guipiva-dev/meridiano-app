@@ -8,6 +8,7 @@ import { Button, type Coluna, DataTable, Input, Paginacao, StatusCell } from "@/
 import { EmptyState } from "@/components/feedback";
 import { Page, PageHeader, Subnav } from "@/components/shell";
 import { formatarCnpj } from "@/lib/documentos";
+import { plural } from "@/lib/plural";
 import { subnavs } from "@/shell/navegacao";
 import s from "./Grupos.module.css";
 
@@ -61,7 +62,7 @@ export function GruposPage() {
     <Page>
       <PageHeader
         title="Grupos e empresas"
-        subtitle={`${listaQ.isLoading ? "—" : total} grupos · organizam o cadastro de pessoas; não têm valor financeiro`}
+        subtitle={`${listaQ.isLoading ? "— grupos" : plural(total, "grupo", "grupos")} · organizam o cadastro de pessoas; não têm valor financeiro`}
         actions={
           pode("cliente.editar") && (
             <Button

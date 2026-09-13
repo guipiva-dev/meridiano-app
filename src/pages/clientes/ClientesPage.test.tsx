@@ -104,7 +104,7 @@ afterEach(() => {
 
 test("cabeçalho mostra os contadores da agência", async () => {
   montar();
-  expect(await screen.findByText("3 pessoas · 2 grupos · 1 passaportes vencendo")).toBeInTheDocument();
+  expect(await screen.findByText("3 pessoas · 2 grupos · 1 passaporte vencendo")).toBeInTheDocument();
 });
 
 test("linha mostra CPF mascarado, idade e telefone formatado", async () => {
@@ -157,7 +157,7 @@ test("P06: sem cliente.ver (vendedor externo), some '· N grupos' e não chama G
     </QueryClientProvider>,
   );
 
-  expect(await screen.findByText("3 pessoas · 1 passaportes vencendo")).toBeInTheDocument();
+  expect(await screen.findByText("3 pessoas · 1 passaporte vencendo")).toBeInTheDocument();
   expect(chamadas.some((u) => u.includes("/grupos?"))).toBe(false);
 });
 

@@ -10,6 +10,7 @@ import { Alert } from "@/components/display";
 import { Skeleton } from "@/components/feedback";
 import { NovaPendenciaModal } from "@/components/pendencias";
 import { Page, PageHeader, type Tab, Tabs } from "@/components/shell";
+import { plural } from "@/lib/plural";
 import s from "./Agenda.module.css";
 import { CreditosTab } from "./CreditosTab";
 import { DocumentosTab } from "./DocumentosTab";
@@ -43,7 +44,7 @@ export function AgendaPage() {
   const dto = q.data;
 
   const subtitulo = dto
-    ? `${formatarCabecalhoData(dto.cabecalho.hoje)} · ${dto.cabecalho.pendenciasHoje} pendências hoje · ${dto.cabecalho.atrasadas} atrasadas · ${dto.cabecalho.embarquesSemana} embarques esta semana`
+    ? `${formatarCabecalhoData(dto.cabecalho.hoje)} · ${plural(dto.cabecalho.pendenciasHoje, "pendência", "pendências")} hoje · ${plural(dto.cabecalho.atrasadas, "atrasada", "atrasadas")} · ${plural(dto.cabecalho.embarquesSemana, "embarque", "embarques")} esta semana`
     : undefined;
 
   const tabs: Tab[] = [

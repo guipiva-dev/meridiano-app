@@ -5,10 +5,12 @@ import { mensagemDeErro } from "@/api/errors";
 import { chavesRelatorios, relatoriosApi, urlCsv } from "@/api/relatorios";
 import { Button, DataTable, KpiCard, MoneyCell, MoneyValue, Select } from "@/components";
 import { Alert, Tooltip } from "@/components/display";
+import { toast } from "@/components/feedback";
 import { Skeleton } from "@/components/Skeleton/Skeleton";
 import { Page, PageHeader, Section } from "@/components/shell";
 import { formatarDinheiro } from "@/lib/dinheiro";
 import { baixarComFeedback } from "@/lib/download";
+import { plural } from "@/lib/plural";
 import { BarrasMensais } from "./BarrasMensais";
 import s from "./Relatorios.module.css";
 import { ServicosVendidos } from "./ServicosVendidos";
@@ -43,7 +45,9 @@ export function RelatoriosPage() {
     setErroExportacao(null);
     setExportando(true);
     try {
-      await baixarComFeedback(urlCsv(anoEfetivo, vendedorId), `relatorio-${anoEfetivo}.csv`);
+      const nome = `relatorio-${anoEfetivo}.csv`;
+      await baixarComFeedback(urlCsv(anoEfetivo, vendedorId), nome);
+      toast.success(`Arquivo pronto: ${nome}`);
     } catch (e) {
       setErroExportacao(mensagemDeErro(e));
     } finally {
@@ -134,7 +138,7 @@ export function RelatoriosPage() {
             <KpiCard
               label="Venda no ano"
               value={formatarDinheiro(dto.kpis.vendaAno)}
-              contexto={`${dto.kpis.reservas} reservas · ${dto.kpis.viagens} viagens`}
+              contexto={`${plural(dto.kpis.reservas, "reserva", "reservas")} · ${plural(dto.kpis.viagens, "viagem", "viagens")}`}
             />
             <KpiCard
               label="Receita recebida"

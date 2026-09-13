@@ -258,3 +258,15 @@ test("422 ao convidar mostra o erro num toast", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Convidar" }));
   expect(await screen.findByText("Este colaborador já tem acesso")).toBeInTheDocument();
 });
+
+test("subtítulo mostra — enquanto a lista carrega (MED-02)", () => {
+  vi.stubGlobal(
+    "fetch",
+    () =>
+      new Promise<Response>(() => {
+        /* nunca resolve: a página fica carregando */
+      }),
+  );
+  montar();
+  expect(screen.getByText("— pessoas na equipe · — com acesso · — convites pendentes")).toBeInTheDocument();
+});

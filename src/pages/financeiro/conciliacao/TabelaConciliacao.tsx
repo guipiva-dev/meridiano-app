@@ -45,7 +45,13 @@ export function TabelaConciliacao({
   function menu(i: ConciliacaoItemDto): ItemMenu[] {
     const itensMenu: ItemMenu[] = [];
     // Divergência é para o que já deveria ter entrado: parcial (recebido > 0) ou vencida.
-    if (podeConciliar && !i.conciliacaoEncerrada && (i.recebido > 0 || i.situacaoComissao === "atrasada")) {
+    // Em divergências o encerramento (estorno pendente) já é botão visível na linha.
+    if (
+      podeConciliar &&
+      !divergencias &&
+      !i.conciliacaoEncerrada &&
+      (i.recebido > 0 || i.situacaoComissao === "atrasada")
+    ) {
       itensMenu.push({
         label: "Encerrar divergência…",
         onClick: () => {
@@ -124,7 +130,17 @@ export function TabelaConciliacao({
       render: (i) => <DateCell value={recebidas ? i.ultimoRecebimentoEm : i.dataPrevistaComissao} />,
     },
     divergencias
-      ? { id: "motivo", titulo: "Motivo", render: (i) => i.divergenciaMotivo ?? "—" }
+      ? {
+          id: "motivo",
+          titulo: "Motivo",
+          // ALT-01: estorno pendente ainda não tem motivo — a situação diz o que falta.
+          render: (i) =>
+            i.situacaoComissao === "estorno_pendente" ? (
+              <StatusCell entidade="comissao" valor={i.situacaoComissao} />
+            ) : (
+              (i.divergenciaMotivo ?? "—")
+            ),
+        }
       : {
           id: "situacao",
           titulo: "Situação",
@@ -168,6 +184,22 @@ export function TabelaConciliacao({
               size="sm"
               onClick={() => {
                 onDivergencia(i);
+              }}
+            >
+              Encerrar divergência…
+            </Button>
+          )}
+          {/* ALT-01: estorno pendente em divergências. A linha navega no clique/Enter; o botão não propaga. */}
+          {podeConciliar && divergencias && !i.conciliacaoEncerrada && i.situacaoComissao === "estorno_pendente" && (
+            <Button
+              variant="tertiary"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDivergencia(i);
+              }}
+              onKeyDown={(e) => {
+                e.stopPropagation();
               }}
             >
               Encerrar divergência…
