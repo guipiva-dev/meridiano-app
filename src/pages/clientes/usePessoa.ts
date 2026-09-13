@@ -119,6 +119,13 @@ export function usePessoa(id: string | undefined) {
 
   const daPessoa = Boolean(id);
   const alvo = id ?? "";
+  // Mesma queryKey/queryFn da carga em `useFormularioCadastro`: react-query compartilha o fetch,
+  // isto só observa o erro (ex.: 422 `nao_encontrado`) para A30, sem chamada extra.
+  const clienteQ = useQuery({
+    queryKey: chavesClientes.cliente(alvo),
+    queryFn: () => clientesApi.obter(alvo),
+    enabled: daPessoa,
+  });
   const gruposQ = useQuery({ queryKey: chavesGrupos.lista("", 1), queryFn: () => gruposApi.listar("", 1) });
   const vendedoresQ = useQuery({ queryKey: chaves.vendedores, queryFn: viagensApi.vendedores });
   const viagensQ = useQuery({
@@ -140,6 +147,7 @@ export function usePessoa(id: string | undefined) {
   });
   return {
     ...base,
+    erroCarga: clienteQ.error,
     tab,
     setTab,
     grupos: gruposQ.data?.itens ?? [],

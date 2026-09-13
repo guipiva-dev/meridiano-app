@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { useAuth } from "@/auth/useAuth";
 import { Button, Field, Input, Select, StatusCell } from "@/components";
 import { Alert } from "@/components/display";
 import { ConfirmModal, Skeleton } from "@/components/feedback";
@@ -18,14 +19,17 @@ const OPCOES_SITUACAO = [
   { value: "true", label: "Ativo" },
   { value: "false", label: "Inativo" },
 ];
+const AJUDA_PROPRIO_ACESSO = "Você não pode alterar o próprio acesso; peça a outro Dono";
 
 export function ColaboradorPage() {
   const { id } = useParams();
   const nav = useNavigate();
+  const { me } = useAuth();
   const v = useColaborador(id);
   const [confirmarInativar, setConfirmarInativar] = useState(false);
 
   const dirty = v.salvamento.estado === "dirty" || v.salvamento.estado === "error";
+  const souEuMesmo = Boolean(v.dto) && v.dto?.id === me?.usuarioId;
   const perfilSelecionado = v.form.watch("perfil");
   const geraRepasse = v.form.watch("geraRepasse");
   const titulo = v.dto?.nome ?? "Novo colaborador";
@@ -150,8 +154,13 @@ export function ColaboradorPage() {
             <Field label="Telefone" className="span-3">
               <Input autoComplete="off" {...v.form.register("telefone")} />
             </Field>
-            <Field label="Perfil" className="span-3" error={v.erros.perfil}>
-              <Select options={OPCOES_PERFIL} {...v.form.register("perfil")} />
+            <Field
+              label="Perfil"
+              className="span-3"
+              error={v.erros.perfil}
+              helper={souEuMesmo ? AJUDA_PROPRIO_ACESSO : undefined}
+            >
+              <Select options={OPCOES_PERFIL} disabled={souEuMesmo} {...v.form.register("perfil")} />
             </Field>
             <Field label="Gera repasse" className="span-3">
               <Select
@@ -173,9 +182,10 @@ export function ColaboradorPage() {
               </Field>
             )}
             {id && (
-              <Field label="Situação" className="span-3">
+              <Field label="Situação" className="span-3" helper={souEuMesmo ? AJUDA_PROPRIO_ACESSO : undefined}>
                 <Select
                   options={OPCOES_SITUACAO}
+                  disabled={souEuMesmo}
                   value={String(v.form.watch("ativo"))}
                   onChange={(e) => {
                     if (e.target.value === "false" && v.form.getValues("ativo")) {

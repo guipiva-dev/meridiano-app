@@ -75,9 +75,9 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function montar(entrada: string) {
+function montar(entrada: string, meId = "u-guilherme") {
   const auth: AuthValue = {
-    me: { usuarioId: "u-guilherme", agenciaId: "a1", perfil: "dono", nome: "Guilherme", permissoes: [] },
+    me: { usuarioId: meId, agenciaId: "a1", perfil: "dono", nome: "Guilherme", permissoes: [] },
     carregando: false,
     pode: () => true,
     entrar: () => Promise.resolve(),
@@ -157,6 +157,26 @@ test("/equipe/nova envia POST /usuarios", async () => {
     const post = chamadas.find((c) => c.method === "POST" && c.url.endsWith("/usuarios"));
     expect(post).toBeTruthy();
   });
+});
+
+// P04: o usuário não pode alterar o próprio Perfil/Situação (só outro Dono pode).
+test("editando o próprio usuário desabilita Situação e Perfil com a ajuda explicando", async () => {
+  montar("/equipe/u-ana", "u-ana");
+  await screen.findByDisplayValue("Ana Paula Ribeiro");
+
+  const perfil = screen.getByLabelText(/^Perfil/);
+  const situacao = screen.getByLabelText("Situação");
+  expect(perfil).toBeDisabled();
+  expect(situacao).toBeDisabled();
+  expect(screen.getAllByText("Você não pode alterar o próprio acesso; peça a outro Dono")).toHaveLength(2);
+});
+
+test("editando outro usuário mantém Situação e Perfil habilitados", async () => {
+  montar("/equipe/u-ana", "u-guilherme");
+  await screen.findByDisplayValue("Ana Paula Ribeiro");
+
+  expect(screen.getByLabelText(/^Perfil/)).not.toBeDisabled();
+  expect(screen.getByLabelText("Situação")).not.toBeDisabled();
 });
 
 test("PerfilVe para vendedor_externo mostra 'só as próprias' e resultado com X; trocar para agente atualiza", async () => {

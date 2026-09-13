@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { clientesApi } from "@/api/clientes";
-import { mensagemDeErro } from "@/api/errors";
+import { mensagemDeErro, ValidationError } from "@/api/errors";
 import { chavesGrupos } from "@/api/grupos";
 import { useAuth } from "@/auth/useAuth";
 import { Button } from "@/components";
@@ -28,8 +28,6 @@ export function PessoaPage() {
 
   const podeEditar = pode("cliente.editar");
   const verDocumento = pode("cliente.ver_documento");
-  // Sem a permissão o DTO nem traz `cpf`; em "Nova pessoa" (sem DTO) vale só a permissão.
-  const mostrarCpf = v.dto ? v.dto.cpf !== undefined : verDocumento;
   const dirty = v.salvamento.estado === "dirty" || v.salvamento.estado === "error";
   const titulo = v.dto?.nome ?? "Nova pessoa";
 
@@ -63,22 +61,34 @@ export function PessoaPage() {
 
   // Com `id` e sem DTO depois da carga, a busca falhou: nem "Nova pessoa" nem formulário em branco.
   if (id && !v.dto) {
+    const naoEncontrada = v.erroCarga instanceof ValidationError && v.erroCarga.codigo === "nao_encontrado";
     return (
       <Page>
         <Alert
           tone="danger"
           action={
-            <Button
-              variant="secondary"
-              onClick={() => {
-                void v.recarregar();
-              }}
-            >
-              Tentar de novo
-            </Button>
+            naoEncontrada ? (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  void nav("/clientes");
+                }}
+              >
+                Ver lista
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  void v.recarregar();
+                }}
+              >
+                Tentar de novo
+              </Button>
+            )
           }
         >
-          Não foi possível carregar esta pessoa.
+          {naoEncontrada ? "Pessoa não encontrada ou excluída." : "Não foi possível carregar esta pessoa."}
         </Alert>
       </Page>
     );
@@ -90,12 +100,14 @@ export function PessoaPage() {
   if (v.dto?.grupoNome) partes.push(v.dto.grupoNome);
   if (resumo) partes.push(`${resumo.viagens} viagens`, `cliente desde ${resumo.clienteDesde}`);
 
+  const temVinculos = (resumo?.viagens ?? 0) > 0;
+
   const formulario = (
     <DadosPessoaForm
       form={v.form}
       grupos={v.grupos}
       erros={v.erros}
-      verDocumento={mostrarCpf}
+      verDocumento={verDocumento}
       onNovoGrupo={() => {
         setGrupoAberto(true);
       }}
@@ -115,6 +127,8 @@ export function PessoaPage() {
             {podeEditar && v.dto && (
               <Button
                 variant="secondary"
+                disabled={temVinculos}
+                title={temVinculos ? "Tem viagem ou crédito; não pode ser excluída" : undefined}
                 onClick={() => {
                   setConfirmarExclusao(true);
                 }}
