@@ -4,7 +4,7 @@ function V(
   valorTotal: number,
   valorComissao: number,
   ravOperadora: number,
-  valorCliente: number,
+  valorCliente: number | null,
   opts: Partial<Pick<ValoresReserva, "taxaServico" | "viaOperadora" | "cancelada" | "comissaoMantida">> = {},
 ): ValoresReserva {
   return {
@@ -67,6 +67,16 @@ test("percentual nulo sem total", () => {
 
 test("percentual arredonda como o banco", () => {
   expect(calcularReserva(V(300, 100, 0, 300)).percentualComissao).toBe(33.33);
+});
+
+test("A03: valorCliente null vira ravCliente null (nunca −total)", () => {
+  const r = calcularReserva(V(10000, 1000, 100, null));
+  expect(r.ravCliente).toBeNull();
+});
+
+test("A12: esperado da operadora pode ficar negativo (venda muito abaixo do custo, via operadora)", () => {
+  const r = calcularReserva(V(10000, 1000, 100, 2000, { viaOperadora: true }));
+  expect(r.valorEsperadoOperadora).toBe(-6900);
 });
 
 test("sem erro de ponto flutuante: 0.3 - 0.1 = 0.2 exato", () => {

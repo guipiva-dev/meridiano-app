@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ValidationError } from "@/api/errors";
 import type * as ViagensApi from "@/api/viagens";
 import type { RemarcarRequest, ReservaDto, ViagemDto } from "@/api/viagens";
 import { RemarcarModal } from "./RemarcarModal";
@@ -159,4 +160,39 @@ test("avisa quando o novo custo fica acima da venda ao cliente", () => {
 
   fireEvent.change(screen.getByLabelText("Nova venda ao cliente"), { target: { value: "4.000,00" } });
   expect(screen.queryByText(/RAV do cliente ficará negativo/)).toBeNull();
+});
+
+test("A12: RAV do cliente via operadora, novo custo deixa o esperado negativo — bloqueia e mostra erro sem chamar a API", async () => {
+  const user = userEvent.setup();
+  const r = {
+    ...reserva(),
+    valorTotal: 10000,
+    valorComissao: 1000,
+    ravOperadora: 100,
+    valorCliente: 10500,
+    ravClienteModo: "via_operadora" as const,
+  };
+  const v = viagem(r);
+  render(<RemarcarModal open reserva={r} viagem={v} onClose={vi.fn()} onRemarcada={vi.fn()} />);
+
+  await user.type(screen.getByLabelText(/Descrição/), "Cliente trocou o hotel");
+  fireEvent.change(screen.getByLabelText("Novo valor da reserva"), { target: { value: "12.000,00" } });
+  expect(screen.getByText("Com RAV via operadora a venda não pode ficar abaixo do custo")).toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Remarcar" }));
+
+  expect(remarcar).not.toHaveBeenCalled();
+});
+
+test("A12: erro do back esperado_negativo aparece sob 'Nova venda ao cliente'", async () => {
+  const user = userEvent.setup();
+  const r = { ...reserva(), valorCliente: 3200, ravClienteModo: "via_operadora" as const };
+  const v = viagem(r);
+  remarcar.mockRejectedValue(new ValidationError(422, "esperado_negativo", "Esperado da operadora ficaria negativo"));
+  render(<RemarcarModal open reserva={r} viagem={v} onClose={vi.fn()} onRemarcada={vi.fn()} />);
+
+  await user.type(screen.getByLabelText(/Descrição/), "Troca de acomodação");
+  await user.click(screen.getByRole("button", { name: "Remarcar" }));
+
+  expect(await screen.findByText("Esperado da operadora ficaria negativo")).toBeInTheDocument();
 });

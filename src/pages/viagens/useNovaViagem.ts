@@ -20,6 +20,7 @@ import { type PassageiroForm, somarReservas } from "@/components/viagem";
 import { arredondar2 } from "@/dominio/calculoReserva";
 import { useSalvamento } from "@/lib/useSalvamento";
 import { errosDeApi } from "./mapaErros";
+import { validarReserva } from "./validarReserva";
 
 export interface ViagemForm {
   destino: string;
@@ -101,14 +102,6 @@ function validar(v: ViagemForm): Record<string, string> {
   if (v.passageiros.length === 0) e.passageiros = "Adicione ao menos um passageiro";
   if (!v.vendedorId) e.vendedorId = "Escolha quem vendeu";
   if (v.dataIda && v.dataVolta && v.dataVolta < v.dataIda) e.dataVolta = "Volta antes da ida";
-  return e;
-}
-
-/** Campo que uma reserva ativa cobra antes de gastar uma ida ao servidor (ALT-01). Só o que o back também exige: `fornecedorId`
- * (`valorTotal`/`tiposServico` são opcionais no schema, front não pode ser mais estrito). Cancelada é imutável: não valida. */
-function validarReserva(r: ReservaForm): Record<string, string> {
-  const e: Record<string, string> = {};
-  if (!r.fornecedorId) e.fornecedorId = "Escolha o fornecedor";
   return e;
 }
 
@@ -365,7 +358,12 @@ export function useNovaViagem(id: string | undefined) {
   );
   const erroCarga = viagemQ.isError ? mensagemDeErro(viagemQ.error) : null;
   // ALT-01: ao vivo a partir da 1ª tentativa de salvar — soma sozinha ao corrigir o campo, sem precisar salvar de novo.
-  const errosReservas = tentouSalvarReserva ? problemasPorReserva : [];
+  // A04: antes da 1ª tentativa, só "Escolha o fornecedor" aparece, e só depois de tocar o campo (não ao criar o card).
+  const errosReservas = reservas.map((r, i) => {
+    if (tentouSalvarReserva) return problemasPorReserva[i] ?? {};
+    const problemas = problemasPorReserva[i];
+    return r.fornecedorTocado && problemas?.fornecedorId ? { fornecedorId: problemas.fornecedorId } : {};
+  });
 
   const receitaPrevista = somarReservas(reservas).receitaPrevista;
   const repasseSugerido =

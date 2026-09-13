@@ -29,6 +29,10 @@ export interface ReservaForm {
   comissaoSugerida: boolean;
   ravOperadora: number | null;
   valorCliente: number | null;
+  /** A03: `valorCliente` foi pré-preenchido a partir do total (editável; some ao digitar à mão). */
+  vendaSugerida: boolean;
+  /** A04: campo "Fornecedor" já perdeu o foco ao menos uma vez — libera o erro antes de tentar salvar. */
+  fornecedorTocado: boolean;
   taxaServico: number | null;
   ravClienteModo: RavClienteModo;
   fluxoPagamento: FluxoPagamento;
@@ -57,6 +61,8 @@ export function reservaVazia(taxaServicoPadrao: number): ReservaForm {
     comissaoSugerida: true,
     ravOperadora: null,
     valorCliente: null,
+    vendaSugerida: false,
+    fornecedorTocado: false,
     taxaServico: taxaServicoPadrao,
     ravClienteModo: "retido_agencia",
     fluxoPagamento: "cliente_paga_operadora",
@@ -110,6 +116,8 @@ export function deDto(r: ReservaDto): ReservaForm {
     comissaoSugerida: false,
     ravOperadora: r.ravOperadora ?? null,
     valorCliente: r.valorCliente ?? null,
+    vendaSugerida: false,
+    fornecedorTocado: true,
     taxaServico: r.taxaServico ?? null,
     ravClienteModo: r.ravClienteModo,
     fluxoPagamento: r.fluxoPagamento,
@@ -129,7 +137,7 @@ export function paraValoresReserva(r: ReservaForm): ValoresReserva {
     valorTotal: r.valorTotal ?? 0,
     valorComissao: r.valorComissao ?? 0,
     ravOperadora: r.ravOperadora ?? 0,
-    valorCliente: r.valorCliente ?? 0,
+    valorCliente: r.valorCliente,
     taxaServico: r.taxaServico ?? 0,
     viaOperadora: r.ravClienteModo === "via_operadora",
     cancelada: r.status === "cancelada",
