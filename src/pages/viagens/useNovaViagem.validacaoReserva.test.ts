@@ -1,5 +1,5 @@
 import { act } from "@testing-library/react";
-import { chamadas, esperar, montar, reiniciar } from "./useNovaViagem.harness";
+import { chamadas, esperar, montar, reiniciar, stubs } from "./useNovaViagem.harness";
 
 beforeEach(reiniciar);
 
@@ -90,4 +90,29 @@ test("A12: venda via operadora abaixo do custo bloqueia salvar com erro em valor
   expect(result.current.errosReservas[0]?.valorCliente).toBe(
     "Com RAV via operadora a venda não pode ficar abaixo do custo",
   );
+});
+
+// Review round 1: taxa_maior_que_total/esperado_negativo não têm índice de reserva no 422 (igual ao
+// cancelamento em lote) — não podem apontar pra um campo de reserva certo, então caem no Alert de bloco.
+test("422 esperado_negativo (sem índice de reserva) vira Alert de bloco, não é engolido", async () => {
+  stubs.respostaPost = {
+    status: 422,
+    body: { codigo: "esperado_negativo", detail: "Esperado da operadora ficaria negativo" },
+  };
+  const { result } = montar();
+  await esperar.agencia(result);
+
+  act(() => {
+    result.current.form.setValue("destino", "Lisboa");
+    result.current.form.setValue("passageiros", [{ clienteId: "c1", nome: "Carlos", titular: true }]);
+  });
+
+  let ok = true;
+  await act(async () => {
+    ok = await result.current.salvar();
+  });
+
+  expect(ok).toBe(false);
+  expect(result.current.erroBloco).toBe("Esperado da operadora ficaria negativo");
+  expect(result.current.erros.valorCliente).toBeUndefined();
 });

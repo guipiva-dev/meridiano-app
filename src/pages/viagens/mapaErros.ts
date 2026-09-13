@@ -11,10 +11,10 @@ const CAMPO_POR_CODIGO: Record<string, string> = {
   repasse_sem_vendedor: "repasseValor",
   valor_negativo: "repasseValor",
   usuario_inativo: "vendedorId",
-  // A02/A12: se o 422 chegar sem índice de reserva (ex.: raça de concorrência após a validação local).
-  taxa_maior_que_total: "valorTaxas",
-  esperado_negativo: "valorCliente",
 };
+// A02/A12 (`taxa_maior_que_total`, `esperado_negativo`): o 422 não diz de qual reserva veio — igual ao
+// cancelamento em lote (ver CancelarViagemModal), mandar para um campo de reserva arbitrário seria pior
+// que não mapear (some do card certo, ou aponta pro card errado). Cai no Alert de bloco.
 
 export interface ErrosApi {
   campos: Record<string, string>;

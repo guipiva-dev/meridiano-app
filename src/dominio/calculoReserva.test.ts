@@ -74,6 +74,18 @@ test("A03: valorCliente null vira ravCliente null (nunca −total)", () => {
   expect(r.ravCliente).toBeNull();
 });
 
+test("review 1: valorCliente null também zera esperado/receita para null (nunca um número bogus)", () => {
+  const r = calcularReserva(V(10000, 1000, 100, null, { viaOperadora: true }));
+  expect(r.valorEsperadoOperadora).toBeNull();
+  expect(r.receitaPrevista).toBeNull();
+});
+
+test("review 1: cancelada sem venda informada ainda zera esperado/receita (não vira null)", () => {
+  const r = calcularReserva(V(10000, 1000, 100, null, { cancelada: true }));
+  expect(r.valorEsperadoOperadora).toBe(0);
+  expect(r.receitaPrevista).toBe(0);
+});
+
 test("A12: esperado da operadora pode ficar negativo (venda muito abaixo do custo, via operadora)", () => {
   const r = calcularReserva(V(10000, 1000, 100, 2000, { viaOperadora: true }));
   expect(r.valorEsperadoOperadora).toBe(-6900);

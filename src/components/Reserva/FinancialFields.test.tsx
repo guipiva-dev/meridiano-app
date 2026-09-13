@@ -48,6 +48,24 @@ test("A03: sair do Total com Venda vazia pré-preenche Venda = Total (marcada co
   expect(screen.getByText("calculado")).toBeInTheDocument();
 });
 
+test("A03 (review 1): editar o Total de novo enquanto a Venda ainda está sugerida ressincroniza", async () => {
+  const user = userEvent.setup();
+  render(<Harness />);
+  const total = screen.getByLabelText("Total da reserva");
+  await user.click(total);
+  await user.type(total, "3000");
+  await user.tab();
+  expect(screen.getByLabelText("Venda ao cliente")).toHaveValue("R$ 3.000,00");
+
+  await user.click(total);
+  await user.clear(total);
+  await user.type(total, "5000");
+  await user.tab();
+
+  expect(screen.getByLabelText("Venda ao cliente")).toHaveValue("R$ 5.000,00");
+  expect(screen.getByText("calculado")).toBeInTheDocument();
+});
+
 test("A03: se a Venda já foi digitada, sair do Total não sobrescreve", async () => {
   const user = userEvent.setup();
   render(<Harness />);

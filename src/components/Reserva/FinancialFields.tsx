@@ -86,8 +86,9 @@ export function FinancialFields({
             onChange({ valorTotal: v });
           }}
           onBlur={() => {
-            // A03: venda ainda não informada — sugere venda = total (editável, nunca sobrescreve o que já foi digitado).
-            if (!readOnly && value.valorCliente === null && value.valorTotal) {
+            // A03: venda ainda vazia, ou ainda sugerida (usuário não digitou à mão) — sugere/ressincroniza
+            // venda = total. Nunca sobrescreve o que o usuário já digitou (vendaSugerida vira false ao digitar).
+            if (!readOnly && value.valorTotal && (value.valorCliente === null || value.vendaSugerida)) {
               onChange({ valorCliente: value.valorTotal, vendaSugerida: true });
             }
           }}

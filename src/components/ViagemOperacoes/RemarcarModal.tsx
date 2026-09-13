@@ -106,14 +106,14 @@ export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada, onR
   const esperadoNegativo =
     reserva.valorCliente !== undefined &&
     reserva.ravClienteModo === "via_operadora" &&
-    calcularReserva({
+    (calcularReserva({
       valorTotal: valorNovo ?? reserva.valorTotal ?? 0,
       valorComissao: reserva.valorComissao ?? 0,
       ravOperadora: reserva.ravOperadora ?? 0,
       valorCliente: novaVenda ?? reserva.valorCliente,
       taxaServico: 0,
       viaOperadora: true,
-    }).valorEsperadoOperadora < 0;
+    }).valorEsperadoOperadora ?? 0) < 0;
 
   return (
     <Modal

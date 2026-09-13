@@ -9,14 +9,14 @@ function erroVenda(r: ReservaForm): string | undefined {
   // A12: com RAV via operadora, venda abaixo do custo faz o esperado da operadora ficar negativo.
   if (r.ravClienteModo !== "via_operadora") return undefined;
   const negativo =
-    calcularReserva({
+    (calcularReserva({
       valorTotal: r.valorTotal ?? 0,
       valorComissao: r.valorComissao ?? 0,
       ravOperadora: r.ravOperadora ?? 0,
       valorCliente: r.valorCliente,
       taxaServico: r.taxaServico ?? 0,
       viaOperadora: true,
-    }).valorEsperadoOperadora < 0;
+    }).valorEsperadoOperadora ?? 0) < 0;
   return negativo ? "Com RAV via operadora a venda não pode ficar abaixo do custo" : undefined;
 }
 

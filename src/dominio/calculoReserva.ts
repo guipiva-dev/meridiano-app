@@ -11,10 +11,11 @@ export interface ValoresReserva {
 }
 
 export interface ResultadoReserva {
-  /** null quando `valorCliente` da entrada é null: nunca mostra RAV = −total por venda vazia. */
+  /** null quando `valorCliente` da entrada é null (venda ainda não informada): "—" no resumo, nunca um número
+   * calculado a partir de venda = 0 (nem RAV = −total, nem esperado/receita bogus). Cancelada ainda zera. */
   ravCliente: number | null;
-  valorEsperadoOperadora: number;
-  receitaPrevista: number;
+  valorEsperadoOperadora: number | null;
+  receitaPrevista: number | null;
   percentualComissao: number | null;
 }
 
@@ -37,13 +38,14 @@ export function calcularReserva(v: ValoresReserva): ResultadoReserva {
   const taxa = c(v.taxaServico);
   const ravCliente = cli - total;
   const zera = Boolean(v.cancelada) && !v.comissaoMantida;
+  const cliValido = v.valorCliente !== null || zera; // cancelada zera mesmo sem venda informada
   const esperado = zera ? 0 : com + rav + (v.viaOperadora ? ravCliente : 0);
   const prevista = zera ? 0 : com + rav + ravCliente + taxa;
   const percentual = total > 0 ? arredondar2((100 * com) / total) : null;
   return {
     ravCliente: v.valorCliente === null ? null : ravCliente / 100,
-    valorEsperadoOperadora: esperado / 100,
-    receitaPrevista: prevista / 100,
+    valorEsperadoOperadora: cliValido ? esperado / 100 : null,
+    receitaPrevista: cliValido ? prevista / 100 : null,
     percentualComissao: percentual,
   };
 }
