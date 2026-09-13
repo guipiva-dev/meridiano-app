@@ -8,6 +8,7 @@ const VIGENTE = {
     { diaInicial: 1, diaFinal: 14, diaPagamento: 20, mesesAFrente: 0 },
     { diaInicial: 15, diaFinal: 31, diaPagamento: 5, mesesAFrente: 1 },
   ],
+  vigente: true,
 };
 
 const FORNECEDOR: FornecedorDetalheDto = {
@@ -26,7 +27,11 @@ const FORNECEDOR: FornecedorDetalheDto = {
   observacoes: null,
   resumo: { reservas: 12 },
   regras: [
-    { vigenteDesde: "2025-01-01", janelas: [{ diaInicial: 1, diaFinal: 31, diaPagamento: 10, mesesAFrente: 1 }] },
+    {
+      vigenteDesde: "2025-01-01",
+      janelas: [{ diaInicial: 1, diaFinal: 31, diaPagamento: 10, mesesAFrente: 1 }],
+      vigente: false,
+    },
     VIGENTE,
   ],
   regraVigente: VIGENTE,
@@ -72,4 +77,27 @@ test("fornecedor sem regra mostra só o estado vazio, sem a linha de prazo fixo"
 test("prazo de 1 dia usa o singular (não '1 dias')", () => {
   montar({ ...FORNECEDOR, prazoComissaoDias: 1 });
   expect(screen.getByText("ou prazo fixo: 1 dia após a compra")).toBeInTheDocument();
+});
+
+test("F02-front: versão com vigenteDesde no futuro vira 'Próxima versão' e some de anteriores", () => {
+  const proxima = {
+    vigenteDesde: "2099-01-01",
+    janelas: [{ diaInicial: 1, diaFinal: 31, diaPagamento: 10, mesesAFrente: 0 }],
+    vigente: false,
+  };
+  montar({ ...FORNECEDOR, regras: [...FORNECEDOR.regras, proxima] });
+  expect(screen.getByText("Próxima versão (a partir de 01/01)")).toBeInTheDocument();
+  expect(screen.getByText("Versões anteriores (1)")).toBeInTheDocument();
+});
+
+test("F02-front: campo vigente do B6 decide mesmo quando regraVigente (legado) aponta para outra", () => {
+  const outraVigente = { vigenteDesde: "2024-06-01", janelas: [], vigente: true };
+  const naoVigente = { ...VIGENTE, vigente: false };
+  montar({
+    ...FORNECEDOR,
+    regras: [outraVigente, naoVigente],
+    regraVigente: VIGENTE,
+  });
+  expect(screen.getByText("Regra vigente desde 01/06/2024")).toBeInTheDocument();
+  expect(screen.getByText("Versões anteriores (1)")).toBeInTheDocument();
 });

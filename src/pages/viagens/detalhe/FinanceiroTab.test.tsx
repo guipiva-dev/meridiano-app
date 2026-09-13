@@ -4,7 +4,7 @@ import type { MovimentoDto } from "@/api/financeiro";
 import { chaves, type ViagemDto } from "@/api/viagens";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
 import { FinanceiroTab } from "./FinanceiroTab";
-import { VIAGEM } from "./fixtures";
+import { RESERVA_1, RESERVA_2, VIAGEM } from "./fixtures";
 
 function resposta(status: number, body: unknown) {
   return {
@@ -172,6 +172,33 @@ test("Excluir… fica visível ao lado de Editar e abre o modal com motivo obrig
   expect(dialogo).toHaveTextContent("Excluir movimento");
   fireEvent.click(within(dialogo).getByRole("button", { name: "Excluir movimento" }));
   expect(await within(dialogo).findByText("Motivo é obrigatório")).toBeInTheDocument();
+});
+
+test("A07/A38: comissão divergente vai para 'Comissões recebidas', sem botão Receber", async () => {
+  montar(() => true, {
+    ...VIAGEM,
+    reservas: [RESERVA_1, { ...RESERVA_2, situacaoComissao: "divergente", recebidoOperadora: 250 }],
+  });
+  await screen.findByText("Decolar");
+  expect(screen.getByText("Comissões recebidas")).toBeInTheDocument();
+  expect(screen.getAllByRole("button", { name: "Receber" })).toHaveLength(1);
+});
+
+test("A38: comissão recebida some de 'Comissões a receber' e não tem botão Receber", async () => {
+  montar(() => true, {
+    ...VIAGEM,
+    reservas: [RESERVA_1, { ...RESERVA_2, situacaoComissao: "recebida", recebidoOperadora: 300 }],
+  });
+  await screen.findByText("Decolar");
+  expect(screen.getAllByRole("button", { name: "Receber" })).toHaveLength(1);
+});
+
+test("A38: comissão parcial mostra 'recebido R$ X · falta R$ Y'", async () => {
+  montar(() => true, {
+    ...VIAGEM,
+    reservas: [{ ...RESERVA_1, situacaoComissao: "parcial", recebidoOperadora: 400 }, RESERVA_2],
+  });
+  expect(await screen.findByText("recebido R$ 400,00 · falta R$ 600,00")).toBeInTheDocument();
 });
 
 test("viagem cancelada: sem + Despesa; Lançar movimento só oferece estorno e reembolso", async () => {

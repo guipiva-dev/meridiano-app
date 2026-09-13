@@ -104,6 +104,12 @@ export function UsarCreditoModal({ open, viagem, creditos, onClose, onUsado, onR
         )}
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
         {erroLocal && <Alert tone="danger">{erroLocal}</Alert>}
+        {creditoSelecionado && reservasElegiveis.length === 0 && (
+          <Alert tone="warning">
+            Este crédito é da {creditoSelecionado.fornecedorNome}; não há reserva ativa dela nesta viagem. Adicione uma
+            reserva da {creditoSelecionado.fornecedorNome} para usar o crédito.
+          </Alert>
+        )}
         <div role="radiogroup" aria-label="Créditos disponíveis" className={s.lista}>
           {disponiveis.map((c) => (
             <div key={c.id} className={s.creditoLinha}>

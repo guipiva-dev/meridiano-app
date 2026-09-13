@@ -41,7 +41,8 @@ export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaA
         <Alert
           tone="info"
           action={
-            podeEditar && (
+            podeEditar &&
+            !viagem.cancelada && (
               <Button
                 variant="secondary"
                 size="sm"

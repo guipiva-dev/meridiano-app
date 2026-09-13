@@ -112,6 +112,24 @@ test("escolher crédito CVC filtra reservas para CVC e envia consumirCredito", a
   expect(onUsado).toHaveBeenCalledWith(v);
 });
 
+test("X01: crédito sem reserva ativa da mesma operadora mostra aviso e não oferece Select", async () => {
+  const user = userEvent.setup();
+  const v: ViagemDto = {
+    ...viagem(),
+    reservas: [{ ...reserva("r1", "f-cvc", "CVC"), status: "cancelada" }, reserva("r2", "f-decolar", "Decolar")],
+  };
+  const creditos = [credito("cred1", "f-cvc", "CVC")];
+  render(<UsarCreditoModal open viagem={v} creditos={creditos} onClose={vi.fn()} onUsado={vi.fn()} />);
+
+  await user.click(screen.getByLabelText(/CVC/));
+
+  expect(
+    screen.getByText(
+      "Este crédito é da CVC; não há reserva ativa dela nesta viagem. Adicione uma reserva da CVC para usar o crédito.",
+    ),
+  ).toBeInTheDocument();
+});
+
 test("crédito sem valor (vendedor externo) aparece na lista e pode ser selecionado", async () => {
   const user = userEvent.setup();
   const v = viagem();

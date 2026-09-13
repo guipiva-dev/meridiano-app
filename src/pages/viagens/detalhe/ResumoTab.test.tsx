@@ -52,3 +52,18 @@ test("faixa completa: Receita recebida e Comissão do vendedor", () => {
   expect(screen.getByText(/Soma de todos os movimentos/)).toHaveAttribute("role", "tooltip");
   expect(screen.queryByText(/Comissões recebidas|vendedora/)).toBeNull();
 });
+
+test("P02: vendedor externo (sem resumo, sem verValores) vê 'Seu repasse' com valor e status", () => {
+  render(
+    <ResumoTab
+      viagem={{ ...VIAGEM, resumo: undefined, repasse: { id: "rp1", valor: 300, status: "bloqueado" } }}
+      verValores={false}
+      pendencias={[]}
+      onAbrirReserva={noop}
+      onVerPendencias={noop}
+    />,
+  );
+  expect(screen.getByText("Seu repasse")).toBeInTheDocument();
+  expect(screen.getByText("R$ 300,00")).toBeInTheDocument();
+  expect(screen.getByText("Bloqueado")).toBeInTheDocument();
+});

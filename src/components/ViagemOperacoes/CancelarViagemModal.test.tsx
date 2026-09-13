@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ValidationError } from "@/api/errors";
 import type * as ViagensApi from "@/api/viagens";
@@ -142,4 +142,21 @@ test("uma reserva ativa: singular no impacto e no botão", () => {
 test("duas reservas ativas: plural no impacto", () => {
   render(<CancelarViagemModal open viagem={viagem()} onClose={vi.fn()} onCancelada={vi.fn()} />);
   expect(screen.getByText("Cancela 2 reservas ativas e as pendências automáticas.")).toBeInTheDocument();
+});
+
+test("A23: reserva com recebido de operadora > 0 mostra aviso de estorno só nela", () => {
+  const v = {
+    ...viagem(),
+    reservas: [{ ...reserva("r1", "CVC"), recebidoOperadora: 700 }, reserva("r2", "Decolar")],
+  };
+  render(<CancelarViagemModal open viagem={v} onClose={vi.fn()} onCancelada={vi.fn()} />);
+
+  const grupoCvc = screen.getByRole("group", { name: /CVC/ });
+  const grupoDecolar = screen.getByRole("group", { name: /Decolar/ });
+  expect(
+    within(grupoCvc).getByText(
+      "Já entraram R$ 700,00 desta reserva. Se a operadora vai cobrar de volta, lance um 'Estorno da operadora' depois do cancelamento.",
+    ),
+  ).toBeInTheDocument();
+  expect(within(grupoDecolar).queryByText(/Já entraram/)).toBeNull();
 });

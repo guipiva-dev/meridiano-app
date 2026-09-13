@@ -4,6 +4,7 @@ import { viagensApi } from "@/api/viagens";
 import { Button, Field, useField } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
+import { formatarDinheiro } from "@/lib/dinheiro";
 import { DesfechoFields, type DesfechoValue } from "./DesfechoFields";
 import s from "./Operacoes.module.css";
 import { useOperacao } from "./useOperacao";
@@ -24,6 +25,7 @@ const MAPA: Record<string, string> = {
   credito_valor_invalido: "credito.valor",
   credito_cliente_invalido: "credito.clienteId",
   credito_validade_passada: "credito.validade",
+  valor_acima_da_venda: "valorReembolso",
 };
 
 const DESFECHO_PADRAO: DesfechoValue = {
@@ -143,10 +145,22 @@ export function CancelarReservaModal({
         )}
         {erroBloco && <Alert tone="danger">{erroBloco}</Alert>}
         <p className={s.impacto}>Zera comissão prevista (salvo comissão mantida) e reavalia o repasse.</p>
+        {(reserva.recebidoOperadora ?? 0) > 0 && !desfecho.comissaoMantida && (
+          <Alert tone="warning">
+            Já entraram {formatarDinheiro(reserva.recebidoOperadora ?? 0)} desta reserva. Se a operadora vai cobrar de
+            volta, lance um &apos;Estorno da operadora&apos; depois do cancelamento.
+          </Alert>
+        )}
         <Field label="Motivo" required error={erroMotivoLocal ?? erros.motivo}>
           <Motivo value={motivo} onChange={setMotivo} />
         </Field>
-        <DesfechoFields value={desfecho} onChange={setDesfecho} erros={erros} passageiros={viagem.passageiros} />
+        <DesfechoFields
+          value={desfecho}
+          onChange={setDesfecho}
+          erros={erros}
+          passageiros={viagem.passageiros}
+          valorVenda={reserva.valorCliente}
+        />
       </div>
     </Modal>
   );

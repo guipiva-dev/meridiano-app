@@ -4,6 +4,7 @@ import { viagensApi } from "@/api/viagens";
 import { Button, DateInput, Field, Input, Select } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
+import { hojeIso } from "@/lib/datas";
 import s from "./Operacoes.module.css";
 import { useOperacao } from "./useOperacao";
 
@@ -19,6 +20,7 @@ interface NfseModalProps {
 // `nfse_incompleta` fala de número, data e tomador de uma vez: fica no bloco, não sob um campo.
 const MAPA: Record<string, string> = {
   nfse_invalida: "status",
+  nfse_data_futura: "dataEmissao",
 };
 
 const OPCOES_STATUS = [
@@ -37,6 +39,8 @@ export function NfseModal({ open, reserva, viagem, onClose, onSalva, onRecarrega
   const [numero, setNumero] = useState(reserva.nfseNumero ?? "");
   const [dataEmissao, setDataEmissao] = useState(reserva.nfseDataEmissao ?? "");
   const [erroTomadorLocal, setErroTomadorLocal] = useState<string>();
+  const [erroNumeroLocal, setErroNumeroLocal] = useState<string>();
+  const [erroDataLocal, setErroDataLocal] = useState<string>();
   const { salvando, erros, erroBloco, conflito, enviar, limpar } = useOperacao<NfseRequest>(
     (req) => viagensApi.nfse(reserva.id, req),
     MAPA,
@@ -48,6 +52,8 @@ export function NfseModal({ open, reserva, viagem, onClose, onSalva, onRecarrega
     setNumero(reserva.nfseNumero ?? "");
     setDataEmissao(reserva.nfseDataEmissao ?? "");
     setErroTomadorLocal(undefined);
+    setErroNumeroLocal(undefined);
+    setErroDataLocal(undefined);
     limpar();
     onClose();
   }
@@ -58,6 +64,16 @@ export function NfseModal({ open, reserva, viagem, onClose, onSalva, onRecarrega
       return;
     }
     setErroTomadorLocal(undefined);
+    if (status === "emitido" && !numero.trim()) {
+      setErroNumeroLocal("Número é obrigatório para NFSe emitida");
+      return;
+    }
+    setErroNumeroLocal(undefined);
+    if (status === "emitido" && dataEmissao && dataEmissao > hojeIso()) {
+      setErroDataLocal("Data de emissão não pode ser no futuro");
+      return;
+    }
+    setErroDataLocal(undefined);
     const req: NfseRequest = {
       status,
       tomador: tomador === "" ? null : tomador,
@@ -131,7 +147,7 @@ export function NfseModal({ open, reserva, viagem, onClose, onSalva, onRecarrega
             }}
           />
         </Field>
-        <Field label="Número" error={erros.numero}>
+        <Field label="Número" error={erroNumeroLocal ?? erros.numero}>
           <Input
             className={s.mono}
             value={numero}
@@ -140,8 +156,9 @@ export function NfseModal({ open, reserva, viagem, onClose, onSalva, onRecarrega
             }}
           />
         </Field>
-        <Field label="Emissão">
+        <Field label="Emissão" error={erroDataLocal ?? erros.dataEmissao}>
           <DateInput
+            max={hojeIso()}
             value={dataEmissao}
             onChange={(e) => {
               setDataEmissao(e.target.value);

@@ -76,7 +76,7 @@ export function ViagemPage() {
   const tab = tabs.some((t) => t.id === v.tab) ? v.tab : "resumo";
 
   return (
-    <Page>
+    <Page titulo={`${viagem.codigo} · ${viagem.destino}`}>
       <CabecalhoViagem
         viagem={viagem}
         pode={v.pode}

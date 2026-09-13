@@ -17,7 +17,8 @@ export const CAMPO_POR_CODIGO: Record<string, string> = {
   vigencia_invalida: "vigenteDesde",
   janelas_obrigatorias: "janelas",
   janela_invalida: "janelas",
-  janelas_sobrepostas: "janelas",
+  // B6: `janelas_incompletas` substitui `janelas_sobrepostas` (removido).
+  janelas_incompletas: "janelas",
   documento_tipo_invalido: "tipo",
   validade_invalida: "validade",
   canal_invalido: "canal",

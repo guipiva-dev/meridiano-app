@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { VersaoRegraDto } from "@/api/fornecedores";
 import { hojeIso } from "@/lib/datas";
 import { NovaVersaoRegraModal } from "./NovaVersaoRegraModal";
 
@@ -13,8 +14,16 @@ function resposta(status: number, body: unknown) {
   } as unknown as Response;
 }
 
-function montar(onSalva = () => undefined) {
-  render(<NovaVersaoRegraModal open fornecedorId="f1" onClose={() => undefined} onSalva={onSalva} />);
+function montar(onSalva = () => undefined, regraVigente: VersaoRegraDto | null = null) {
+  render(
+    <NovaVersaoRegraModal
+      open
+      fornecedorId="f1"
+      regraVigente={regraVigente}
+      onClose={() => undefined}
+      onSalva={onSalva}
+    />,
+  );
 }
 
 function preencher(janela: number, valores: [number, number, number, number]) {
@@ -83,4 +92,40 @@ test("janela sem dias preenchidos também é barrada localmente", async () => {
 
   expect(await screen.findByText("Na janela 1, preencha dias entre 1 e 31.")).toBeInTheDocument();
   expect(chamadas).toHaveLength(0);
+});
+
+test("F02-front: pré-carrega as janelas da versão vigente", () => {
+  const vigente: VersaoRegraDto = {
+    vigenteDesde: "2025-01-01",
+    janelas: [{ diaInicial: 1, diaFinal: 14, diaPagamento: 20, mesesAFrente: 1 }],
+    vigente: true,
+  };
+  montar(() => undefined, vigente);
+
+  expect(screen.getByLabelText("Dia inicial da janela 1")).toHaveValue(1);
+  expect(screen.getByLabelText("Dia final da janela 1")).toHaveValue(14);
+  expect(screen.getByLabelText("Dia do pagamento da janela 1")).toHaveValue(20);
+  expect(screen.getByLabelText("Meses à frente da janela 1")).toHaveValue(1);
+});
+
+test("F02-front: vigente_desde tem hoje como valor default", () => {
+  montar();
+  expect(screen.getByLabelText(/Vigente a partir de/)).toHaveValue(hojeIso());
+});
+
+test("F02-front: janelas_incompletas do back aparece como mensagem no bloco", async () => {
+  vi.stubGlobal("fetch", () =>
+    Promise.resolve({
+      ok: false,
+      status: 422,
+      headers: { get: () => "application/json" },
+      json: () => Promise.resolve({ codigo: "janelas_incompletas", detail: "As janelas não cobrem o mês inteiro." }),
+    } as unknown as Response),
+  );
+  montar();
+
+  preencher(1, [1, 31, 10, 0]);
+  fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+
+  expect(await screen.findByText("As janelas não cobrem o mês inteiro.")).toBeInTheDocument();
 });

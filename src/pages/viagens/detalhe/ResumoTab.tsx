@@ -68,6 +68,9 @@ interface ResumoTabProps {
 
 export function ResumoTab({ viagem, verValores, pendencias, onAbrirReserva, onVerPendencias }: ResumoTabProps) {
   const faixa = faixaDaViagem(viagem, verValores);
+  // P02: vendedor externo recebe `repasse` mas não `resumo` nem `verValores` — sem faixa (nenhuma
+  // das duas condições de `faixaDaViagem`), mas ainda mostra o próprio repasse.
+  const meuRepasse = !faixa ? viagem.repasse : null;
   const reservasAtivas = viagem.reservas.filter((r) => r.status !== "cancelada").length;
   const reservasTotal = viagem.reservas.length;
   const metaReservas =
@@ -82,6 +85,15 @@ export function ResumoTab({ viagem, verValores, pendencias, onAbrirReserva, onVe
   return (
     <div className={s.resumo}>
       {faixa && <FaixaResumo itens={faixa.itens} extra={faixa.extra} />}
+
+      {meuRepasse && (
+        <Bloco titulo="Seu repasse">
+          <div className={s.linha}>
+            <MoneyValue value={meuRepasse.valor} className={s.linhaValor} />
+            <StatusBadge entidade="repasse" valor={meuRepasse.status} />
+          </div>
+        </Bloco>
+      )}
 
       <div className={s.split}>
         <Bloco titulo="Reservas" meta={metaReservas}>

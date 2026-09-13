@@ -4,6 +4,7 @@ import { viagensApi } from "@/api/viagens";
 import { Button, Field, useField } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
+import { formatarDinheiro } from "@/lib/dinheiro";
 import { plural } from "@/lib/plural";
 import { DesfechoFields, type DesfechoValue } from "./DesfechoFields";
 import s from "./Operacoes.module.css";
@@ -145,19 +146,29 @@ export function CancelarViagemModal({ open, viagem, onClose, onCancelada, onReca
           <Motivo value={motivo} onChange={setMotivo} />
         </Field>
         <div className={s.lista}>
-          {ativos.map((r) => (
-            <fieldset key={r.id} className={s.item}>
-              <legend className={s.itemHeader}>{`${r.fornecedorNome} · ${r.localizador ?? "—"}`}</legend>
-              <DesfechoFields
-                value={desfechos[r.id] ?? DESFECHO_PADRAO}
-                onChange={(v) => {
-                  setDesfechos((prev) => ({ ...prev, [r.id]: v }));
-                }}
-                erros={SEM_ERROS}
-                passageiros={viagem.passageiros}
-              />
-            </fieldset>
-          ))}
+          {ativos.map((r) => {
+            const desfechoR = desfechos[r.id] ?? DESFECHO_PADRAO;
+            return (
+              <fieldset key={r.id} className={s.item}>
+                <legend className={s.itemHeader}>{`${r.fornecedorNome} · ${r.localizador ?? "—"}`}</legend>
+                {(r.recebidoOperadora ?? 0) > 0 && !desfechoR.comissaoMantida && (
+                  <Alert tone="warning">
+                    Já entraram {formatarDinheiro(r.recebidoOperadora ?? 0)} desta reserva. Se a operadora vai cobrar de
+                    volta, lance um &apos;Estorno da operadora&apos; depois do cancelamento.
+                  </Alert>
+                )}
+                <DesfechoFields
+                  value={desfechoR}
+                  onChange={(v) => {
+                    setDesfechos((prev) => ({ ...prev, [r.id]: v }));
+                  }}
+                  erros={SEM_ERROS}
+                  passageiros={viagem.passageiros}
+                  valorVenda={r.valorCliente}
+                />
+              </fieldset>
+            );
+          })}
         </div>
       </div>
     </Modal>

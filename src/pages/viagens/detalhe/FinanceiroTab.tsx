@@ -2,13 +2,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { chavesDespesas } from "@/api/despesas";
 import { chavesFinanceiro } from "@/api/financeiro";
-import { chaves, type ReservaDto, type ViagemDto } from "@/api/viagens";
+import { chaves, type ReservaDto, type SituacaoComissao, type ViagemDto } from "@/api/viagens";
 import { useAuth } from "@/auth/useAuth";
 import { Button, MoneyValue } from "@/components";
 import { StatusBadge } from "@/components/display";
 import { type ItemRecebimento, ReceberModal } from "@/components/financeiro";
 import { FaixaResumo, type ItemFaixa } from "@/components/viagem";
 import { formatarData } from "@/lib/datas";
+import { formatarDinheiro } from "@/lib/dinheiro";
 import { DespesasViagem } from "./DespesasViagem";
 import { MovimentosViagem } from "./MovimentosViagem";
 import { Bloco, TOOLTIP_RECEBIDA } from "./ResumoTab";
@@ -37,7 +38,14 @@ export function FinanceiroTab({ viagem }: { viagem: ViagemDto }) {
         { label: "Resultado", value: r.resultado, destaque: true },
       ]
     : [];
-  const aReceber = viagem.reservas.filter((res) => res.status !== "cancelada" && (res.valorEsperadoOperadora ?? 0) > 0);
+  // A07/A38: "divergente" é conciliada (spec §6.1) — junto com "recebida" vai para "Comissões
+  // recebidas", sem botão Receber.
+  const SITUACOES_A_RECEBER: SituacaoComissao[] = ["a_receber", "parcial", "atrasada"];
+  const comValorEsperado = viagem.reservas.filter(
+    (res) => res.status !== "cancelada" && (res.valorEsperadoOperadora ?? 0) > 0,
+  );
+  const aReceber = comValorEsperado.filter((res) => SITUACOES_A_RECEBER.includes(res.situacaoComissao));
+  const recebidas = comValorEsperado.filter((res) => !SITUACOES_A_RECEBER.includes(res.situacaoComissao));
 
   function aplicar() {
     void qc.invalidateQueries({ queryKey: chaves.viagem(viagem.id) });
@@ -70,11 +78,17 @@ export function FinanceiroTab({ viagem }: { viagem: ViagemDto }) {
                 {res.fornecedorNome}
                 {res.localizador && <code className={s.codigo}> · {res.localizador}</code>}
               </b>
-              <span className={s.linhaMeta}>previsto para {formatarData(res.dataPrevistaComissao)}</span>
+              <span className={s.linhaMeta}>
+                {res.situacaoComissao === "parcial"
+                  ? `recebido ${formatarDinheiro(res.recebidoOperadora ?? 0)} · falta ${formatarDinheiro(
+                      (res.valorEsperadoOperadora ?? 0) - (res.recebidoOperadora ?? 0),
+                    )}`
+                  : `previsto para ${formatarData(res.dataPrevistaComissao)}`}
+              </span>
             </span>
             <StatusBadge entidade="comissao" valor={res.situacaoComissao} />
             <MoneyValue value={res.valorEsperadoOperadora ?? null} className={s.linhaValor} />
-            {podeMovimentar && res.situacaoComissao !== "recebida" && (
+            {podeMovimentar && (
               <Button
                 variant="secondary"
                 size="sm"
@@ -88,6 +102,23 @@ export function FinanceiroTab({ viagem }: { viagem: ViagemDto }) {
           </div>
         ))}
       </Bloco>
+
+      {recebidas.length > 0 && (
+        <Bloco titulo="Comissões recebidas" meta={recebidas.length}>
+          {recebidas.map((res) => (
+            <div key={res.id} className={s.linha}>
+              <span className={s.linhaTexto}>
+                <b className={s.linhaTitulo}>
+                  {res.fornecedorNome}
+                  {res.localizador && <code className={s.codigo}> · {res.localizador}</code>}
+                </b>
+              </span>
+              <StatusBadge entidade="comissao" valor={res.situacaoComissao} />
+              <MoneyValue value={res.valorEsperadoOperadora ?? null} className={s.linhaValor} />
+            </div>
+          ))}
+        </Bloco>
+      )}
 
       <MovimentosViagem viagem={viagem} podeMovimentar={podeMovimentar} verValores={verValores} onMudou={aplicar} />
       <DespesasViagem viagem={viagem} podeMovimentar={podeMovimentar} onMudou={aplicar} />
