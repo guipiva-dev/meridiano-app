@@ -122,6 +122,17 @@ test("criar invalida a lista e o detalhe do novo id (substitui o dto sintético 
   expect(invalidar).toHaveBeenCalledWith({ queryKey: ["teste", "novo"] });
 });
 
+test("carregar que rejeita expõe o erro em erroCarga", async () => {
+  const erro = new ValidationError(422, "nao_encontrado", "Pessoa não encontrada");
+  const carregar = vi.fn().mockRejectedValue(erro);
+  const { result } = montar({ id: "c1", carregar });
+
+  await waitFor(() => {
+    expect(result.current.erroCarga).toBeInstanceOf(ValidationError);
+  });
+  expect(result.current.erroCarga).toBe(erro);
+});
+
 test("atualizar invalida a lista", async () => {
   const carregar = vi.fn().mockResolvedValue({ id: "c1", versao: "7", nome: "Bia" });
   const atualizar = vi.fn().mockResolvedValue({ id: "c1", versao: "8", nome: "Bia" });

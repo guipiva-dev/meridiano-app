@@ -92,6 +92,7 @@ export function useFormularioCadastro<TForm extends FieldValues, TDto>(opts: Opc
     form,
     dto,
     carregando: Boolean(id) && dtoQ.isPending,
+    erroCarga: dtoQ.error,
     salvamento,
     erros: daApi.campos,
     erroBloco: daApi.bloco,
