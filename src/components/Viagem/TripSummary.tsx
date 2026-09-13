@@ -19,23 +19,28 @@ export function somarReservas(reservas: ReservaValores[]): {
   vendaTotal: number;
   custo: number;
   receitaPrevista: number;
+  /** true quando alguma reserva ativa ainda não tem venda ao cliente preenchida. */
+  incompleta: boolean;
 } {
   let vendaTotal = 0;
   let custo = 0;
   let receitaPrevista = 0;
+  let incompleta = false;
   for (const r of reservas) {
     if (r.status === "cancelada") continue;
     const valorTotal = r.valorTotal ?? 0;
-    const valorCliente = r.valorCliente ?? 0;
-    vendaTotal += valorCliente;
     custo += valorTotal;
+    if (r.valorCliente === null) {
+      incompleta = true;
+      continue;
+    }
+    vendaTotal += r.valorCliente;
     receitaPrevista +=
-      // valorCliente acima já é um number (nunca null): receitaPrevista nunca vem null aqui, só satisfaz o tipo.
       calcularReserva({
         valorTotal,
         valorComissao: r.valorComissao ?? 0,
         ravOperadora: r.ravOperadora ?? 0,
-        valorCliente,
+        valorCliente: r.valorCliente,
         taxaServico: r.taxaServico ?? 0,
         viaOperadora: r.ravClienteModo === "via_operadora",
       }).receitaPrevista ?? 0;
@@ -44,6 +49,7 @@ export function somarReservas(reservas: ReservaValores[]): {
     vendaTotal: arredondar2(vendaTotal),
     custo: arredondar2(custo),
     receitaPrevista: arredondar2(receitaPrevista),
+    incompleta,
   };
 }
 
@@ -63,7 +69,7 @@ export function TripSummary({
   onAdicionarReserva,
   mostrarResultado = true,
 }: TripSummaryProps) {
-  const { vendaTotal, custo, receitaPrevista } = somarReservas(reservas);
+  const { vendaTotal, custo, receitaPrevista, incompleta } = somarReservas(reservas);
   const resultado = arredondar2(receitaPrevista - (repasseValor ?? 0) - despesas);
   return (
     <div className={s.summaryStrip}>
@@ -89,14 +95,14 @@ export function TripSummary({
             <MoneyValue value={despesas} />
           </div>
           <span className={s.sep} aria-hidden />
-          <div className={s.item}>
+          <div className={s.item} title={incompleta ? "Preencha a venda ao cliente das reservas" : undefined}>
             <small>
               Resultado da viagem{" "}
               <Tooltip text="Receita das reservas − comissão do vendedor − despesas vinculadas">
                 <CircleHelp size={16} aria-hidden />
               </Tooltip>
             </small>
-            <MoneyValue value={resultado} emphasis="result" />
+            <MoneyValue value={incompleta ? null : resultado} emphasis="result" />
           </div>
         </>
       ) : (

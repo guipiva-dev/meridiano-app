@@ -365,9 +365,9 @@ export function useNovaViagem(id: string | undefined) {
     return r.fornecedorTocado && problemas?.fornecedorId ? { fornecedorId: problemas.fornecedorId } : {};
   });
 
-  const receitaPrevista = somarReservas(reservas).receitaPrevista;
+  const { receitaPrevista, incompleta } = somarReservas(reservas);
   const repasseSugerido =
-    vendedorSelecionado?.geraRepasse && repasseValor === null
+    !incompleta && vendedorSelecionado?.geraRepasse && repasseValor === null
       ? arredondar2((receitaPrevista * vendedorSelecionado.percentualPadrao) / 100)
       : null;
 
