@@ -12,6 +12,7 @@ export interface Coluna<T> {
   ordenavel?: boolean;
   render: (linha: T) => ReactNode;
   largura?: string;
+  classe?: string;
 }
 
 export interface Ordenacao {
@@ -77,7 +78,7 @@ export function DataTable<T>({
                 <th
                   key={c.id}
                   style={{ width: c.largura }}
-                  className={cx(c.alinhar === "right" && s.right)}
+                  className={cx(c.alinhar === "right" && s.right, c.classe)}
                   aria-sort={ariaSort}
                 >
                   {c.ordenavel ? (
@@ -140,7 +141,7 @@ export function DataTable<T>({
                 }
               >
                 {colunas.map((c) => (
-                  <td key={c.id} className={cx(c.alinhar === "right" && s.right)}>
+                  <td key={c.id} className={cx(c.alinhar === "right" && s.right, c.classe)}>
                     {c.render(l)}
                   </td>
                 ))}

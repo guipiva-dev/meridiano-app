@@ -1,5 +1,9 @@
+.celulaViagem {
+  width: 100%;
+  max-width: 0;
+}
 .primary {
-  max-width: 30rem;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -9,12 +13,12 @@
 .secondary {
   display: flex;
   align-items: baseline;
-  max-width: 30rem;
+  max-width: 100%;
   font: var(--type-helper);
   color: var(--color-text-secondary);
 }
 .secondaryDestino {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

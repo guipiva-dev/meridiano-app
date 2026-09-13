@@ -78,6 +78,7 @@ export function ViagensPage() {
       {
         id: "viagem",
         titulo: "Viagem",
+        classe: s.celulaViagem,
         render: (l) => {
           const destinoTipo = `${l.destino} · ${ROTULO_TIPO[l.tipo]}`;
           return (
