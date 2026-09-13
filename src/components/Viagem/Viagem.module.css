@@ -24,6 +24,17 @@
   align-items: center;
   gap: var(--space-1);
 }
+.chipDuasLinhas {
+  flex-direction: column;
+  align-items: flex-start;
+  height: auto;
+  padding-block: var(--space-2);
+}
+.chipMeta {
+  display: block;
+  font: var(--type-helper);
+  color: var(--color-text-secondary);
+}
 .titular {
   outline: 2px solid var(--color-action-business);
   outline-offset: 1px;

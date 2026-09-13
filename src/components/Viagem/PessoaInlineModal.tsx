@@ -1,7 +1,7 @@
 import { type SubmitEvent, useState } from "react";
 import { ApiError, ConflictError, mensagemDeErro, ValidationError } from "@/api/errors";
 import type { ClienteBuscaDto } from "@/api/viagens";
-import { Button, Field, Input } from "@/components";
+import { Button, DateInput, Field, Input } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
 import s from "./Viagem.module.css";
@@ -10,13 +10,16 @@ interface NovaPessoa {
   nome: string;
   telefone?: string;
   email?: string;
-  cpf?: string;
+  cpf: string;
+  dataNascimento: string;
 }
 
 const CAMPO_POR_CODIGO: Record<string, keyof NovaPessoa | undefined> = {
   nome_obrigatorio: "nome",
   cpf_invalido: "cpf",
   cpf_duplicado: "cpf",
+  cpf_obrigatorio: "cpf",
+  data_nascimento_obrigatoria: "dataNascimento",
   email_invalido: "email",
   telefone_invalido: "telefone",
 };
@@ -33,6 +36,7 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
   const [telefone, setTelefone] = useState("");
   const [email, setEmail] = useState("");
   const [cpf, setCpf] = useState("");
+  const [dataNascimento, setDataNascimento] = useState("");
   const [erros, setErros] = useState<Partial<Record<keyof NovaPessoa, string>>>({});
   const [erroBloco, setErroBloco] = useState<string>();
   const [salvando, setSalvando] = useState(false);
@@ -42,6 +46,7 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
     setTelefone("");
     setEmail("");
     setCpf("");
+    setDataNascimento("");
     setErros({});
     setErroBloco(undefined);
     setSalvando(false);
@@ -54,8 +59,12 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
   async function enviar(e?: SubmitEvent<HTMLFormElement>) {
     e?.preventDefault();
     setErroBloco(undefined);
-    if (!nome.trim()) {
-      setErros({ nome: "Nome é obrigatório" });
+    const obrigatorios: Partial<Record<keyof NovaPessoa, string>> = {};
+    if (!nome.trim()) obrigatorios.nome = "Nome é obrigatório";
+    if (!cpf.trim()) obrigatorios.cpf = "Informe o CPF";
+    if (!dataNascimento) obrigatorios.dataNascimento = "Informe a data de nascimento";
+    if (Object.keys(obrigatorios).length > 0) {
+      setErros(obrigatorios);
       return;
     }
     setErros({});
@@ -65,7 +74,8 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
         nome: nome.trim(),
         telefone: telefone.trim() || undefined,
         email: email.trim() || undefined,
-        cpf: cpf.trim() || undefined,
+        cpf: cpf.trim(),
+        dataNascimento,
       });
       onCriada(criada);
       fechar();
@@ -140,11 +150,19 @@ export function PessoaInlineModal({ open, onClose, onCriada, criar }: PessoaInli
             }}
           />
         </Field>
-        <Field label="CPF" error={erros.cpf}>
+        <Field label="CPF" required error={erros.cpf}>
           <Input
             value={cpf}
             onChange={(e) => {
               setCpf(e.target.value);
+            }}
+          />
+        </Field>
+        <Field label="Nascimento" required error={erros.dataNascimento}>
+          <DateInput
+            value={dataNascimento}
+            onChange={(e) => {
+              setDataNascimento(e.target.value);
             }}
           />
         </Field>

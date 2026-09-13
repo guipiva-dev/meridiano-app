@@ -54,6 +54,16 @@ test("422 cpf_invalido continua mapeado para o campo cpf", () => {
   expect(errosDeCadastro(erro).campos).toEqual({ cpf: "CPF inválido" });
 });
 
+test("422 cpf_obrigatorio mapeia para o campo cpf", () => {
+  const erro = new ValidationError(422, "cpf_obrigatorio", "Informe o CPF");
+  expect(errosDeCadastro(erro).campos).toEqual({ cpf: "Informe o CPF" });
+});
+
+test("422 data_nascimento_obrigatoria mapeia para o campo dataNascimento", () => {
+  const erro = new ValidationError(422, "data_nascimento_obrigatoria", "Informe a data de nascimento");
+  expect(errosDeCadastro(erro).campos).toEqual({ dataNascimento: "Informe a data de nascimento" });
+});
+
 test("422 telefone_invalido mapeia para o campo telefone", () => {
   const erro = new ValidationError(422, "telefone_invalido", "Telefone inválido");
   expect(errosDeCadastro(erro).campos).toEqual({ telefone: "Telefone inválido" });
