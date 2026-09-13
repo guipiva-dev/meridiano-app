@@ -115,7 +115,14 @@ export function ReceberModal({ open, item, onClose, onRecebido }: ReceberModalPr
           </Alert>
         )}
         <div ref={avisoRef}>
-          <AvisoExcedente excedente={excedente} confirmado={confirmarExcedente} onChange={setConfirmarExcedente} />
+          <AvisoExcedente
+            excedente={excedente}
+            confirmado={confirmarExcedente}
+            onChange={(marcado) => {
+              setConfirmarExcedente(marcado);
+              if (marcado) m.confirmarExcedenteMarcado();
+            }}
+          />
           {m.precisaConfirmarExcedente && (
             <Alert tone="danger">{"Marque 'Registrar mesmo assim' para confirmar"}</Alert>
           )}

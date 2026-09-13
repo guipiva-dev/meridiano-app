@@ -14,6 +14,8 @@ export interface ResultadoMutacao<TArgs, TRes> {
   excedente: number | null;
   /** true quando o servidor recusou por faltar a confirmação do excedente: o modal avisa e foca a checkbox. */
   precisaConfirmarExcedente: boolean;
+  /** Chamado quando o usuário marca "Registrar mesmo assim": esconde o aviso de recusa do servidor. */
+  confirmarExcedenteMarcado: () => void;
   enviar: (args: TArgs) => Promise<TRes | null>;
   limpar: () => void;
 }
@@ -36,6 +38,10 @@ export function useMutacaoFinanceira<TArgs, TRes>(
   const [motivo, setMotivo] = useState("");
   const [excedente, setExcedente] = useState<number | null>(null);
   const [precisaConfirmarExcedente, setPrecisaConfirmarExcedente] = useState(false);
+
+  function confirmarExcedenteMarcado() {
+    setPrecisaConfirmarExcedente(false);
+  }
 
   function limpar() {
     setSalvando(false);
@@ -105,6 +111,7 @@ export function useMutacaoFinanceira<TArgs, TRes>(
     setMotivo,
     excedente,
     precisaConfirmarExcedente,
+    confirmarExcedenteMarcado,
     enviar,
     limpar,
   };
