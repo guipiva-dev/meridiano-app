@@ -5,6 +5,7 @@ import type { ClienteBuscaDto } from "@/api/viagens";
 import { Button, Field, IconButton, Input } from "@/components";
 import { Chip } from "@/components/display";
 import { cx } from "@/lib/cx";
+import { formatarData } from "@/lib/datas";
 import { formatarCpf, formatarTelefone } from "@/lib/documentos";
 import s from "./Viagem.module.css";
 
@@ -12,6 +13,8 @@ export interface PassageiroForm {
   clienteId: string;
   nome: string;
   titular: boolean;
+  cpf?: string | null;
+  dataNascimento?: string | null;
 }
 
 interface PassageirosFieldProps {
@@ -73,7 +76,10 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
     clearTimeout(timer.current);
     seq.current++;
     if (value.some((p) => p.clienteId === c.id)) return;
-    onChange([...value, { clienteId: c.id, nome: c.nome, titular: value.length === 0 }]);
+    onChange([
+      ...value,
+      { clienteId: c.id, nome: c.nome, titular: value.length === 0, cpf: c.cpf, dataNascimento: c.dataNascimento },
+    ]);
     setQuery("");
     setOpcoes([]);
     setAberto(false);
@@ -116,27 +122,33 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
     <Field label="Passageiros" tooltip="O titular (contorno laranja) é o contato da viagem" error={erro ?? erroBusca}>
       <div className={s.passageiros}>
         <div className={s.chips}>
-          {value.map((p) => (
-            <span key={p.clienteId} className={s.passChip}>
-              <Chip
-                selected
-                className={p.titular ? s.titular : undefined}
-                onClick={() => {
-                  tornarTitular(p.clienteId);
-                }}
-              >
-                {p.nome}
-                {p.titular && <span className={s.srOnly}> titular</span>}
-              </Chip>
-              <IconButton
-                label={`Remover ${p.nome}`}
-                icon={<X size={14} />}
-                onClick={() => {
-                  remover(p.clienteId);
-                }}
-              />
-            </span>
-          ))}
+          {value.map((p) => {
+            const meta = [p.cpf && formatarCpf(p.cpf), p.dataNascimento && `nasc. ${formatarData(p.dataNascimento)}`]
+              .filter(Boolean)
+              .join(" · ");
+            return (
+              <span key={p.clienteId} className={s.passChip}>
+                <Chip
+                  selected
+                  className={cx(p.titular && s.titular, meta && s.chipDuasLinhas)}
+                  onClick={() => {
+                    tornarTitular(p.clienteId);
+                  }}
+                >
+                  {p.nome}
+                  {p.titular && <span className={s.srOnly}> titular</span>}
+                  {meta && <span className={s.chipMeta}>{meta}</span>}
+                </Chip>
+                <IconButton
+                  label={`Remover ${p.nome}`}
+                  icon={<X size={14} />}
+                  onClick={() => {
+                    remover(p.clienteId);
+                  }}
+                />
+              </span>
+            );
+          })}
         </div>
         <div className={s.buscaWrap}>
           <Input

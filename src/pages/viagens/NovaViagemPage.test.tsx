@@ -269,6 +269,39 @@ test("observações tem maxLength 2000 e mostra contador N/2000", async () => {
   expect(screen.getByText("3/2000")).toBeInTheDocument();
 });
 
+test("criar pessoa inline propaga CPF e nascimento: chip mostra a linha secundária", async () => {
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    const metodo = init?.method ?? "GET";
+    urls.push(`${metodo} ${url}`);
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
+    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, VENDEDORES));
+    if (url.includes("/agencia")) return Promise.resolve(resposta(200, AGENCIA));
+    if (metodo === "POST" && url.includes("/clientes")) {
+      return Promise.resolve(
+        resposta(200, {
+          id: "c9",
+          nome: "Carlos Mendes",
+          telefone: null,
+          cpf: "52998224725",
+          dataNascimento: "1980-05-05",
+        }),
+      );
+    }
+    return Promise.resolve(resposta(200, null));
+  });
+
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+
+  fireEvent.click(screen.getByRole("button", { name: "+ pessoa" }));
+  fireEvent.change(screen.getByLabelText(/Nome/), { target: { value: "Carlos Mendes" } });
+  fireEvent.change(screen.getByLabelText(/^CPF/), { target: { value: "52998224725" } });
+  fireEvent.change(screen.getByLabelText(/^Nascimento/), { target: { value: "1980-05-05" } });
+  fireEvent.click(screen.getByRole("button", { name: "Criar" }));
+
+  expect(await screen.findByText("529.982.247-25 · nasc. 05/05/1980")).toBeInTheDocument();
+});
+
 test("edição não repete 'Titular:' no subtítulo", async () => {
   vi.stubGlobal("fetch", (url: string) => {
     if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));

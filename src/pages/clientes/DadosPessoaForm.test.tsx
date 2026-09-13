@@ -74,6 +74,22 @@ test("erro vindo da API (422 cpf_invalido) prevalece sobre o local", () => {
   expect(screen.getByText("CPF inválido")).toBeInTheDocument();
 });
 
+test("CPF e Nascimento são obrigatórios", () => {
+  render(<Wrapper />);
+  expect(screen.getByLabelText(/^CPF/)).toBeRequired();
+  expect(screen.getByLabelText(/^Nascimento/)).toBeRequired();
+});
+
+test("422 cpf_obrigatorio mostra 'Informe o CPF' no campo CPF", () => {
+  render(<Wrapper erros={{ cpf: "Informe o CPF" }} />);
+  expect(screen.getByText("Informe o CPF")).toBeInTheDocument();
+});
+
+test("422 data_nascimento_obrigatoria mostra 'Informe a data de nascimento' no campo Nascimento", () => {
+  render(<Wrapper erros={{ dataNascimento: "Informe a data de nascimento" }} />);
+  expect(screen.getByText("Informe a data de nascimento")).toBeInTheDocument();
+});
+
 test("telefone com letras mostra erro local", async () => {
   const user = userEvent.setup();
   render(<Wrapper />);

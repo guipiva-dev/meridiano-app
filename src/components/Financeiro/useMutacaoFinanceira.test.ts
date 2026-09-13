@@ -71,6 +71,27 @@ test("422 recebimento_acima_esperado expõe o excedente sem virar erro de bloco"
   expect(result.current.precisaConfirmarExcedente).toBe(true);
 });
 
+test("confirmarExcedenteMarcado limpa precisaConfirmarExcedente sem mexer no excedente", async () => {
+  const executar = vi
+    .fn()
+    .mockRejectedValue(
+      new ValidationError(422, "recebimento_acima_esperado", "Valor acima do esperado", { excedente: 110 }),
+    );
+  const { result } = renderHook(() => useMutacaoFinanceira(executar, CAMPO_POR_CODIGO_FIN));
+
+  await act(async () => {
+    await result.current.enviar({});
+  });
+  expect(result.current.precisaConfirmarExcedente).toBe(true);
+
+  act(() => {
+    result.current.confirmarExcedenteMarcado();
+  });
+
+  expect(result.current.precisaConfirmarExcedente).toBe(false);
+  expect(result.current.excedente).toBe(110);
+});
+
 test("409 vira conflito e limpar reseta tudo", async () => {
   const executar = vi.fn().mockRejectedValue(new ConflictError(409, "conflito", "Alguém alterou"));
   const { result } = renderHook(() => useMutacaoFinanceira(executar, CAMPO_POR_CODIGO_FIN));

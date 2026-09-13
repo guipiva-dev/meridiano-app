@@ -32,7 +32,8 @@ interface RegrasTabProps {
 }
 
 /** F02-front: B6 já manda `vigente` em cada versão (exatamente uma `true`, nenhuma se todas forem
- * futuras) — só falta separar as futuras ("próxima") das que já venceram ("anterior"). */
+ * futuras) — só falta separar as futuras ("próximas", pode haver mais de uma) das que já venceram
+ * ("anterior"). */
 function classificarRegras(fornecedor: FornecedorDetalheDto) {
   const hoje = hojeIso();
   function classificar(r: VersaoRegraDto): "proxima" | "vigente" | "anterior" {
@@ -40,7 +41,9 @@ function classificarRegras(fornecedor: FornecedorDetalheDto) {
     return r.vigente ? "vigente" : "anterior";
   }
   return {
-    proxima: fornecedor.regras.find((r) => classificar(r) === "proxima"),
+    proximas: fornecedor.regras
+      .filter((r) => classificar(r) === "proxima")
+      .sort((a, b) => a.vigenteDesde.localeCompare(b.vigenteDesde)),
     vigente: fornecedor.regras.find((r) => classificar(r) === "vigente") ?? fornecedor.regraVigente,
     anteriores: fornecedor.regras.filter((r) => classificar(r) === "anterior"),
   };
@@ -48,16 +51,20 @@ function classificarRegras(fornecedor: FornecedorDetalheDto) {
 
 export function RegrasTab({ fornecedor, podeEditar, onMudou }: RegrasTabProps) {
   const [aberto, setAberto] = useState(false);
-  const { proxima, vigente, anteriores } = classificarRegras(fornecedor);
+  const { proximas, vigente, anteriores } = classificarRegras(fornecedor);
 
   return (
     <Section title="Quando paga a comissão" description="Define a data prevista de cada reserva na conciliação">
       <div className={s.blocoRegras}>
-        {proxima && (
-          <Alert tone="info" title={`Próxima versão (a partir de ${formatarData(proxima.vigenteDesde).slice(0, 5)})`}>
-            <Janelas regra={proxima} />
+        {proximas.map((p) => (
+          <Alert
+            key={p.vigenteDesde}
+            tone="info"
+            title={`Próxima versão (a partir de ${formatarData(p.vigenteDesde)})`}
+          >
+            <Janelas regra={p} />
           </Alert>
-        )}
+        ))}
         {vigente ? (
           <>
             <Alert tone="neutral" title={`Regra vigente desde ${formatarData(vigente.vigenteDesde)}`}>

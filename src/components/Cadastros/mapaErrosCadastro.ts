@@ -5,6 +5,8 @@ export const CAMPO_POR_CODIGO: Record<string, string> = {
   nome_obrigatorio: "nome",
   cpf_invalido: "cpf",
   cpf_duplicado: "cpf",
+  cpf_obrigatorio: "cpf",
+  data_nascimento_obrigatoria: "dataNascimento",
   uf_invalida: "uf",
   data_nascimento_invalida: "dataNascimento",
   email_invalido: "email",

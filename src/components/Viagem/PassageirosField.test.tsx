@@ -106,6 +106,52 @@ test("Enter sem seta destacada adiciona a primeira opção e nunca envia o formu
   vi.useRealTimers();
 });
 
+test("Enter na primeira opção carrega cpf e dataNascimento do resultado da busca", async () => {
+  vi.useFakeTimers();
+  const buscar = vi
+    .fn()
+    .mockResolvedValue([
+      { id: "1", nome: "Carlos Mendes", telefone: null, cpf: "11144477735", dataNascimento: "1980-05-05" },
+    ]);
+  const onChange = vi.fn();
+  render(<PassageirosField value={[]} onChange={onChange} buscar={buscar} onNovaPessoa={vi.fn()} erro={undefined} />);
+
+  const input = screen.getByLabelText("Passageiros");
+  fireEvent.change(input, { target: { value: "car" } });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(250);
+  });
+  fireEvent.keyDown(input, { key: "ArrowDown" });
+  fireEvent.keyDown(input, { key: "Enter" });
+
+  expect(onChange).toHaveBeenCalledWith([
+    { clienteId: "1", nome: "Carlos Mendes", titular: true, cpf: "11144477735", dataNascimento: "1980-05-05" },
+  ]);
+  vi.useRealTimers();
+});
+
+test("chip do passageiro selecionado mostra CPF e data de nascimento na linha secundária", () => {
+  const value = [
+    { clienteId: "1", nome: "Carlos Mendes", titular: true, cpf: "11144477735", dataNascimento: "1980-05-05" },
+  ];
+  render(
+    <PassageirosField value={value} onChange={vi.fn()} buscar={vi.fn()} onNovaPessoa={vi.fn()} erro={undefined} />,
+  );
+
+  expect(screen.getByText("111.444.777-35 · nasc. 05/05/1980")).toBeInTheDocument();
+});
+
+test("chip do passageiro sem permissão de ver CPF mostra só a data de nascimento", () => {
+  const value = [
+    { clienteId: "1", nome: "Carlos Mendes", titular: true, cpf: undefined, dataNascimento: "1980-05-05" },
+  ];
+  render(
+    <PassageirosField value={value} onChange={vi.fn()} buscar={vi.fn()} onNovaPessoa={vi.fn()} erro={undefined} />,
+  );
+
+  expect(screen.getByText("nasc. 05/05/1980")).toBeInTheDocument();
+});
+
 test("clicar em outro chip troca o titular (exatamente um)", async () => {
   const user = userEvent.setup();
   const onChange = vi.fn();

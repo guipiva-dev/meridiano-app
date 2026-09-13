@@ -12,10 +12,17 @@
   cursor: pointer;
 }
 .chip:hover {
-  background: var(--color-bg-subtle);
+  background: var(--color-info-soft);
+  border-color: var(--color-action);
+  color: var(--color-action);
 }
 .on {
   background: var(--chip-on-bg);
   color: var(--chip-on-text);
   border-color: var(--chip-on-bg);
+}
+.on:hover {
+  background: var(--color-action-hover);
+  border-color: var(--color-action-hover);
+  color: var(--chip-on-text);
 }

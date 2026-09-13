@@ -86,12 +86,13 @@ export const ROTULO_SERVICO: Record<TipoServico, string> = {
   outro: "Outro",
 };
 
-export const FORMAS_PAGAMENTO = ["pix", "boleto", "cartao"] as const;
+export const FORMAS_PAGAMENTO = ["pix", "boleto", "cartao", "dinheiro"] as const;
 export type FormaPagamento = (typeof FORMAS_PAGAMENTO)[number];
 export const ROTULO_FORMA: Record<FormaPagamento, string> = {
   pix: "PIX",
   boleto: "Boleto",
   cartao: "Cartão",
+  dinheiro: "Dinheiro",
 };
 
 export interface PassageiroRequest {
@@ -236,6 +237,7 @@ export interface ClienteBuscaDto {
   nome: string;
   telefone: string | null;
   cpf?: string | null;
+  dataNascimento?: string | null;
 }
 
 export interface FornecedorDto {
@@ -273,7 +275,7 @@ export const viagensApi = {
       `/reservas/duplicada?${qs({ fornecedorId, localizador })}`,
     ),
   buscarClientes: (q: string) => api.get<ClienteBuscaDto[]>(`/clientes/busca?q=${encodeURIComponent(q)}`),
-  criarCliente: (c: { nome: string; telefone?: string; email?: string; cpf?: string }) =>
+  criarCliente: (c: { nome: string; telefone?: string; email?: string; cpf: string; dataNascimento: string }) =>
     api.post<ClienteBuscaDto>("/clientes", c),
   fornecedores: () => api.get<FornecedorDto[]>("/fornecedores?ativo=true"),
   criarFornecedor: (f: { nome: string; tipo: string }) => api.post<FornecedorDto>("/fornecedores", f),

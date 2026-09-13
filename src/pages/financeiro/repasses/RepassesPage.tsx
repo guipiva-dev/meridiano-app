@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { plural } from "@/lib/plural";
 import { useSearchParams } from "react-router";
 import { mensagemDeErro } from "@/api/errors";
 import type { RepasseItemDto, VendedorRepassesDto } from "@/api/repasses";
@@ -13,6 +12,7 @@ import { PagarRepasseModal } from "@/components/financeiro";
 import { Page, PageHeader, Subnav } from "@/components/shell";
 import { competenciaAtual, nomeMes } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
+import { plural } from "@/lib/plural";
 import { subnavs } from "@/shell/navegacao";
 import s from "./Repasses.module.css";
 import { VendedorCard } from "./VendedorCard";

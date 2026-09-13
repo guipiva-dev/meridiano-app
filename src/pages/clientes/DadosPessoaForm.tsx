@@ -45,7 +45,7 @@ export function DadosPessoaForm({ form, grupos, erros, verDocumento, onNovoGrupo
             <Input autoComplete="off" maxLength={150} {...form.register("nome")} />
           </Field>
           {verDocumento && (
-            <Field label="CPF" className="span-3" error={erroCpf}>
+            <Field label="CPF" required className="span-3" error={erroCpf}>
               <Input
                 className={s.mono}
                 autoComplete="off"
@@ -57,7 +57,7 @@ export function DadosPessoaForm({ form, grupos, erros, verDocumento, onNovoGrupo
               />
             </Field>
           )}
-          <Field label="Nascimento" className="span-3" error={erros.dataNascimento}>
+          <Field label="Nascimento" required className="span-3" error={erros.dataNascimento}>
             <DateInput {...form.register("dataNascimento")} />
           </Field>
           <Field label="Grupo / empresa" className="span-3" error={erros.grupoId}>

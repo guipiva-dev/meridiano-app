@@ -98,6 +98,15 @@ test("A03: digitar na Venda depois de sugerida some o selo 'calculado'", async (
   expect(screen.queryByText("calculado")).not.toBeInTheDocument();
 });
 
+test("chip 'Dinheiro' existe e alterna formasPagamento ao clicar", async () => {
+  const user = userEvent.setup();
+  render(<Harness />);
+  const chip = screen.getByRole("button", { name: "Dinheiro" });
+  expect(chip).toHaveAttribute("aria-pressed", "false");
+  await user.click(chip);
+  expect(chip).toHaveAttribute("aria-pressed", "true");
+});
+
 test("Comissão, Taxa de serviço e Fluxo têm tooltip explicando o cálculo com exemplo", () => {
   render(<Harness />);
   const tooltips = screen.getAllByTitle(/ex\.:/i);

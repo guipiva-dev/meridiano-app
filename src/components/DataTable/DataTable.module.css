@@ -1,21 +1,21 @@
+/* A01/R01: sombra à direita só quando há mais colunas para rolar (classe controlada por JS via
+   useScrollShadow, cobre também o cabeçalho — ver DataTable.tsx). O ::after fica no container
+   externo (que não rola) para não ser arrastado por cima das células ao rolar; o container
+   interno (.wrap) é o que de fato rola. */
+.outer {
+  position: relative;
+}
+.outer.comSombra::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 1.5rem;
+  pointer-events: none;
+  background: linear-gradient(to left, var(--table-scroll-shadow), transparent);
+}
 .wrap {
   overflow-x: auto;
-  /* A01/R01: sombra à direita só quando há mais colunas para rolar. Truque em duas camadas: a
-     primeira ("cobertura", attachment: local) rola junto com o conteúdo e some por cima da sombra
-     assim que a rolagem chega ao fim; a segunda ("sombra", attachment: scroll) fica fixa na borda
-     visível. Sem JS/ResizeObserver — a cor precisa ficar aqui (não em .table) para não ser coberta. */
   background-color: var(--color-bg-surface);
-  background-image:
-    linear-gradient(to left, var(--color-bg-surface) 40%, transparent),
-    linear-gradient(to left, var(--table-scroll-shadow), transparent);
-  background-repeat: no-repeat, no-repeat;
-  background-position:
-    right center,
-    right center;
-  background-size:
-    24px 100%,
-    24px 100%;
-  background-attachment: local, scroll;
 }
 .table {
   width: 100%;

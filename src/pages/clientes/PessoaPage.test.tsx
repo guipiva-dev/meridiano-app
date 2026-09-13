@@ -363,7 +363,7 @@ test("com cliente.ver_documento o campo CPF aparece mesmo sem a chave cpf no DTO
   montar("/clientes/p1", TODAS);
 
   await screen.findByDisplayValue("São Paulo");
-  expect(screen.getByLabelText("CPF")).toBeInTheDocument();
+  expect(screen.getByLabelText(/^CPF/)).toBeInTheDocument();
 });
 
 // A29: cliente com viagens não pode ser excluído.
