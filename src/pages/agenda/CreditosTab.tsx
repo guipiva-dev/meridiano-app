@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import type { CreditoVencendoDto } from "@/api/agenda";
 import { type Coluna, DataTable, MoneyCell } from "@/components";
 import { EmptyState } from "@/components/feedback";
+import { plural } from "@/lib/plural";
 
 /** yyyy-mm-dd → "mm/yyyy". */
 function mesAno(iso: string): string {
@@ -18,7 +19,7 @@ const COLUNAS: Coluna<CreditoVencendoDto>[] = [
     render: (c) =>
       c.diasParaVencer < 0
         ? `${mesAno(c.validade)} · vencido`
-        : `${mesAno(c.validade)} · ${Math.round(c.diasParaVencer / 30)} meses`,
+        : `vence em ${mesAno(c.validade)} (${plural(Math.round(c.diasParaVencer / 30), "mês", "meses")})`,
   },
   { id: "valor", titulo: "Valor", alinhar: "right", render: (c) => <MoneyCell value={c.valor} /> },
   { id: "abrir", titulo: "", render: (c) => <Link to={`/clientes/${c.clienteId}`}>Abrir</Link> },

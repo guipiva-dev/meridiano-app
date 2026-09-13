@@ -33,5 +33,11 @@ test("crédito vencido mostra 'vencido' em vez de meses negativos (achado: '01/2
 
 test("crédito válido continua mostrando os meses restantes", () => {
   montar([credito({ validade: "2027-02-28", diasParaVencer: 300 })]);
-  expect(screen.getByText("02/2027 · 10 meses")).toBeInTheDocument();
+  expect(screen.getByText("vence em 02/2027 (10 meses)")).toBeInTheDocument();
+});
+
+// U11: "10/2026 · 1 meses" — plural errado no singular.
+test("1 mês restante usa o singular, não '1 meses'", () => {
+  montar([credito({ validade: "2026-10-15", diasParaVencer: 20 })]);
+  expect(screen.getByText("vence em 10/2026 (1 mês)")).toBeInTheDocument();
 });

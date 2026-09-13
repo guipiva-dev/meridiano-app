@@ -42,7 +42,8 @@ export const itensSidebar: ItemSidebar[] = [
     icon: BriefcaseBusiness,
     path: "/fornecedores",
     section: "Operação",
-    permission: "viagem.ver",
+    // P01: mesma permissão que protege a rota — o vendedor externo (só `viagem.ver_proprias`) não vê o item.
+    permission: "fornecedor.ver",
   },
   {
     label: "Financeiro",

@@ -63,6 +63,16 @@ test("409 avisa e recarrega a lista de pendências (senão a versão velha trava
   });
 });
 
+// U11: helper dizia "Hoje prevista para 15/04/2026" — "Hoje" não faz sentido para uma data que já passou.
+test("helper de data prevista não diz 'Hoje'", () => {
+  const fetchSpy = vi.fn(() => Promise.resolve(resposta(200, {})));
+  vi.stubGlobal("fetch", fetchSpy);
+  montar();
+
+  expect(screen.getByText("Prevista para 15/04/2026.")).toBeInTheDocument();
+  expect(screen.queryByText(/Hoje prevista/)).not.toBeInTheDocument();
+});
+
 test("data anterior à prevista vira erro de campo e não chama a API", () => {
   const fetchSpy = vi.fn(() => Promise.resolve(resposta(200, {})));
   vi.stubGlobal("fetch", fetchSpy);

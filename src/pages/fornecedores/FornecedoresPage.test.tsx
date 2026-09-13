@@ -84,11 +84,23 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test("cabeçalho conta os cadastrados e explica a regra de pagamento", async () => {
+test("cabeçalho conta os ativos (filtro padrão) e explica a regra de pagamento", async () => {
   montar();
   expect(
-    await screen.findByText("2 cadastrados · a regra de pagamento define quando a comissão é esperada"),
+    await screen.findByText("2 ativos · a regra de pagamento define quando a comissão é esperada"),
   ).toBeInTheDocument();
+});
+
+// U09: "5 cadastrados" ficava fixo mesmo filtrando por inativos (na prática contava só os ativos).
+test("cabeçalho troca o rótulo conforme o filtro de situação", async () => {
+  montar();
+  await screen.findByText("CVC");
+
+  fireEvent.change(screen.getByLabelText("Situação"), { target: { value: "inativos" } });
+  expect(await screen.findByText("2 inativos · a regra de pagamento define quando a comissão é esperada")).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText("Situação"), { target: { value: "todos" } });
+  expect(await screen.findByText("2 cadastrados · a regra de pagamento define quando a comissão é esperada")).toBeInTheDocument();
 });
 
 test("janelas vigentes viram uma célula legível e o prazo fixo aparece quando não há janela", async () => {
@@ -133,6 +145,6 @@ test("contador mostra — enquanto a lista carrega (não 0)", () => {
   );
   montar();
   expect(
-    screen.getByText("— cadastrados · a regra de pagamento define quando a comissão é esperada"),
+    screen.getByText("— ativos · a regra de pagamento define quando a comissão é esperada"),
   ).toBeInTheDocument();
 });

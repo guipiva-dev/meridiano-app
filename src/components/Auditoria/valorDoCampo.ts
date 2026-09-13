@@ -40,6 +40,21 @@ export function rotuloDominio(valor: string): string {
   return valor;
 }
 
+// F07: coluna "Campo" do "Ver detalhes" mostrava a chave técnica de banco crua.
+const ROTULOS_CAMPO: Record<string, string> = {
+  divergencia_motivo: "Motivo da divergência",
+  conciliacao_encerrada: "Conciliação encerrada",
+  valor_total: "Total da reserva",
+};
+
+/** Nome de coluna (`campo` de `alteracoes`) → rótulo humano; desconhecido vira "snake case" com espaço. */
+export function rotuloCampo(campo: string): string {
+  const conhecido = ROTULOS_CAMPO[campo];
+  if (conhecido) return conhecido;
+  const texto = campo.replace(/_/g, " ");
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
 /** Valor de `alteracoes` (auditoria): dinheiro nos campos monetários, booleano em Sim/Não, data ISO formatada, enum conhecido traduzido; o resto vira texto (JSON para objeto/array). */
 export function valorDoCampo(campo: string, valor: unknown): string {
   if (valor === null || valor === undefined) return "—";
