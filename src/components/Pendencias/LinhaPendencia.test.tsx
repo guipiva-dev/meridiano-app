@@ -82,7 +82,7 @@ describe("mensagem pronta no WhatsApp (check-in e pós-viagem)", () => {
     const onConcluir = vi.fn();
     render(
       <LinhaPendencia
-        p={pendencia({ titulo: "Check-in", viagemId: "v1", ...contato })}
+        p={pendencia({ titulo: "Check-in", viagemId: "v1", mensagemTipo: "checkin", ...contato })}
         onConcluir={onConcluir}
         onAdiar={vi.fn()}
         onEditar={vi.fn()}
@@ -107,12 +107,15 @@ describe("mensagem pronta no WhatsApp (check-in e pós-viagem)", () => {
   });
 
   test("titular sem WhatsApp: botão desabilitado com texto visível", () => {
-    montar(pendencia({ titulo: "Pós-viagem", viagemId: "v1", ...contato, titularWhatsapp: null }));
+    montar(
+      pendencia({ titulo: "Pós-viagem", viagemId: "v1", mensagemTipo: "posviagem", ...contato, titularWhatsapp: null }),
+    );
     expect(screen.getByRole("button", { name: "Titular sem WhatsApp" })).toBeDisabled();
   });
 
   test("manual ou sem contato do titular não mostra a ação", () => {
-    montar(pendencia({ titulo: "Check-in", origem: "manual", viagemId: "v1", ...contato }));
+    // Título "Check-in" sem mensagemTipo (manual ou sem permissão): o front não adivinha pelo título.
+    montar(pendencia({ titulo: "Check-in", origem: "manual", viagemId: "v1", mensagemTipo: null, ...contato }));
     montar(pendencia({ id: "p2", titulo: "Check-in", viagemId: "v1" }));
     expect(screen.queryByRole("button", { name: "Enviar mensagem" })).toBeNull();
     expect(screen.queryByText("Titular sem WhatsApp")).toBeNull();

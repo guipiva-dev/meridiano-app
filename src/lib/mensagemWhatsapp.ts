@@ -10,25 +10,23 @@ export function montarLinkWhatsapp({ whatsapp, texto }: { whatsapp: string; text
 
 type Campos = Pick<
   PendenciaDto,
-  "titulo" | "origem" | "titularId" | "titularNome" | "titularWhatsapp" | "destino" | "dataIda" | "dataVolta"
+  "mensagemTipo" | "titularId" | "titularNome" | "titularWhatsapp" | "destino" | "dataIda" | "dataVolta"
 >;
 
 /**
- * Mensagem pronta das automáticas de check-in e pós-viagem. O backend só manda o contato do titular nessas duas
- * (e para quem vê o cliente); o tipo sai do título fixo da automática (Rotinas.cs), que não é editável.
+ * Mensagem pronta das automáticas de check-in e pós-viagem. O backend só manda `mensagemTipo` (e o contato do titular)
+ * nessas duas chaves e para quem vê o cliente.
  */
 export function mensagemDaPendencia(p: Campos): { texto: string; resumo: string } | null {
-  if (p.origem !== "automatica" || !p.titularId) return null;
+  if (!p.mensagemTipo) return null;
   const nome = (p.titularNome ?? "").trim().split(/\s+/)[0] ?? "";
-  if (p.titulo === "Check-in")
+  if (p.mensagemTipo === "checkin")
     return {
       texto: `Olá, ${nome}! Sua viagem para ${p.destino ?? ""} é em ${formatarData(p.dataIda)}. O check-in online costuma abrir 48 h antes do voo. Qualquer dúvida, estou à disposição.`,
       resumo: "Mensagem de check-in enviada pelo sistema",
     };
-  if (p.titulo === "Pós-viagem")
-    return {
-      texto: `Olá, ${nome}! Que bom ter você de volta de ${p.destino ?? ""}. Como foi a viagem? Sua opinião nos ajuda muito.`,
-      resumo: "Mensagem de pós-viagem enviada pelo sistema",
-    };
-  return null;
+  return {
+    texto: `Olá, ${nome}! Que bom ter você de volta de ${p.destino ?? ""}. Como foi a viagem? Sua opinião nos ajuda muito.`,
+    resumo: "Mensagem de pós-viagem enviada pelo sistema",
+  };
 }

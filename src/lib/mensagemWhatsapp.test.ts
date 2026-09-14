@@ -14,8 +14,7 @@ test("não duplica 55 quando o número já tem DDI (12–13 dígitos)", () => {
 });
 
 const base = {
-  titulo: "Check-in",
-  origem: "automatica" as const,
+  mensagemTipo: "checkin" as const,
   titularId: "c1",
   titularNome: "Carlos Mendes",
   titularWhatsapp: "11988887777",
@@ -33,14 +32,13 @@ test("check-in: primeiro nome, destino e data dd/mm/aaaa", () => {
 });
 
 test("pós-viagem", () => {
-  expect(mensagemDaPendencia({ ...base, titulo: "Pós-viagem" })).toEqual({
+  expect(mensagemDaPendencia({ ...base, mensagemTipo: "posviagem" as const })).toEqual({
     texto: "Olá, Carlos! Que bom ter você de volta de Lisboa. Como foi a viagem? Sua opinião nos ajuda muito.",
     resumo: "Mensagem de pós-viagem enviada pelo sistema",
   });
 });
 
-test("sem contato do titular (manual, recompra ou sem permissão) não há mensagem", () => {
-  expect(mensagemDaPendencia({ ...base, titularId: null })).toBeNull();
-  expect(mensagemDaPendencia({ ...base, titulo: "Recompra" })).toBeNull();
-  expect(mensagemDaPendencia({ ...base, origem: "manual" })).toBeNull();
+test("sem mensagemTipo (manual, recompra ou sem permissão) não há mensagem, mesmo com título de check-in", () => {
+  expect(mensagemDaPendencia({ ...base, mensagemTipo: null })).toBeNull();
+  expect(mensagemDaPendencia({ ...base, mensagemTipo: undefined })).toBeNull();
 });
