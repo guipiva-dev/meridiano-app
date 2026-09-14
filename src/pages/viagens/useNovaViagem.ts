@@ -297,11 +297,16 @@ export function useNovaViagem(id: string | undefined) {
   const enviar = useCallback(
     async (dados: ViagemForm) => {
       const req = paraViagemRequest(dados, viagem?.versao);
+      // Vendedor que não gera repasse: os campos ficam ocultos, então não enviam valor (evita 422 invisível).
+      if (vendedores.find((v) => v.id === dados.vendedorId)?.geraRepasse === false) {
+        req.repasseValor = null;
+        req.repassePercentual = null;
+      }
       const salva = id ? await viagensApi.atualizar(id, req) : await viagensApi.criar(req);
       qc.setQueryData(chaves.viagem(salva.id), salva);
       if (!id) await nav(`/viagens/${salva.id}/editar`, { replace: true });
     },
-    [id, viagem, qc, nav],
+    [id, viagem, qc, nav, vendedores],
   );
 
   const salvamento = useSalvamento<ViagemForm>(enviar);

@@ -6,7 +6,7 @@ import { comissaoPorPercentual } from "@/lib/comissao";
 import type { ViagemForm } from "./useNovaViagem";
 
 /** Base do vendedor como em `Rotinas.ReavaliarRepasseAsync`: comissão + RAV das reservas não canceladas ou canceladas
- * com comissão mantida; venda nula conta como o total (RAV 0), igual ao que o backend grava. Taxa de serviço fora. */
+ * com comissão mantida, nunca abaixo de 0 (`greatest(0, …)`); venda nula conta como o total (RAV 0), igual ao que o backend grava. Taxa de serviço fora. */
 function baseDoVendedor(reservas: ReservaForm[]): number {
   let base = 0;
   for (const r of reservas) {
@@ -22,7 +22,7 @@ function baseDoVendedor(reservas: ReservaForm[]): number {
         comissaoMantida: r.comissaoMantida,
       }).totalComissao ?? 0;
   }
-  return arredondar2(base);
+  return Math.max(0, arredondar2(base));
 }
 
 /** Comissão do vendedor em % e R$ (ruling 2026-09-14). Repasse pago/cancelado: o backend congela o valor. */

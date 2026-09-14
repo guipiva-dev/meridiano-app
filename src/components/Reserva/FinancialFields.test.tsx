@@ -192,6 +192,17 @@ test("com % como âncora, mudar o total recalcula a comissão", async () => {
   expect(screen.getByTestId("comissao")).toHaveTextContent("2000");
 });
 
+test("comissão re-sugerida de fora (troca de fornecedor) solta o % digitado", async () => {
+  const user = userEvent.setup();
+  // comissaoSugerida false = estado depois de digitar o % (o onChange real grava isso).
+  const base = { ...reservaVazia(0), valorTotal: 10000, comissaoSugerida: false };
+  const props = { onChange: vi.fn(), percentualSugerido: 10, erros: {} };
+  const { rerender } = render(<FinancialFields value={base} {...props} />);
+  await user.type(screen.getByLabelText("Comissão (%)"), "10");
+  rerender(<FinancialFields value={{ ...base, comissaoSugerida: true, valorComissao: 700 }} {...props} />);
+  expect(screen.getByLabelText("Comissão (%)")).toHaveValue("7");
+});
+
 test("digitar R$ solta a âncora: mudar o total não recalcula a comissão", async () => {
   const user = userEvent.setup();
   render(<Harness inicial={{ valorTotal: 10000 }} />);

@@ -126,7 +126,7 @@ export function TripSummary({
             <MoneyValue value={despesas} />
           </div>
           <span className={s.sep} aria-hidden />
-          <div className={s.item} title={incompleta ? "Preencha a venda ao cliente das reservas" : undefined}>
+          <div className={s.item} title={incompleta ? "Preencha o total cobrado do cliente das reservas" : undefined}>
             <small>
               Resultado da viagem{" "}
               <Tooltip text="Receita da agência − comissão do vendedor − despesas vinculadas">

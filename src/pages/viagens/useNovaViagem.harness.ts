@@ -33,6 +33,7 @@ const VENDEDORES = [
     geraRepasse: true,
     percentualPadrao: 20,
   },
+  { id: "u2", nome: "Bia", perfil: "agente", geraRepasse: false, percentualPadrao: 0 },
 ];
 const AGENCIA = { nome: "Viva", taxaServicoPadrao: 0 };
 

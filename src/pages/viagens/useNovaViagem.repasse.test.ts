@@ -1,5 +1,5 @@
 import { act, waitFor } from "@testing-library/react";
-import { esperar, montar, reiniciar, stubs, viagemDto } from "./useNovaViagem.harness";
+import { chamadas, esperar, montar, reiniciar, stubs, viagemDto } from "./useNovaViagem.harness";
 
 beforeEach(reiniciar);
 
@@ -107,6 +107,36 @@ test("repasse pago mostra o valor gravado, sem recalcular pelo %", async () => {
   await esperar.viagem(result);
   expect(result.current.form.getValues("repassePercentual")).toBe(10);
   expect(result.current.repasseValorMostrado).toBe(123);
+});
+
+test("base do vendedor negativa vira 0 (como o greatest do backend)", async () => {
+  const { result } = await comReservaDeComissao();
+  act(() => {
+    // RAV 8000 − 10000 = −2000; base 1000 − 2000 = −1000
+    result.current.atualizarReserva(0, { valorCliente: 8000 });
+  });
+  act(() => {
+    result.current.definirRepassePercentual(10);
+  });
+  expect(result.current.baseRepasse).toBe(0);
+  expect(result.current.repasseValorMostrado).toBe(0);
+});
+
+test("vendedor que não gera repasse: request vai sem % e sem R$ do vendedor", async () => {
+  const { result } = await comReservaDeComissao();
+  act(() => {
+    result.current.definirRepassePercentual(10);
+    result.current.form.setValue("destino", "Lisboa");
+    result.current.form.setValue("passageiros", [{ clienteId: "c1", nome: "Carlos", titular: true }]);
+    result.current.form.setValue("vendedorId", "u2");
+  });
+  await act(async () => {
+    await result.current.salvar();
+  });
+  const corpo = chamadas.find((c) => c.metodo === "POST")?.corpo as Record<string, unknown>;
+  expect(corpo.vendedorId).toBe("u2");
+  expect(corpo.repassePercentual).toBeNull();
+  expect(corpo.repasseValor).toBeNull();
 });
 
 test("limpar o % mantém o valor mostrado em R$", async () => {

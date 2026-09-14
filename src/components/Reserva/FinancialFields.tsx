@@ -60,6 +60,12 @@ export function FinancialFields({
   // % digitado vira âncora: mudar o total recalcula o R$. Digitar R$ solta a âncora e o % passa a ser derivado.
   const [pctTexto, setPctTexto] = useState<string | null>(null);
   const [erroPct, setErroPct] = useState<string | null>(null);
+  // Comissão re-sugerida de fora (ex.: troca de fornecedor) solta a âncora do % digitado.
+  const [sugeridaAntes, setSugeridaAntes] = useState(value.comissaoSugerida);
+  if (sugeridaAntes !== value.comissaoSugerida) {
+    setSugeridaAntes(value.comissaoSugerida);
+    if (value.comissaoSugerida) setPctTexto(null);
+  }
   const pctDerivado = percentualDaComissao(value.valorComissao, value.valorTotal);
   const pctMostrado = pctTexto ?? (pctDerivado === null ? "" : String(pctDerivado).replace(".", ","));
 

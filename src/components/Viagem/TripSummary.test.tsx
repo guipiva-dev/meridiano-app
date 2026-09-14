@@ -116,7 +116,7 @@ test("reserva incompleta mostra '—' no resultado com dica para preencher a ven
   ];
   render(<TripSummary reservas={reservas} repasseValor={300} despesas={0} onAdicionarReserva={vi.fn()} />);
 
-  const resultado = screen.getByTitle("Preencha a venda ao cliente das reservas");
+  const resultado = screen.getByTitle("Preencha o total cobrado do cliente das reservas");
   expect(resultado.querySelector(".value")).toHaveTextContent("—");
 });
 

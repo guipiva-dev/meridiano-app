@@ -169,14 +169,16 @@ export function RemarcarModal({ open, reserva, viagem, onClose, onRemarcada, onR
         </Field>
         {reserva.valorCliente !== undefined && (
           <Field
-            label="Nova venda ao cliente"
-            helper="Deixe como está para manter a venda atual"
+            label="Novo total cobrado do cliente"
+            helper="Deixe como está para manter o total atual"
             error={erros.novoValorCliente ?? (esperadoNegativo ? MSG_ESPERADO_NEGATIVO : undefined)}
           >
             <MoneyInput value={novaVenda} onChange={setNovaVenda} />
           </Field>
         )}
-        {vendaAbaixoDoCusto && <Alert tone="warning">Venda abaixo do custo: RAV do cliente ficará negativo</Alert>}
+        {vendaAbaixoDoCusto && (
+          <Alert tone="warning">Total cobrado do cliente abaixo do custo: RAV ficará negativo</Alert>
+        )}
         <Field label="Multa paga pelo cliente" helper="Informativa: não altera receita nem repasse">
           <MoneyInput value={multaCliente} onChange={setMultaCliente} />
         </Field>

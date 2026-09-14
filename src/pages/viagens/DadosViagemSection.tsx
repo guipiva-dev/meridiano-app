@@ -61,9 +61,19 @@ export function DadosViagemSection({
   const repassePercentual = form.watch("repassePercentual");
   // Texto cru do % enquanto se digita ("10," não vira "10"); valor externo reassume ao sair do controle local.
   const [pctRepasseTexto, setPctRepasseTexto] = useState<string | null>(null);
+  const [erroPctRepasse, setErroPctRepasse] = useState<string | null>(null);
   function mudarPctRepasse(texto: string) {
     const p = parsearPercentual(texto);
-    if (p === "invalido" || p === "negativo" || (p !== null && p > 100)) return;
+    // Como o % da reserva: entrada inválida mostra erro e não chega ao formulário.
+    if (p === "invalido") {
+      setErroPctRepasse("Percentual inválido");
+      return;
+    }
+    if (p === "negativo" || (p !== null && p > 100)) {
+      setErroPctRepasse("Percentual deve ficar entre 0 e 100");
+      return;
+    }
+    setErroPctRepasse(null);
     setPctRepasseTexto(texto);
     onRepassePercentual(p);
   }
@@ -107,8 +117,7 @@ export function DadosViagemSection({
             label="Comissão do vendedor (%)"
             className="span-2"
             tooltip="Percentual sobre a comissão total da viagem (comissão + RAV, sem taxa de serviço). O valor acompanha as reservas até o repasse ser pago."
-            helper={repasseSugerido === null ? undefined : `Sugerido: ${formatarDinheiro(repasseSugerido)}`}
-            error={erros.repassePercentual}
+            error={erroPctRepasse ?? erros.repassePercentual}
           >
             <Input
               inputMode="decimal"
@@ -119,11 +128,17 @@ export function DadosViagemSection({
               }}
             />
           </Field>
-          <Field label="Comissão do vendedor (R$)" className="span-2" error={erros.repasseValor}>
+          <Field
+            label="Comissão do vendedor (R$)"
+            className="span-2"
+            helper={repasseSugerido === null ? undefined : `Sugerido: ${formatarDinheiro(repasseSugerido)}`}
+            error={erros.repasseValor}
+          >
             <MoneyInput
               value={repasseValorMostrado}
               onChange={(v) => {
                 setPctRepasseTexto(null);
+                setErroPctRepasse(null);
                 onRepasseValor(v);
               }}
             />
