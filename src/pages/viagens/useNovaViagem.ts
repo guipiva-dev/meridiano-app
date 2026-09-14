@@ -369,7 +369,7 @@ export function useNovaViagem(id: string | undefined) {
     return r.fornecedorTocado && problemas?.fornecedorId ? { fornecedorId: problemas.fornecedorId } : {};
   });
 
-  const repasse = useRepasseVendedor(form, reservas, vendedorSelecionado);
+  const repasse = useRepasseVendedor(form, reservas, vendedorSelecionado, viagem?.repasse?.status);
 
   return {
     form,
