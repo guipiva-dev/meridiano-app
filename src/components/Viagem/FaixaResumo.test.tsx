@@ -5,13 +5,13 @@ test("mostra os itens e o extra, com destaque e tooltip", () => {
   const itens: ItemFaixa[] = [
     { label: "Venda total", value: 13700 },
     { label: "Custo dos fornecedores", value: 13000 },
-    { label: "Comissão da vendedora", value: 300 },
+    { label: "Comissão do vendedor", value: 300 },
     { label: "Despesas da viagem", value: 0 },
     {
       label: "Resultado da viagem",
       value: 1640,
       destaque: true,
-      tooltip: "Receita das reservas − comissão da vendedora − despesas vinculadas",
+      tooltip: "Receita das reservas − comissão do vendedor − despesas vinculadas",
     },
   ];
   render(<FaixaResumo itens={itens} extra={{ label: "Comissões recebidas", value: 500 }} />);
@@ -25,6 +25,6 @@ test("mostra os itens e o extra, com destaque e tooltip", () => {
   expect(resultado).toHaveClass("result");
 
   expect(screen.getByRole("tooltip", { hidden: true })).toHaveTextContent(
-    "Receita das reservas − comissão da vendedora − despesas vinculadas",
+    "Receita das reservas − comissão do vendedor − despesas vinculadas",
   );
 });

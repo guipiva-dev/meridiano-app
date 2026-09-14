@@ -10,6 +10,7 @@ const CAMPO_POR_CODIGO: Record<string, string> = {
   datas_incoerentes: "dataVolta",
   repasse_sem_vendedor: "repasseValor",
   valor_negativo: "repasseValor",
+  percentual_invalido: "repassePercentual",
   usuario_inativo: "vendedorId",
 };
 // A02/A12 (`taxa_maior_que_total`, `esperado_negativo`): o 422 não diz de qual reserva veio — igual ao

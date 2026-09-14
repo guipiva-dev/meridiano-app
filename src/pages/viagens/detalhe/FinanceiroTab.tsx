@@ -27,15 +27,15 @@ export function FinanceiroTab({ viagem }: { viagem: ViagemDto }) {
   const r = viagem.resumo;
   const itens: ItemFaixa[] = r
     ? [
-        { label: "Receita prevista", value: r.receitaPrevista },
+        { label: "Receita da agência", value: r.receitaPrevista },
         { label: "Receita recebida", value: r.receitaRecebida, tooltip: TOOLTIP_RECEBIDA },
         {
           label: "Comissão do vendedor",
           value: r.repasseValor,
           badge: r.repasseStatus ? <StatusBadge entidade="repasse" valor={r.repasseStatus} /> : undefined,
         },
-        { label: "Despesas", value: r.despesasViagem },
-        { label: "Resultado", value: r.resultado, destaque: true },
+        { label: "Despesas da viagem", value: r.despesasViagem },
+        { label: "Resultado da viagem", value: r.resultado, destaque: true },
       ]
     : [];
   // A07/A38: "divergente" é conciliada (spec §6.1) — junto com "recebida" vai para "Comissões

@@ -252,6 +252,49 @@ test("rótulo 'Comissão do vendedor' no resumo", async () => {
   expect(screen.queryByText(/vendedora/)).toBeNull();
 });
 
+test("vendedor que gera repasse: campos Comissão do vendedor (%) e (R$)", async () => {
+  const base = globalThis.fetch;
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) =>
+    url.includes("/usuarios/vendedores")
+      ? Promise.resolve(resposta(200, [{ ...VENDEDORES[0], geraRepasse: true, percentualPadrao: 10 }]))
+      : base(url, init),
+  );
+  montar();
+  expect(await screen.findByLabelText("Comissão do vendedor (%)")).toBeInTheDocument();
+  expect(screen.getByLabelText("Comissão do vendedor (R$)")).toBeInTheDocument();
+});
+
+function comVendedorQueGeraRepasse() {
+  const base = globalThis.fetch;
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) =>
+    url.includes("/usuarios/vendedores")
+      ? Promise.resolve(resposta(200, [{ ...VENDEDORES[0], geraRepasse: true, percentualPadrao: 10 }]))
+      : base(url, init),
+  );
+}
+
+test("% do vendedor inválido ou fora de 0–100 mostra erro em vez de sumir", async () => {
+  comVendedorQueGeraRepasse();
+  montar();
+  const pct = await screen.findByLabelText("Comissão do vendedor (%)");
+  fireEvent.change(pct, { target: { value: "abc" } });
+  expect(pct).toHaveAccessibleDescription("Percentual inválido");
+  fireEvent.change(pct, { target: { value: "101" } });
+  expect(pct).toHaveAccessibleDescription("Percentual deve ficar entre 0 e 100");
+  fireEvent.change(pct, { target: { value: "-1" } });
+  expect(pct).toHaveAccessibleDescription("Percentual deve ficar entre 0 e 100");
+  fireEvent.change(pct, { target: { value: "10" } });
+  expect(pct).not.toHaveAccessibleDescription(/Percentual/);
+});
+
+test("'Sugerido: R$' fica no campo Comissão do vendedor (R$)", async () => {
+  comVendedorQueGeraRepasse();
+  montar();
+  const pct = await screen.findByLabelText("Comissão do vendedor (%)");
+  expect(screen.getByLabelText("Comissão do vendedor (R$)")).toHaveAccessibleDescription(/^Sugerido: R\$/);
+  expect(pct).not.toHaveAccessibleDescription(/Sugerido/);
+});
+
 test("destino tem maxLength 120", async () => {
   montar();
   await screen.findByRole("heading", { name: /Nova viagem/ });

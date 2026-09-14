@@ -49,23 +49,43 @@ test("faixa completa: Receita recebida e Comissão do vendedor", () => {
   render(<ResumoTab viagem={VIAGEM} verValores={true} pendencias={[]} onAbrirReserva={noop} onVerPendencias={noop} />);
   expect(screen.getByText("Receita recebida")).toBeInTheDocument();
   expect(screen.getByText("Comissão do vendedor")).toBeInTheDocument();
-  expect(screen.getByText(/Soma de todos os movimentos/)).toHaveAttribute("role", "tooltip");
+  expect(screen.getByText(/Comissões, RAV e taxas que já entraram/)).toHaveAttribute("role", "tooltip");
   expect(screen.queryByText(/Comissões recebidas|vendedora/)).toBeNull();
 });
 
-test("U06: faixa completa mostra Receita prevista entre Custo dos fornecedores e Comissão do vendedor", () => {
+test("faixa completa usa o vocabulário único, na ordem, com comissão média", () => {
   render(<ResumoTab viagem={VIAGEM} verValores={true} pendencias={[]} onAbrirReserva={noop} onVerPendencias={noop} />);
-  const rotulos = screen.getAllByText(/^(Venda total|Custo dos fornecedores|Receita prevista|Comissão do vendedor)$/);
-  expect(rotulos.map((el) => el.textContent)).toEqual([
-    "Venda total",
-    "Custo dos fornecedores",
-    "Receita prevista",
+  const rotulos = screen.getAllByText(
+    /^(Total cobrado|Custo das reservas|Receita da agência|Comissão do vendedor|Despesas da viagem|Resultado da viagem)$/,
+  );
+  // primeiro nó do <small> é o rótulo; o tooltip vem depois
+  expect(rotulos.map((el) => el.childNodes[0]?.textContent)).toEqual([
+    "Total cobrado",
+    "Custo das reservas",
+    "Receita da agência",
     "Comissão do vendedor",
+    "Despesas da viagem",
+    "Resultado da viagem",
   ]);
-  expect(screen.getByText("Receita prevista").parentElement).toHaveTextContent("R$ 2.000,00");
+  expect(screen.getByText("Receita da agência").parentElement).toHaveTextContent("R$ 2.000,00");
+  expect(screen.getByText(/^comissão média \d+,?\d* %$/)).toBeInTheDocument();
 });
 
-test("U06: sem verValores (nem resumo), Receita prevista some junto com o resto da faixa", () => {
+test("faixa reduzida usa Total cobrado, Custo das reservas e Receita da agência", () => {
+  render(
+    <ResumoTab
+      viagem={{ ...VIAGEM, resumo: undefined }}
+      verValores={true}
+      pendencias={[]}
+      onAbrirReserva={noop}
+      onVerPendencias={noop}
+    />,
+  );
+  for (const rotulo of ["Total cobrado", "Custo das reservas", "Receita da agência"])
+    expect(screen.getByText(rotulo)).toBeInTheDocument();
+});
+
+test("U06: sem verValores (nem resumo), Receita da agência some junto com o resto da faixa", () => {
   render(
     <ResumoTab
       viagem={{ ...VIAGEM, resumo: undefined }}
@@ -75,7 +95,7 @@ test("U06: sem verValores (nem resumo), Receita prevista some junto com o resto 
       onVerPendencias={noop}
     />,
   );
-  expect(screen.queryByText("Receita prevista")).toBeNull();
+  expect(screen.queryByText("Receita da agência")).toBeNull();
 });
 
 test("passageiro com cpf e dataNascimento mostra a linha secundária 'CPF · nasc. dd/mm/aaaa'", () => {
@@ -129,7 +149,11 @@ test("passageiro sem cpf nem dataNascimento não mostra linha secundária", () =
 test("P02: vendedor externo (sem resumo, sem verValores) vê 'Seu repasse' com valor e status", () => {
   render(
     <ResumoTab
-      viagem={{ ...VIAGEM, resumo: undefined, repasse: { id: "rp1", valor: 300, status: "bloqueado" } }}
+      viagem={{
+        ...VIAGEM,
+        resumo: undefined,
+        repasse: { id: "rp1", valor: 300, percentual: null, status: "bloqueado" },
+      }}
       verValores={false}
       pendencias={[]}
       onAbrirReserva={noop}

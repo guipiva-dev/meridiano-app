@@ -132,6 +132,7 @@ export interface ViagemRequest {
   observacoes: string | null;
   passageiros: PassageiroRequest[];
   repasseValor: number | null;
+  repassePercentual: number | null;
   reservas: ReservaRequest[];
   versao?: string;
 }
@@ -185,6 +186,7 @@ export interface ReservaDto {
 export interface RepasseDto {
   id: string;
   valor: number | null;
+  percentual: number | null;
   status: "bloqueado" | "a_pagar" | "pago" | "cancelado";
 }
 

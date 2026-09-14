@@ -58,6 +58,7 @@ export async function criarViagemComComissao(
     observacoes: null,
     passageiros: [{ clienteId: cliente?.id ?? "", titular: true }],
     repasseValor: null,
+    repassePercentual: null,
     reservas: [
       {
         fornecedorId: fornecedor?.id ?? "",

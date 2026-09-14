@@ -16,10 +16,11 @@ import {
 } from "@/api/viagens";
 import { useAuth } from "@/auth/useAuth";
 import { deDto, paraRequest, type ReservaForm, reservaVazia } from "@/components/reserva";
-import { type PassageiroForm, somarReservas } from "@/components/viagem";
+import type { PassageiroForm } from "@/components/viagem";
 import { arredondar2 } from "@/dominio/calculoReserva";
 import { useSalvamento } from "@/lib/useSalvamento";
 import { errosDeApi } from "./mapaErros";
+import { useRepasseVendedor } from "./useRepasseVendedor";
 import { validarReserva } from "./validarReserva";
 
 export interface ViagemForm {
@@ -33,6 +34,7 @@ export interface ViagemForm {
   observacoes: string;
   passageiros: PassageiroForm[];
   repasseValor: number | null;
+  repassePercentual: number | null;
   reservas: ReservaForm[];
 }
 
@@ -47,6 +49,7 @@ const VAZIO: ViagemForm = {
   observacoes: "",
   passageiros: [],
   repasseValor: null,
+  repassePercentual: null,
   reservas: [],
 };
 const SEM_FORNECEDORES: FornecedorDto[] = [];
@@ -69,6 +72,7 @@ function paraForm(dto: ViagemDto, anteriores: ReservaForm[], abrirSomente?: stri
     observacoes: dto.observacoes ?? "",
     passageiros: dto.passageiros.map((p) => ({ ...p, dataNascimento: p.dataNascimento ?? undefined })),
     repasseValor: dto.repasse?.valor ?? null,
+    repassePercentual: dto.repasse?.percentual ?? null,
     reservas: dto.reservas.map((r, i) => {
       if (abrirSomente) return { ...deDto(r), aberta: r.id === abrirSomente };
       const anterior = anteriores.find((a) => a.id === r.id) ?? anteriores[i];
@@ -89,6 +93,7 @@ function paraViagemRequest(v: ViagemForm, versao: string | undefined): ViagemReq
     observacoes: v.observacoes.trim() || null,
     passageiros: v.passageiros.map((p) => ({ clienteId: p.clienteId, titular: p.titular })),
     repasseValor: v.repasseValor,
+    repassePercentual: v.repassePercentual,
     // R2: reserva cancelada é imutável pelo PUT — omitida, não reenviada.
     reservas: v.reservas.filter((r) => r.status !== "cancelada").map(paraRequest),
     versao,
@@ -178,7 +183,6 @@ export function useNovaViagem(id: string | undefined) {
   const dataIda = form.watch("dataIda");
   const dataVolta = form.watch("dataVolta");
   const vendedorId = form.watch("vendedorId");
-  const repasseValor = form.watch("repasseValor");
   const vendedorSelecionado = vendedores.find((v) => v.id === vendedorId);
 
   const setReservas = useCallback(
@@ -293,11 +297,16 @@ export function useNovaViagem(id: string | undefined) {
   const enviar = useCallback(
     async (dados: ViagemForm) => {
       const req = paraViagemRequest(dados, viagem?.versao);
+      // Vendedor que não gera repasse: os campos ficam ocultos, então não enviam valor (evita 422 invisível).
+      if (vendedores.find((v) => v.id === dados.vendedorId)?.geraRepasse === false) {
+        req.repasseValor = null;
+        req.repassePercentual = null;
+      }
       const salva = id ? await viagensApi.atualizar(id, req) : await viagensApi.criar(req);
       qc.setQueryData(chaves.viagem(salva.id), salva);
       if (!id) await nav(`/viagens/${salva.id}/editar`, { replace: true });
     },
-    [id, viagem, qc, nav],
+    [id, viagem, qc, nav, vendedores],
   );
 
   const salvamento = useSalvamento<ViagemForm>(enviar);
@@ -365,11 +374,7 @@ export function useNovaViagem(id: string | undefined) {
     return r.fornecedorTocado && problemas?.fornecedorId ? { fornecedorId: problemas.fornecedorId } : {};
   });
 
-  const { receitaPrevista, incompleta } = somarReservas(reservas);
-  const repasseSugerido =
-    !incompleta && vendedorSelecionado?.geraRepasse && repasseValor === null
-      ? arredondar2((receitaPrevista * vendedorSelecionado.percentualPadrao) / 100)
-      : null;
+  const repasse = useRepasseVendedor(form, reservas, vendedorSelecionado, viagem?.repasse?.status);
 
   return {
     form,
@@ -385,7 +390,7 @@ export function useNovaViagem(id: string | undefined) {
       setDispensadoPara(chaveSemelhante);
     },
     duplicadas,
-    repasseSugerido,
+    ...repasse,
     adicionarReserva,
     removerReserva,
     alternarReserva,

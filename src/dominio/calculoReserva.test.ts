@@ -103,3 +103,34 @@ test("sem erro de ponto flutuante: 0.3 - 0.1 = 0.2 exato", () => {
     }).ravCliente,
   ).toBe(0.2);
 });
+
+test("totalComissao = comissão + RAV da operadora + RAV do cliente", () => {
+  const r = calcularReserva({
+    valorTotal: 10000,
+    valorComissao: 1000,
+    ravOperadora: 0,
+    valorCliente: 10500,
+    taxaServico: 150,
+    viaOperadora: true,
+  });
+  expect(r.totalComissao).toBe(1500);
+  expect(r.receitaPrevista).toBe(1650);
+});
+
+test("totalComissao com desconto (RAV negativo)", () => {
+  const r = calcularReserva({
+    valorTotal: 10000,
+    valorComissao: 1000,
+    ravOperadora: 0,
+    valorCliente: 9800,
+    taxaServico: 0,
+    viaOperadora: true,
+  });
+  expect(r.totalComissao).toBe(800);
+});
+
+test("totalComissao null sem venda; 0 se cancelada sem comissão mantida", () => {
+  const base = { valorTotal: 10000, valorComissao: 1000, ravOperadora: 0, taxaServico: 0, viaOperadora: true };
+  expect(calcularReserva({ ...base, valorCliente: null }).totalComissao).toBeNull();
+  expect(calcularReserva({ ...base, valorCliente: null, cancelada: true }).totalComissao).toBe(0);
+});

@@ -39,11 +39,6 @@ interface ReservaDetalheCardProps {
   onDuplicar?: () => void;
 }
 
-const ROTULO_FLUXO = {
-  cliente_paga_operadora: "Cliente paga a operadora",
-  cliente_paga_agencia: "Cliente paga a agência",
-};
-
 function Leitura({ rotulo, children }: { rotulo: string; children: ReactNode }) {
   return (
     <div className={s.item}>
@@ -152,7 +147,6 @@ export function ReservaDetalheCard({
               )}
             </Leitura>
             <Leitura rotulo="Formas de pagamento">{formas || "—"}</Leitura>
-            <Leitura rotulo="Fluxo">{ROTULO_FLUXO[reserva.fluxoPagamento]}</Leitura>
             <Leitura rotulo="Previsão da comissão">{formatarData(reserva.dataPrevistaComissao)}</Leitura>
             <Leitura rotulo="Situação">
               <StatusBadge entidade="comissao" valor={reserva.situacaoComissao} />

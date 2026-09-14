@@ -35,7 +35,7 @@ const OPCOES_DESFECHO = [
 export function DesfechoFields({ value, onChange, erros, passageiros, valorVenda }: DesfechoFieldsProps) {
   function excedeVenda(valor: number | null): string | undefined {
     if (valorVenda === undefined || valor === null || valor <= valorVenda) return undefined;
-    return `Não pode passar de ${formatarDinheiro(valorVenda)} (venda ao cliente)`;
+    return `Não pode passar de ${formatarDinheiro(valorVenda)} (total cobrado do cliente)`;
   }
 
   function mudarDesfecho(desfecho: Desfecho) {

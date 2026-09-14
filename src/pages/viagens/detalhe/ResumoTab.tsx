@@ -4,13 +4,13 @@ import { type ReservaDto, ROTULO_SERVICO, type ViagemDto } from "@/api/viagens";
 import { Button, MoneyValue } from "@/components";
 import { Badge, StatusBadge } from "@/components/display";
 import { EmptyState } from "@/components/feedback";
-import { FaixaResumo, type ItemFaixa } from "@/components/viagem";
+import { comissaoMedia, FaixaResumo, type ItemFaixa, rotuloComissaoMedia } from "@/components/viagem";
 import { formatarData } from "@/lib/datas";
 import { formatarCpf } from "@/lib/documentos";
 import s from "./Viagem.module.css";
 
-export const TOOLTIP_RECEBIDA = "Soma de todos os movimentos da viagem";
-const TOOLTIP_RESULTADO = "Receita das reservas − comissão do vendedor − despesas vinculadas";
+export const TOOLTIP_RECEBIDA = "Comissões, RAV e taxas que já entraram no caixa (movimentos)";
+const TOOLTIP_RESULTADO = "Receita da agência − comissão do vendedor − despesas vinculadas";
 
 export function Bloco({ titulo, meta, children }: { titulo: string; meta?: ReactNode; children: ReactNode }) {
   return (
@@ -31,12 +31,17 @@ function faixaDaViagem(
 ): { itens: ItemFaixa[]; extra?: { label: string; value: number; tooltip?: string } } | null {
   const r = viagem.resumo;
   if (r) {
+    const media = comissaoMedia(viagem.reservas);
     return {
       itens: [
-        { label: "Venda total", value: r.vendaTotal },
-        { label: "Custo dos fornecedores", value: r.custoFornecedores },
-        // U06: sem esta linha o usuário faz "Venda − Custo" e lê errado (esse resultado é bruto, não a receita da agência).
-        { label: "Receita prevista", value: r.receitaPrevista },
+        { label: "Total cobrado", value: r.vendaTotal },
+        { label: "Custo das reservas", value: r.custoFornecedores },
+        // U06: sem esta linha o usuário faz "Total − Custo" e lê errado (esse resultado é bruto, não a receita da agência).
+        {
+          label: "Receita da agência",
+          value: r.receitaPrevista,
+          badge: media === null ? undefined : <small>{rotuloComissaoMedia(media)}</small>,
+        },
         {
           label: "Comissão do vendedor",
           value: r.repasseValor,
@@ -54,8 +59,8 @@ function faixaDaViagem(
     ativas.reduce((total, res) => total + (campo(res) ?? 0), 0);
   return {
     itens: [
-      { label: "Venda total", value: soma((res) => res.valorCliente) },
-      { label: "Custo dos fornecedores", value: soma((res) => res.valorTotal) },
+      { label: "Total cobrado", value: soma((res) => res.valorCliente) },
+      { label: "Custo das reservas", value: soma((res) => res.valorTotal) },
       { label: "Receita da agência", value: soma((res) => res.receitaPrevista), destaque: true },
     ],
   };

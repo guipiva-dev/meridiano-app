@@ -77,7 +77,7 @@ export const VIAGEM: ViagemDto = {
     { clienteId: "c2", nome: "Lúcia Mendes", titular: false },
   ],
   reservas: [RESERVA_1, RESERVA_2],
-  repasse: { id: "rp1", valor: 300, status: "bloqueado" },
+  repasse: { id: "rp1", valor: 300, percentual: null, status: "bloqueado" },
   resumo: {
     vendaTotal: 13_700,
     custoFornecedores: 13_000,

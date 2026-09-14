@@ -145,12 +145,16 @@ test("confirmar o recebimento invalida a viagem no cache", async () => {
   });
 });
 
-test("faixa: Receita recebida (soma de todos os movimentos) e Comissão do vendedor, sem 'Comissões recebidas'", async () => {
+test("faixa: Receita da agência, Receita recebida (movimentos) e Comissão do vendedor, sem 'Comissões recebidas'", async () => {
   montar();
   await screen.findByText("CVC Operadora");
+  expect(screen.getByText("Receita da agência")).toBeInTheDocument();
   expect(screen.getByText("Receita recebida")).toBeInTheDocument();
-  expect(screen.getByRole("tooltip")).toHaveTextContent(/soma de todos os movimentos/i);
+  expect(screen.getByRole("tooltip")).toHaveTextContent(/Comissões, RAV e taxas que já entraram/);
   expect(screen.getByText("Comissão do vendedor")).toBeInTheDocument();
+  // faixa + título do bloco Despesas
+  expect(screen.getAllByText("Despesas da viagem")).toHaveLength(2);
+  expect(screen.getByText("Resultado da viagem")).toBeInTheDocument();
   expect(screen.queryByText(/Comissões recebidas|vendedora/)).toBeNull();
 });
 

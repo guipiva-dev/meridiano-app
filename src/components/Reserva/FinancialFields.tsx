@@ -1,26 +1,11 @@
 import { type ChangeEvent, useState } from "react";
-import {
-  type FluxoPagamento,
-  FORMAS_PAGAMENTO,
-  type FormaPagamento,
-  type RavClienteModo,
-  ROTULO_FORMA,
-} from "@/api/viagens";
-import { Field, Input, MoneyInput, Select, useField } from "@/components";
+import { FORMAS_PAGAMENTO, type FormaPagamento, ROTULO_FORMA } from "@/api/viagens";
+import { Field, Input, MoneyInput, useField } from "@/components";
 import { Chip } from "@/components/display";
+import { calcularReserva } from "@/dominio/calculoReserva";
 import { comissaoPorPercentual, parsearPercentual, percentualDaComissao } from "@/lib/comissao";
-import { formatarDinheiro } from "@/lib/dinheiro";
 import s from "./Reserva.module.css";
-import type { ReservaForm } from "./tipos";
-
-const OPCOES_RAV_CLIENTE: { value: RavClienteModo; label: string }[] = [
-  { value: "via_operadora", label: "Via operadora" },
-  { value: "retido_agencia", label: "Retido pela agência" },
-];
-const OPCOES_FLUXO: { value: FluxoPagamento; label: string }[] = [
-  { value: "cliente_paga_operadora", label: "Cliente paga a operadora" },
-  { value: "cliente_paga_agencia", label: "Cliente paga a agência" },
-];
+import { paraValoresReserva, type ReservaForm } from "./tipos";
 
 interface FinancialFieldsProps {
   value: ReservaForm;
@@ -68,12 +53,21 @@ export function FinancialFields({
 }: FinancialFieldsProps) {
   function alternarForma(forma: FormaPagamento) {
     const atual = value.formasPagamento;
-    onChange({ formasPagamento: atual.includes(forma) ? atual.filter((f) => f !== forma) : [...atual, forma] });
+    onChange({
+      formasPagamento: atual.includes(forma) ? atual.filter((f) => f !== forma) : [...atual, forma],
+    });
   }
-  // L1: modo da comissão é só da tela (não persiste; reserva existente abre em R$).
-  const [comissaoEmPct, setComissaoEmPct] = useState(false);
-  const [pctTexto, setPctTexto] = useState("");
+  // % digitado vira âncora: mudar o total recalcula o R$. Digitar R$ solta a âncora e o % passa a ser derivado.
+  const [pctTexto, setPctTexto] = useState<string | null>(null);
   const [erroPct, setErroPct] = useState<string | null>(null);
+  // Comissão re-sugerida de fora (ex.: troca de fornecedor) solta a âncora do % digitado.
+  const [sugeridaAntes, setSugeridaAntes] = useState(value.comissaoSugerida);
+  if (sugeridaAntes !== value.comissaoSugerida) {
+    setSugeridaAntes(value.comissaoSugerida);
+    if (value.comissaoSugerida) setPctTexto(null);
+  }
+  const pctDerivado = percentualDaComissao(value.valorComissao, value.valorTotal);
+  const pctMostrado = pctTexto ?? (pctDerivado === null ? "" : String(pctDerivado).replace(".", ","));
 
   function mudarPct(texto: string) {
     const p = parsearPercentual(texto);
@@ -93,23 +87,29 @@ export function FinancialFields({
       comissaoSugerida: false,
     });
   }
-  function alternarModoComissao(emPct: boolean) {
-    if (emPct === comissaoEmPct) return;
+  function mudarValorComissao(v: number | null) {
+    setPctTexto(null);
     setErroPct(null);
-    if (emPct) {
-      const p = percentualDaComissao(value.valorComissao, value.valorTotal);
-      setPctTexto(p === null ? "" : String(p).replace(".", ","));
-    }
-    setComissaoEmPct(emPct);
+    onChange({ valorComissao: v, comissaoSugerida: false });
   }
   function mudarTotal(v: number | null) {
-    const p = comissaoEmPct ? parsearPercentual(pctTexto) : null;
-    onChange(
-      typeof p === "number"
-        ? { valorTotal: v, valorComissao: comissaoPorPercentual(p, v), comissaoSugerida: false }
-        : { valorTotal: v },
-    );
+    const p = pctTexto === null ? null : parsearPercentual(pctTexto);
+    // A03: venda ainda vazia, ou ainda sugerida (usuário não digitou à mão) — sugere/ressincroniza venda = total.
+    // Na digitação, não no blur: o Tab cai direto no Total cobrado, que lê o valor no foco (antes do re-render do blur).
+    const venda =
+      v && (value.valorCliente === null || value.vendaSugerida) ? { valorCliente: v, vendaSugerida: true } : {};
+    onChange({
+      valorTotal: v,
+      ...venda,
+      ...(typeof p === "number"
+        ? {
+            valorComissao: comissaoPorPercentual(p, v),
+            comissaoSugerida: false,
+          }
+        : {}),
+    });
   }
+  const r = calcularReserva(paraValoresReserva(value));
   const helperComissao =
     value.comissaoSugerida && percentualSugerido !== null ? `Sugerido: ${percentualSugerido} %` : undefined;
 
@@ -121,94 +121,12 @@ export function FinancialFields({
         tooltip="O que o fornecedor cobrou, taxas incluídas"
         error={erros.valorTotal}
       >
-        <MoneyInput
-          value={value.valorTotal}
-          readOnly={readOnly}
-          onChange={mudarTotal}
-          onBlur={() => {
-            // A03: venda ainda vazia, ou ainda sugerida (usuário não digitou à mão) — sugere/ressincroniza
-            // venda = total. Nunca sobrescreve o que o usuário já digitou (vendaSugerida vira false ao digitar).
-            if (!readOnly && value.valorTotal && (value.valorCliente === null || value.vendaSugerida)) {
-              onChange({ valorCliente: value.valorTotal, vendaSugerida: true });
-            }
-          }}
-        />
-      </Field>
-      <Field label="Do total, quanto é taxa" className="span-2" error={erros.valorTaxas}>
-        <MoneyInput
-          value={value.valorTaxas}
-          readOnly={readOnly}
-          onChange={(v) => {
-            onChange({ valorTaxas: v });
-          }}
-        />
+        <MoneyInput value={value.valorTotal} readOnly={readOnly} onChange={mudarTotal} />
       </Field>
       <Field
-        label="Comissão"
+        label="Total cobrado do cliente"
         className="span-2"
-        tooltip="O que o fornecedor paga à agência por esta reserva (ex.: 10% de R$ 10.000 = R$ 1.000)."
-        helper={helperComissao}
-        error={erroPct ?? erros.valorComissao}
-      >
-        {comissaoEmPct ? (
-          <Input
-            inputMode="decimal"
-            value={pctTexto}
-            readOnly={readOnly}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => {
-              mudarPct(e.target.value);
-            }}
-          />
-        ) : (
-          <MoneyInput
-            value={value.valorComissao}
-            readOnly={readOnly}
-            onChange={(v) => {
-              onChange({ valorComissao: v, comissaoSugerida: false });
-            }}
-          />
-        )}
-        <div className={s.chips}>
-          <div role="group" aria-label="Unidade da comissão" className={s.chips}>
-            <Chip
-              selected={!comissaoEmPct}
-              disabled={readOnly}
-              aria-label="Comissão em R$"
-              onClick={() => {
-                alternarModoComissao(false);
-              }}
-            >
-              R$
-            </Chip>
-            <Chip
-              selected={comissaoEmPct}
-              disabled={readOnly}
-              aria-label="Comissão em %"
-              onClick={() => {
-                alternarModoComissao(true);
-              }}
-            >
-              %
-            </Chip>
-          </div>
-          {comissaoEmPct && value.valorComissao !== null && (
-            <span aria-live="polite">= {formatarDinheiro(value.valorComissao)}</span>
-          )}
-        </div>
-      </Field>
-      <Field label="RAV da operadora" className="span-2" error={erros.ravOperadora}>
-        <MoneyInput
-          value={value.ravOperadora}
-          readOnly={readOnly}
-          onChange={(v) => {
-            onChange({ ravOperadora: v });
-          }}
-        />
-      </Field>
-      <Field
-        label="Venda ao cliente"
-        className="span-2"
-        tooltip="Quanto o cliente contratou pagar. O que entrou no caixa fica em Movimentos."
+        tooltip="Quanto o cliente pagou no total. Começa igual ao total da reserva; mude se cobrou a mais (RAV) ou deu desconto."
         error={erros.valorCliente}
       >
         <MoneyInput
@@ -221,16 +139,46 @@ export function FinancialFields({
         />
       </Field>
       <Field
-        label="RAV do cliente vem"
+        label="Comissão (%)"
         className="span-2"
-        tooltip="Via operadora: ela devolve junto com a comissão. Retido: o cliente pagou a diferença à agência."
+        tooltip="O que o fornecedor paga à agência (ex.: 10% de R$ 10.000 = R$ 1.000)."
+        helper={helperComissao}
+        error={erroPct ?? undefined}
       >
-        <Select
-          options={OPCOES_RAV_CLIENTE}
-          value={value.ravClienteModo}
-          disabled={readOnly}
-          onChange={(e: ChangeEvent<HTMLSelectElement>) => {
-            onChange({ ravClienteModo: e.target.value as RavClienteModo });
+        <Input
+          inputMode="decimal"
+          value={pctMostrado}
+          readOnly={readOnly}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            mudarPct(e.target.value);
+          }}
+        />
+      </Field>
+      <Field label="Comissão (R$)" className="span-2" error={erros.valorComissao}>
+        <MoneyInput value={value.valorComissao} readOnly={readOnly} onChange={mudarValorComissao} />
+      </Field>
+      <Field
+        label="RAV"
+        className="span-2"
+        tooltip="Calculado: total cobrado do cliente − total da reserva (ex.: R$ 10.500 − R$ 10.000 = R$ 500). Negativo = desconto."
+      >
+        <MoneyInput value={r.ravCliente} readOnly calculated onChange={() => undefined} tabIndex={-1} />
+      </Field>
+      <Field label="Total da comissão" className="span-2" tooltip="Comissão + RAV.">
+        <MoneyInput value={r.totalComissao} readOnly calculated onChange={() => undefined} tabIndex={-1} />
+      </Field>
+      <Field
+        label="Taxa de serviço"
+        className="span-2"
+        tooltip="Valor fixo cobrado do cliente sem custo por trás, como assessoria ou emissão de visto (ex.: R$ 150)."
+        helper="Cobrada do cliente por fora da reserva; soma direto na receita da agência."
+        error={erros.taxaServico}
+      >
+        <MoneyInput
+          value={value.taxaServico}
+          readOnly={readOnly}
+          onChange={(v) => {
+            onChange({ taxaServico: v });
           }}
         />
       </Field>
@@ -250,34 +198,15 @@ export function FinancialFields({
           ))}
         </div>
       </Field>
-      <Field
-        label="Fluxo"
-        className="span-2"
-        tooltip="Quem recebe o pagamento do cliente: a agência ou a operadora (ex.: pix à agência, que repassa)."
-      >
-        <Select
-          options={OPCOES_FLUXO}
-          value={value.fluxoPagamento}
-          disabled={readOnly}
-          onChange={(e: ChangeEvent<HTMLSelectElement>) => {
-            onChange({ fluxoPagamento: e.target.value as FluxoPagamento });
-          }}
-        />
-      </Field>
       <details className={s.mais}>
-        <summary>+ mais campos</summary>
+        <summary>+ mais campos (taxas do fornecedor, observações)</summary>
         <div className="grid-form">
-          <Field
-            label="Taxa de serviço"
-            className="span-2"
-            tooltip="Valor fixo cobrado do cliente sem custo por trás, como assessoria ou emissão de visto (ex.: R$ 150)."
-            error={erros.taxaServico}
-          >
+          <Field label="Do total, quanto é taxa" className="span-2" error={erros.valorTaxas}>
             <MoneyInput
-              value={value.taxaServico}
+              value={value.valorTaxas}
               readOnly={readOnly}
               onChange={(v) => {
-                onChange({ taxaServico: v });
+                onChange({ valorTaxas: v });
               }}
             />
           </Field>

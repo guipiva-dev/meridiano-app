@@ -17,6 +17,8 @@ export interface ResultadoReserva {
   valorEsperadoOperadora: number | null;
   receitaPrevista: number | null;
   percentualComissao: number | null;
+  /** comissão + RAV (ruling 2026-09-14). Receita = totalComissao + taxa de serviço. */
+  totalComissao: number | null;
 }
 
 /** Half away from zero, como o `numeric` do Postgres. */
@@ -41,11 +43,13 @@ export function calcularReserva(v: ValoresReserva): ResultadoReserva {
   const cliValido = v.valorCliente !== null || zera; // cancelada zera mesmo sem venda informada
   const esperado = zera ? 0 : com + rav + (v.viaOperadora ? ravCliente : 0);
   const prevista = zera ? 0 : com + rav + ravCliente + taxa;
+  const totalCom = zera ? 0 : com + rav + ravCliente;
   const percentual = total > 0 ? arredondar2((100 * com) / total) : null;
   return {
     ravCliente: v.valorCliente === null ? null : ravCliente / 100,
     valorEsperadoOperadora: cliValido ? esperado / 100 : null,
     receitaPrevista: cliValido ? prevista / 100 : null,
     percentualComissao: percentual,
+    totalComissao: cliValido ? totalCom / 100 : null,
   };
 }

@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { type ReservaValores, somarReservas, TripSummary } from "./TripSummary";
+import { comissaoMedia, type ReservaValores, somarReservas, TripSummary } from "./TripSummary";
 
 test("soma vendas e calcula o resultado da viagem", () => {
   const reservas: ReservaValores[] = [
@@ -48,10 +48,12 @@ test("sem mostrarResultado esconde comissão, despesas e resultado, e mostra a r
     />,
   );
 
-  expect(screen.queryByText("Comissão da vendedora")).toBeNull();
+  expect(screen.queryByText("Comissão do vendedor")).toBeNull();
   expect(screen.queryByText("Despesas da viagem")).toBeNull();
   expect(screen.queryByText(/Resultado da viagem/)).toBeNull();
-  expect(screen.getByText("Receita das reservas")).toBeInTheDocument();
+  expect(screen.getByText("Total cobrado")).toBeInTheDocument();
+  expect(screen.getByText("Custo das reservas")).toBeInTheDocument();
+  expect(screen.getByText("Receita da agência")).toBeInTheDocument();
   expect(screen.getByText("R$ 520,00")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "+ Adicionar reserva" })).toBeInTheDocument();
 });
@@ -72,7 +74,8 @@ test("reserva cancelada fica fora de todos os totais (alinhado ao Resumo do deta
   expect(screen.getByText("R$ 3.200,00")).toBeInTheDocument();
   expect(screen.getByText("R$ 3.000,00")).toBeInTheDocument();
   expect(screen.queryByText("R$ 13.700,00")).toBeNull();
-  expect(screen.getByText("R$ 520,00")).toBeInTheDocument();
+  // receita da agência e resultado (sem repasse nem despesas) coincidem
+  expect(screen.getAllByText("R$ 520,00")).toHaveLength(2);
 });
 
 test("reserva sem venda ao cliente não puxa a receita para negativo", () => {
@@ -113,6 +116,59 @@ test("reserva incompleta mostra '—' no resultado com dica para preencher a ven
   ];
   render(<TripSummary reservas={reservas} repasseValor={300} despesas={0} onAdicionarReserva={vi.fn()} />);
 
-  const resultado = screen.getByTitle("Preencha a venda ao cliente das reservas");
+  const resultado = screen.getByTitle("Preencha o total cobrado do cliente das reservas");
   expect(resultado.querySelector(".value")).toHaveTextContent("—");
+});
+
+const TRES: ReservaValores[] = [
+  {
+    valorTotal: 10000,
+    valorComissao: 1000,
+    ravOperadora: 0,
+    valorCliente: 10500,
+    taxaServico: 150,
+    ravClienteModo: "via_operadora",
+  },
+  {
+    valorTotal: 5000,
+    valorComissao: 250,
+    ravOperadora: 0,
+    valorCliente: 5000,
+    taxaServico: 0,
+    ravClienteModo: "via_operadora",
+  },
+  {
+    valorTotal: 9999,
+    valorComissao: 999,
+    ravOperadora: 0,
+    valorCliente: 9999,
+    taxaServico: 0,
+    ravClienteModo: "via_operadora",
+    status: "cancelada",
+  },
+];
+
+test("somarReservas devolve total da comissão e comissão média ponderada", () => {
+  const r = somarReservas(TRES);
+  expect(r.totalComissao).toBe(1750);
+  expect(r.comissaoMedia).toBe(8.33); // 1250 / 15000
+});
+
+test("comissaoMedia é null sem total", () => {
+  expect(comissaoMedia([])).toBeNull();
+  expect(comissaoMedia([{ valorTotal: 0, valorComissao: 0 }])).toBeNull();
+});
+
+test("rótulos da faixa do formulário", () => {
+  render(<TripSummary reservas={TRES} repasseValor={0} despesas={0} onAdicionarReserva={vi.fn()} />);
+  for (const rotulo of [
+    "Total cobrado",
+    "Custo das reservas",
+    "Receita da agência",
+    "Comissão do vendedor",
+    "Despesas da viagem",
+  ])
+    expect(screen.getByText(rotulo)).toBeInTheDocument();
+  expect(screen.getByText(/^Resultado da viagem/)).toBeInTheDocument();
+  expect(screen.getByText("comissão média 8,33 %")).toBeInTheDocument();
 });
