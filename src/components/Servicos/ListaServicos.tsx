@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useParams } from "react-router";
 import { mensagemDeErro } from "@/api/http";
 import { chavesServicos, type ServicoDto, servicosApi } from "@/api/servicos";
-import { type ReservaDto, ROTULO_SERVICO } from "@/api/viagens";
+import { chaves, type ReservaDto, ROTULO_SERVICO, type ViagemDto } from "@/api/viagens";
 import { Button } from "@/components";
 import { Alert } from "@/components/display";
 import { ConfirmModal, Skeleton, toast } from "@/components/feedback";
@@ -30,6 +31,9 @@ export function ListaServicos({ reserva, podeEditar }: { reserva: ReservaDto; po
   const [editando, setEditando] = useState<ServicoDto | undefined>();
   const [abertoModal, setAbertoModal] = useState(false);
   const [excluindo, setExcluindo] = useState<ServicoDto>();
+  // Datas da viagem para o aviso do modal: vêm do cache da rota `/viagens/:id` (mesmo padrão do ReservaDetalheCard).
+  const { id: viagemId = "" } = useParams();
+  const viagem = qc.getQueryData<ViagemDto>(chaves.viagem(viagemId));
 
   const chave = chavesServicos.daReserva(reserva.id);
   const q = useQuery({ queryKey: chave, queryFn: () => servicosApi.daReserva(reserva.id) });
@@ -102,6 +106,8 @@ export function ListaServicos({ reserva, podeEditar }: { reserva: ReservaDto; po
           open
           reservaId={reserva.id}
           servico={editando}
+          dataIda={viagem?.dataIda}
+          dataVolta={viagem?.dataVolta}
           onClose={() => {
             setAbertoModal(false);
           }}
