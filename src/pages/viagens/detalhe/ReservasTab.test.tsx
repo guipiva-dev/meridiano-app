@@ -150,6 +150,21 @@ test("Duplicar abre nova reserva com fornecedor e valor total, localizador vazio
   });
 });
 
+test("§9: localizador já usado (fornecedor+localizador) mostra aviso na reserva duplicada", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, [{ id: "f1", nome: "CVC Operadora" }]));
+    if (url.includes("/reservas/duplicada") && url.includes("K7X2PQ"))
+      return Promise.resolve(resposta(200, { viagemId: "v9", codigo: "V-0009" }));
+    return Promise.resolve(resposta(200, []));
+  });
+  montar();
+  fireEvent.click(screen.getAllByRole("button", { name: "Expandir" })[0]!);
+  fireEvent.click(screen.getByRole("button", { name: "Duplicar" }));
+  const nova = screen.getByRole("region", { name: `Reserva ${VIAGEM.reservas.length + 1}` });
+  fireEvent.change(within(nova).getByLabelText("Localizador"), { target: { value: "K7X2PQ" } });
+  expect(await within(nova).findByText("Este localizador já está na viagem V-0009.")).toBeInTheDocument();
+});
+
 test("sem verValores a ação Duplicar não aparece", () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(

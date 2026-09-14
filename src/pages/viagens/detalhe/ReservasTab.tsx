@@ -61,6 +61,33 @@ export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaA
     if (chaveDuplicada) refDuplicada.current?.querySelector<HTMLInputElement>("input")?.focus();
   }, [chaveDuplicada]);
 
+  // §9 aviso de reserva duplicada — mesma checagem com debounce de `useNovaViagem` (lá por índice; aqui um card só).
+  // Sem excluir a própria viagem: a duplicada ainda não está salva, então achar nesta viagem também é duplicata.
+  const [codigoDuplicata, setCodigoDuplicata] = useState<string | null>(null);
+  const fornecedorDuplicada = duplicada?.fornecedorId ?? "";
+  const localizadorDuplicada = duplicada?.localizador.trim() ?? "";
+  useEffect(() => {
+    let vivo = true;
+    const t = setTimeout(() => {
+      if (!fornecedorDuplicada || !localizadorDuplicada) {
+        setCodigoDuplicata(null);
+        return;
+      }
+      viagensApi
+        .reservaDuplicada(fornecedorDuplicada, localizadorDuplicada)
+        .then((achada) => {
+          if (vivo) setCodigoDuplicata(achada?.codigo ?? null);
+        })
+        .catch(() => {
+          if (vivo) setCodigoDuplicata(null);
+        });
+    }, 400);
+    return () => {
+      vivo = false;
+      clearTimeout(t);
+    };
+  }, [fornecedorDuplicada, localizadorDuplicada]);
+
   function duplicar(reserva: ReservaDto) {
     salvar.limpar();
     setTentouSalvar(false);
@@ -160,7 +187,7 @@ export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaA
               setNovoFornecedor(true);
             }}
             erros={tentouSalvar ? validarReserva(duplicada) : {}}
-            avisoDuplicada={null}
+            avisoDuplicada={codigoDuplicata ? `Este localizador já está na viagem ${codigoDuplicata}.` : null}
           />
           {salvar.conflito && (
             <Alert tone="danger">Alguém alterou esta viagem enquanto você editava. Recarregue e tente de novo.</Alert>
