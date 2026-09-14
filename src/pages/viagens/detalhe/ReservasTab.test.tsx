@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useState } from "react";
 import { createMemoryRouter, MemoryRouter, RouterProvider, useLocation } from "react-router";
 import type { CreditoDto, ViagemDto } from "@/api/viagens";
@@ -109,6 +109,89 @@ test("Cancelar reserva… no card 1 abre o modal daquela reserva", () => {
   fireEvent.click(screen.getAllByRole("button", { name: "Expandir" })[0]!);
   fireEvent.click(screen.getByRole("button", { name: "Cancelar reserva…" }));
   expect(screen.getByRole("dialog")).toHaveTextContent("Cancelar reserva 1");
+});
+
+test("Duplicar abre nova reserva com fornecedor e valor total, localizador vazio e focado; salvar faz POST", async () => {
+  const chamadas: { url: string; metodo: string; corpo: unknown }[] = [];
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    chamadas.push({
+      url,
+      metodo: init?.method ?? "GET",
+      corpo: typeof init?.body === "string" ? JSON.parse(init.body) : null,
+    });
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, [{ id: "f1", nome: "CVC Operadora" }]));
+    if (init?.method === "POST") return Promise.resolve(resposta(200, VIAGEM));
+    return Promise.resolve(resposta(200, []));
+  });
+  montar();
+  fireEvent.click(screen.getAllByRole("button", { name: "Expandir" })[0]!);
+  fireEvent.click(screen.getByRole("button", { name: "Duplicar" }));
+
+  const nova = screen.getByRole("region", { name: `Reserva ${VIAGEM.reservas.length + 1}` });
+  const localizador = within(nova).getByLabelText("Localizador");
+  expect(localizador).toHaveValue("");
+  expect(localizador).toHaveFocus();
+  expect(await within(nova).findByRole("option", { name: "CVC Operadora" })).toBeInTheDocument();
+  expect(within(nova).getByLabelText("Fornecedor")).toHaveValue("f1");
+  expect(within(nova).getByLabelText("Total da reserva")).toHaveValue("R$ 10.000,00");
+
+  fireEvent.click(screen.getByRole("button", { name: "Salvar reserva" }));
+  await waitFor(() => {
+    expect(chamadas.some((c) => c.metodo === "POST")).toBe(true);
+  });
+  const post = chamadas.find((c) => c.metodo === "POST")!;
+  expect(post.url).toContain(`/viagens/${VIAGEM.id}/reservas`);
+  expect(post.corpo).toMatchObject({
+    versao: VIAGEM.versao,
+    reserva: { fornecedorId: "f1", valorTotal: 10_000, localizador: null, status: "pendente" },
+  });
+  await waitFor(() => {
+    expect(screen.queryByRole("button", { name: "Salvar reserva" })).toBeNull();
+  });
+});
+
+test("§9: localizador já usado (fornecedor+localizador) mostra aviso na reserva duplicada", async () => {
+  vi.stubGlobal("fetch", (url: string) => {
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, [{ id: "f1", nome: "CVC Operadora" }]));
+    if (url.includes("/reservas/duplicada") && url.includes("K7X2PQ"))
+      return Promise.resolve(resposta(200, { viagemId: "v9", codigo: "V-0009" }));
+    return Promise.resolve(resposta(200, []));
+  });
+  montar();
+  fireEvent.click(screen.getAllByRole("button", { name: "Expandir" })[0]!);
+  fireEvent.click(screen.getByRole("button", { name: "Duplicar" }));
+  const nova = screen.getByRole("region", { name: `Reserva ${VIAGEM.reservas.length + 1}` });
+  fireEvent.change(within(nova).getByLabelText("Localizador"), { target: { value: "K7X2PQ" } });
+  expect(await within(nova).findByText("Este localizador já está na viagem V-0009.")).toBeInTheDocument();
+});
+
+test("sem verValores a ação Duplicar não aparece", () => {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={qc}>
+      <MemoryRouter initialEntries={["/viagens/v1"]}>
+        <ReservasTab
+          viagem={VIAGEM}
+          creditos={[]}
+          verValores={false}
+          podeEditar
+          reservaAberta={undefined}
+          abrir={() => undefined}
+        />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  fireEvent.click(screen.getAllByRole("button", { name: "Expandir" })[0]!);
+  expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Duplicar" })).toBeNull();
+});
+
+test("reserva cancelada também pode ser duplicada", () => {
+  const cancelada = { ...VIAGEM.reservas[0]!, status: "cancelada" as const };
+  montar([], { ...VIAGEM, reservas: [cancelada] });
+  fireEvent.click(screen.getByRole("button", { name: "Expandir" }));
+  expect(screen.queryByRole("button", { name: "Editar" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Duplicar" })).toBeInTheDocument();
 });
 
 /** F03: sinaliza para `useNovaViagem` abrir já com uma reserva em branco, sem precisar clicar de novo lá. */

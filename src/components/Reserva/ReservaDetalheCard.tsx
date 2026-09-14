@@ -35,6 +35,8 @@ interface ReservaDetalheCardProps {
   onRemarcar: () => void;
   onCancelar: () => void;
   onNfse: () => void;
+  /** Ausente = sem ação (quem não vê valores ou não pode editar). Vale também para reserva cancelada. */
+  onDuplicar?: () => void;
 }
 
 const ROTULO_FLUXO = {
@@ -90,6 +92,7 @@ export function ReservaDetalheCard({
   onRemarcar,
   onCancelar,
   onNfse,
+  onDuplicar,
 }: ReservaDetalheCardProps) {
   const idTitulo = useId();
   const qc = useQueryClient();
@@ -201,31 +204,44 @@ export function ReservaDetalheCard({
               {(erroStatusLocal ?? status.erroBloco) && (
                 <Alert tone="danger">{erroStatusLocal ?? status.erroBloco}</Alert>
               )}
-              <div className={s.acoes}>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  loading={status.salvando}
-                  onClick={() => {
-                    void mudarStatus();
-                  }}
-                >
-                  {emitida ? "Voltar a em emissão" : "Marcar emitida"}
+            </>
+          )}
+          {((podeEditar && !cancelada) || onDuplicar) && (
+            <div className={s.acoes}>
+              {podeEditar && !cancelada && (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    loading={status.salvando}
+                    onClick={() => {
+                      void mudarStatus();
+                    }}
+                  >
+                    {emitida ? "Voltar a em emissão" : "Marcar emitida"}
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={onEditar}>
+                    Editar
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={onRemarcar}>
+                    Remarcar…
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={onNfse}>
+                    NFSe…
+                  </Button>
+                </>
+              )}
+              {onDuplicar && (
+                <Button variant="secondary" size="sm" onClick={onDuplicar}>
+                  Duplicar
                 </Button>
-                <Button variant="secondary" size="sm" onClick={onEditar}>
-                  Editar
-                </Button>
-                <Button variant="secondary" size="sm" onClick={onRemarcar}>
-                  Remarcar…
-                </Button>
-                <Button variant="secondary" size="sm" onClick={onNfse}>
-                  NFSe…
-                </Button>
+              )}
+              {podeEditar && !cancelada && (
                 <Button variant="danger" size="sm" onClick={onCancelar}>
                   Cancelar reserva…
                 </Button>
-              </div>
-            </>
+              )}
+            </div>
           )}
         </div>
       )}
