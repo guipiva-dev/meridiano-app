@@ -1,11 +1,24 @@
-import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import type { CreditoDto, ReservaDto, ViagemDto } from "@/api/viagens";
+import {
+  type CreditoDto,
+  chaves,
+  type FornecedorDto,
+  type ReservaDto,
+  type ReservaRequest,
+  type ViagemDto,
+  viagensApi,
+} from "@/api/viagens";
 import { Button } from "@/components";
 import { Alert } from "@/components/display";
-import { ReservaDetalheCard } from "@/components/reserva";
+import { duplicarReserva } from "@/components/Reserva/duplicarReserva";
+import { paraRequest, ReservaDetalheCard, type ReservaForm, ReservationCard } from "@/components/reserva";
+import { useOperacao } from "@/components/ViagemOperacoes/useOperacao";
+import { FornecedorInlineModal } from "@/components/viagem";
 import { formatarDinheiro } from "@/lib/dinheiro";
-import type { ModalViagem } from "./useViagem";
+import { validarReserva } from "../validarReserva";
+import { aplicarViagem, type ModalViagem } from "./useViagem";
 import s from "./Viagem.module.css";
 
 interface ReservasTabProps {
@@ -19,6 +32,7 @@ interface ReservasTabProps {
 
 export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaAberta, abrir }: ReservasTabProps) {
   const nav = useNavigate();
+  const qc = useQueryClient();
   const [abertas, setAbertas] = useState<string[]>(reservaAberta ? [reservaAberta] : []);
   const disponiveis = creditos.filter((c) => c.status === "disponivel");
   const disponiveisComValor = disponiveis.filter((c) => c.valor !== undefined);
@@ -28,6 +42,40 @@ export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaA
   const ordenadas = viagem.reservas
     .map((reserva, indice) => ({ reserva, indice: indice + 1 }))
     .sort((a, b) => Number(a.reserva.status === "cancelada") - Number(b.reserva.status === "cancelada"));
+
+  // Duplicar (REQ-04): card de nova reserva pré-preenchido logo abaixo da lista; salvar = POST da reserva.
+  const [duplicada, setDuplicada] = useState<ReservaForm | null>(null);
+  const [tentouSalvar, setTentouSalvar] = useState(false);
+  const [novoFornecedor, setNovoFornecedor] = useState(false);
+  const refDuplicada = useRef<HTMLDivElement>(null);
+  const podeDuplicar = verValores && podeEditar && !viagem.cancelada;
+  const fornecedoresQ = useQuery({
+    queryKey: chaves.fornecedores,
+    queryFn: viagensApi.fornecedores,
+    enabled: duplicada !== null,
+  });
+  const salvar = useOperacao((req: ReservaRequest) => viagensApi.adicionarReserva(viagem.id, req, viagem.versao), {});
+  const chaveDuplicada = duplicada?.chaveLocal;
+  useEffect(() => {
+    // Localizador é o único <input> antes dos valores no card (fornecedor é <select>).
+    if (chaveDuplicada) refDuplicada.current?.querySelector<HTMLInputElement>("input")?.focus();
+  }, [chaveDuplicada]);
+
+  function duplicar(reserva: ReservaDto) {
+    salvar.limpar();
+    setTentouSalvar(false);
+    setDuplicada(duplicarReserva(reserva));
+  }
+
+  async function salvarDuplicada() {
+    if (!duplicada) return;
+    setTentouSalvar(true);
+    if (Object.keys(validarReserva(duplicada)).length > 0) return;
+    const dto = await salvar.enviar(paraRequest(duplicada));
+    if (!dto) return;
+    aplicarViagem(qc, viagem.id, dto);
+    setDuplicada(null);
+  }
 
   function alternar(reserva: ReservaDto) {
     setAbertas((atuais) =>
@@ -83,8 +131,65 @@ export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaA
           onNfse={() => {
             abrir({ tipo: "nfse", reserva });
           }}
+          onDuplicar={
+            podeDuplicar
+              ? () => {
+                  duplicar(reserva);
+                }
+              : undefined
+          }
         />
       ))}
+
+      {duplicada && (
+        <div ref={refDuplicada} className={s.reservas}>
+          <ReservationCard
+            indice={viagem.reservas.length + 1}
+            value={duplicada}
+            onChange={(patch) => {
+              setDuplicada({ ...duplicada, ...patch });
+            }}
+            onToggle={() => {
+              setDuplicada({ ...duplicada, aberta: !duplicada.aberta });
+            }}
+            onRemover={() => {
+              setDuplicada(null);
+            }}
+            fornecedores={fornecedoresQ.data ?? []}
+            onNovoFornecedor={() => {
+              setNovoFornecedor(true);
+            }}
+            erros={tentouSalvar ? validarReserva(duplicada) : {}}
+            avisoDuplicada={null}
+          />
+          {salvar.conflito && (
+            <Alert tone="danger">Alguém alterou esta viagem enquanto você editava. Recarregue e tente de novo.</Alert>
+          )}
+          {salvar.erroBloco && <Alert tone="danger">{salvar.erroBloco}</Alert>}
+          <div>
+            <Button
+              variant="primary"
+              loading={salvar.salvando}
+              onClick={() => {
+                void salvarDuplicada();
+              }}
+            >
+              Salvar reserva
+            </Button>
+          </div>
+          <FornecedorInlineModal
+            open={novoFornecedor}
+            onClose={() => {
+              setNovoFornecedor(false);
+            }}
+            onCriado={(f) => {
+              qc.setQueryData<FornecedorDto[]>(chaves.fornecedores, (atuais) => [...(atuais ?? []), f]);
+              setDuplicada((atual) => atual && { ...atual, fornecedorId: f.id });
+            }}
+            criar={viagensApi.criarFornecedor}
+          />
+        </div>
+      )}
 
       {podeEditar && !viagem.cancelada && (
         <div>
