@@ -69,7 +69,7 @@ export function diasAte(iso: string): number {
  */
 export function idade(nascimentoIso: string | null | undefined, dataRef?: string): number | null {
   if (!nascimentoIso) return null;
-  const ref = dataRef || hojeIso();
+  const ref = dataRef?.length ? dataRef : hojeIso();
   const anos = Number(ref.slice(0, 4)) - Number(nascimentoIso.slice(0, 4));
   return ref.slice(5, 10) < nascimentoIso.slice(5, 10) ? anos - 1 : anos;
 }
