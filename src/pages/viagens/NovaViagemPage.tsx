@@ -24,7 +24,6 @@ export function NovaViagemPage() {
   const [fornecedorPara, setFornecedorPara] = useState<number | null>(null);
 
   const reservas = v.form.watch("reservas");
-  const repasseValor = v.form.watch("repasseValor");
   const titular = v.form.watch("passageiros").find((p) => p.titular);
   const destino = v.form.watch("destino");
   const modalAberto = pessoaAberta || fornecedorPara !== null;
@@ -131,6 +130,9 @@ export function NovaViagemPage() {
           vendedores={v.vendedores}
           mostrarRepasse={verResultado && v.vendedorSelecionado?.geraRepasse === true}
           repasseSugerido={v.repasseSugerido}
+          repasseValorMostrado={v.repasseValorMostrado}
+          onRepassePercentual={v.definirRepassePercentual}
+          onRepasseValor={v.definirRepasseValor}
           erros={v.erros}
           buscarClientes={viagensApi.buscarClientes}
           onNovaPessoa={() => {
@@ -167,7 +169,7 @@ export function NovaViagemPage() {
 
       <TripSummary
         reservas={reservas}
-        repasseValor={repasseValor}
+        repasseValor={v.repasseValorMostrado}
         despesas={v.viagem?.resumo?.despesasViagem ?? 0}
         onAdicionarReserva={v.adicionarReserva}
         mostrarResultado={verResultado}

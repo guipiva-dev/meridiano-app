@@ -252,6 +252,18 @@ test("rótulo 'Comissão do vendedor' no resumo", async () => {
   expect(screen.queryByText(/vendedora/)).toBeNull();
 });
 
+test("vendedor que gera repasse: campos Comissão do vendedor (%) e (R$)", async () => {
+  const base = globalThis.fetch;
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) =>
+    url.includes("/usuarios/vendedores")
+      ? Promise.resolve(resposta(200, [{ ...VENDEDORES[0], geraRepasse: true, percentualPadrao: 10 }]))
+      : base(url, init),
+  );
+  montar();
+  expect(await screen.findByLabelText("Comissão do vendedor (%)")).toBeInTheDocument();
+  expect(screen.getByLabelText("Comissão do vendedor (R$)")).toBeInTheDocument();
+});
+
 test("destino tem maxLength 120", async () => {
   montar();
   await screen.findByRole("heading", { name: /Nova viagem/ });

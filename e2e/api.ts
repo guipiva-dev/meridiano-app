@@ -97,6 +97,7 @@ export async function criarViagemViaApi(
     observacoes: null,
     passageiros: [{ clienteId: cliente?.id ?? "", titular: true }],
     repasseValor: null,
+    repassePercentual: null,
     reservas,
   };
   const dto = await corpo<ViagemDto>(request.post(`${API}/viagens`, { data: viagem }));

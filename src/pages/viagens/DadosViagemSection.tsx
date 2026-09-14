@@ -1,8 +1,9 @@
-import { forwardRef, type TextareaHTMLAttributes } from "react";
+import { forwardRef, type TextareaHTMLAttributes, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { ClienteBuscaDto, VendedorDto } from "@/api/viagens";
 import { DateInput, Field, Input, MoneyInput, Select, useField } from "@/components";
 import { PassageirosField } from "@/components/viagem";
+import { parsearPercentual } from "@/lib/comissao";
 import { formatarDinheiro } from "@/lib/dinheiro";
 import s from "./NovaViagem.module.css";
 import type { ViagemForm } from "./useNovaViagem";
@@ -36,6 +37,9 @@ interface DadosViagemSectionProps {
   /** Só perfis com `viagem.ver_resultado` e vendedor que gera repasse veem a comissão. */
   mostrarRepasse: boolean;
   repasseSugerido: number | null;
+  repasseValorMostrado: number | null;
+  onRepassePercentual: (p: number | null) => void;
+  onRepasseValor: (v: number | null) => void;
   erros: Record<string, string>;
   buscarClientes: (q: string) => Promise<ClienteBuscaDto[]>;
   onNovaPessoa: () => void;
@@ -46,12 +50,23 @@ export function DadosViagemSection({
   vendedores,
   mostrarRepasse,
   repasseSugerido,
+  repasseValorMostrado,
+  onRepassePercentual,
+  onRepasseValor,
   erros,
   buscarClientes,
   onNovaPessoa,
 }: DadosViagemSectionProps) {
   const passageiros = form.watch("passageiros");
-  const repasseValor = form.watch("repasseValor");
+  const repassePercentual = form.watch("repassePercentual");
+  // Texto cru do % enquanto se digita ("10," não vira "10"); valor externo reassume ao sair do controle local.
+  const [pctRepasseTexto, setPctRepasseTexto] = useState<string | null>(null);
+  function mudarPctRepasse(texto: string) {
+    const p = parsearPercentual(texto);
+    if (p === "invalido" || p === "negativo" || (p !== null && p > 100)) return;
+    setPctRepasseTexto(texto);
+    onRepassePercentual(p);
+  }
   const observacoes = (form.watch("observacoes") as string | undefined) ?? "";
   return (
     <div className="grid-form">
@@ -87,20 +102,33 @@ export function DadosViagemSection({
         />
       </Field>
       {mostrarRepasse && (
-        <Field
-          label="Comissão do vendedor"
-          className="span-2"
-          tooltip="Valor definido pelo dono. Só aparece para vendedor que gera repasse."
-          helper={repasseSugerido === null ? undefined : `Sugerido: ${formatarDinheiro(repasseSugerido)}`}
-          error={erros.repasseValor}
-        >
-          <MoneyInput
-            value={repasseValor}
-            onChange={(v) => {
-              form.setValue("repasseValor", v, { shouldDirty: true });
-            }}
-          />
-        </Field>
+        <>
+          <Field
+            label="Comissão do vendedor (%)"
+            className="span-2"
+            tooltip="Percentual sobre a comissão total da viagem (comissão + RAV, sem taxa de serviço). O valor acompanha as reservas até o repasse ser pago."
+            helper={repasseSugerido === null ? undefined : `Sugerido: ${formatarDinheiro(repasseSugerido)}`}
+            error={erros.repassePercentual}
+          >
+            <Input
+              inputMode="decimal"
+              autoComplete="off"
+              value={pctRepasseTexto ?? (repassePercentual === null ? "" : String(repassePercentual).replace(".", ","))}
+              onChange={(e) => {
+                mudarPctRepasse(e.target.value);
+              }}
+            />
+          </Field>
+          <Field label="Comissão do vendedor (R$)" className="span-2" error={erros.repasseValor}>
+            <MoneyInput
+              value={repasseValorMostrado}
+              onChange={(v) => {
+                setPctRepasseTexto(null);
+                onRepasseValor(v);
+              }}
+            />
+          </Field>
+        </>
       )}
       <details className={s.mais}>
         <summary>+ mais campos (ocasião, observações)</summary>
