@@ -299,7 +299,7 @@ test("criar pessoa inline propaga CPF e nascimento: chip mostra a linha secundá
   fireEvent.change(screen.getByLabelText(/^Nascimento/), { target: { value: "1980-05-05" } });
   fireEvent.click(screen.getByRole("button", { name: "Criar" }));
 
-  expect(await screen.findByText("529.982.247-25 · nasc. 05/05/1980")).toBeInTheDocument();
+  expect(await screen.findByText(/^529\.982\.247-25 · nasc\. 05\/05\/1980 · \d+ anos$/)).toBeInTheDocument();
 });
 
 test("edição não repete 'Titular:' no subtítulo", async () => {

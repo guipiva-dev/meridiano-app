@@ -1,4 +1,4 @@
-import type { ChangeEvent } from "react";
+import { type ChangeEvent, useState } from "react";
 import {
   type FluxoPagamento,
   FORMAS_PAGAMENTO,
@@ -6,8 +6,10 @@ import {
   type RavClienteModo,
   ROTULO_FORMA,
 } from "@/api/viagens";
-import { Field, MoneyInput, Select, useField } from "@/components";
+import { Field, Input, MoneyInput, Select, useField } from "@/components";
 import { Chip } from "@/components/display";
+import { comissaoPorPercentual, parsearPercentual, percentualDaComissao } from "@/lib/comissao";
+import { formatarDinheiro } from "@/lib/dinheiro";
 import s from "./Reserva.module.css";
 import type { ReservaForm } from "./tipos";
 
@@ -68,6 +70,46 @@ export function FinancialFields({
     const atual = value.formasPagamento;
     onChange({ formasPagamento: atual.includes(forma) ? atual.filter((f) => f !== forma) : [...atual, forma] });
   }
+  // L1: modo da comissão é só da tela (não persiste; reserva existente abre em R$).
+  const [comissaoEmPct, setComissaoEmPct] = useState(false);
+  const [pctTexto, setPctTexto] = useState("");
+  const [erroPct, setErroPct] = useState<string | null>(null);
+
+  function mudarPct(texto: string) {
+    const p = parsearPercentual(texto);
+    // Como o MoneyInput: entrada inválida não é aceita, então nunca chega ao formulário.
+    if (p === "invalido") {
+      setErroPct("Percentual inválido");
+      return;
+    }
+    if (p === "negativo" || (p !== null && p > 100)) {
+      setErroPct("Percentual deve ficar entre 0 e 100");
+      return;
+    }
+    setErroPct(null);
+    setPctTexto(texto);
+    onChange({
+      valorComissao: p === null ? null : comissaoPorPercentual(p, value.valorTotal),
+      comissaoSugerida: false,
+    });
+  }
+  function alternarModoComissao(emPct: boolean) {
+    if (emPct === comissaoEmPct) return;
+    setErroPct(null);
+    if (emPct) {
+      const p = percentualDaComissao(value.valorComissao, value.valorTotal);
+      setPctTexto(p === null ? "" : String(p).replace(".", ","));
+    }
+    setComissaoEmPct(emPct);
+  }
+  function mudarTotal(v: number | null) {
+    const p = comissaoEmPct ? parsearPercentual(pctTexto) : null;
+    onChange(
+      typeof p === "number"
+        ? { valorTotal: v, valorComissao: comissaoPorPercentual(p, v), comissaoSugerida: false }
+        : { valorTotal: v },
+    );
+  }
   const helperComissao =
     value.comissaoSugerida && percentualSugerido !== null ? `Sugerido: ${percentualSugerido} %` : undefined;
 
@@ -82,9 +124,7 @@ export function FinancialFields({
         <MoneyInput
           value={value.valorTotal}
           readOnly={readOnly}
-          onChange={(v) => {
-            onChange({ valorTotal: v });
-          }}
+          onChange={mudarTotal}
           onBlur={() => {
             // A03: venda ainda vazia, ou ainda sugerida (usuário não digitou à mão) — sugere/ressincroniza
             // venda = total. Nunca sobrescreve o que o usuário já digitou (vendaSugerida vira false ao digitar).
@@ -108,15 +148,53 @@ export function FinancialFields({
         className="span-2"
         tooltip="O que o fornecedor paga à agência por esta reserva (ex.: 10% de R$ 10.000 = R$ 1.000)."
         helper={helperComissao}
-        error={erros.valorComissao}
+        error={erroPct ?? erros.valorComissao}
       >
-        <MoneyInput
-          value={value.valorComissao}
-          readOnly={readOnly}
-          onChange={(v) => {
-            onChange({ valorComissao: v, comissaoSugerida: false });
-          }}
-        />
+        {comissaoEmPct ? (
+          <Input
+            inputMode="decimal"
+            value={pctTexto}
+            readOnly={readOnly}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              mudarPct(e.target.value);
+            }}
+          />
+        ) : (
+          <MoneyInput
+            value={value.valorComissao}
+            readOnly={readOnly}
+            onChange={(v) => {
+              onChange({ valorComissao: v, comissaoSugerida: false });
+            }}
+          />
+        )}
+        <div className={s.chips}>
+          <div role="group" aria-label="Unidade da comissão" className={s.chips}>
+            <Chip
+              selected={!comissaoEmPct}
+              disabled={readOnly}
+              aria-label="Comissão em R$"
+              onClick={() => {
+                alternarModoComissao(false);
+              }}
+            >
+              R$
+            </Chip>
+            <Chip
+              selected={comissaoEmPct}
+              disabled={readOnly}
+              aria-label="Comissão em %"
+              onClick={() => {
+                alternarModoComissao(true);
+              }}
+            >
+              %
+            </Chip>
+          </div>
+          {comissaoEmPct && value.valorComissao !== null && (
+            <span aria-live="polite">= {formatarDinheiro(value.valorComissao)}</span>
+          )}
+        </div>
       </Field>
       <Field label="RAV da operadora" className="span-2" error={erros.ravOperadora}>
         <MoneyInput

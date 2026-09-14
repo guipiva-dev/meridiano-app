@@ -63,13 +63,15 @@ export function diasAte(iso: string): number {
   return Math.round((alvo.getTime() - hoje.getTime()) / 86_400_000);
 }
 
-/** Anos completos entre `nascimentoIso` (yyyy-mm-dd) e hoje; null sem data. */
-export function idade(nascimentoIso: string | null | undefined): number | null {
+/**
+ * Anos completos de `nascimentoIso` até `dataRef` (ambos yyyy-mm-dd; sem ela ou "", hoje local); null sem nascimento.
+ * Comparação de "mm-dd" em texto: aniversário no próprio dia conta; 29/02 em ano não bissexto só vira em 01/03 ("03-01" ≥ "02-29").
+ */
+export function idade(nascimentoIso: string | null | undefined, dataRef?: string): number | null {
   if (!nascimentoIso) return null;
-  const hoje = hojeIso();
-  let anos = Number(hoje.slice(0, 4)) - Number(nascimentoIso.slice(0, 4));
-  if (hoje.slice(5, 10) < nascimentoIso.slice(5, 10)) anos -= 1;
-  return anos;
+  const ref = dataRef?.length ? dataRef : hojeIso();
+  const anos = Number(ref.slice(0, 4)) - Number(nascimentoIso.slice(0, 4));
+  return ref.slice(5, 10) < nascimentoIso.slice(5, 10) ? anos - 1 : anos;
 }
 
 const MESES = [

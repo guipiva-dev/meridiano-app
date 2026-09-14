@@ -6,6 +6,7 @@ import { Button, Field, IconButton, Input } from "@/components";
 import { cx } from "@/lib/cx";
 import { formatarData } from "@/lib/datas";
 import { formatarCpf, formatarTelefone } from "@/lib/documentos";
+import { textoIdade } from "@/lib/idade";
 import s from "./Viagem.module.css";
 
 export interface PassageiroForm {
@@ -22,6 +23,8 @@ interface PassageirosFieldProps {
   buscar: (q: string) => Promise<ClienteBuscaDto[]>;
   onNovaPessoa: () => void;
   erro?: string;
+  /** yyyy-mm-dd; a idade do chip é calculada nela (vazia → hoje). */
+  dataIda?: string | null;
 }
 
 const DEBOUNCE_MS = 250;
@@ -36,7 +39,7 @@ function iniciais(nome: string): string {
   return (primeira + ultima).toUpperCase();
 }
 
-export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }: PassageirosFieldProps) {
+export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro, dataIda }: PassageirosFieldProps) {
   const [query, setQuery] = useState("");
   const [opcoes, setOpcoes] = useState<ClienteBuscaDto[]>([]);
   const [aberto, setAberto] = useState(false);
@@ -181,7 +184,11 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro }
         {value.length > 0 && (
           <ul className={s.cards} aria-label="Passageiros adicionados">
             {value.map((p) => {
-              const meta = [p.cpf && formatarCpf(p.cpf), p.dataNascimento && `nasc. ${formatarData(p.dataNascimento)}`]
+              const meta = [
+                p.cpf && formatarCpf(p.cpf),
+                p.dataNascimento && `nasc. ${formatarData(p.dataNascimento)}`,
+                textoIdade(p.dataNascimento, dataIda),
+              ]
                 .filter(Boolean)
                 .join(" · ");
               return (

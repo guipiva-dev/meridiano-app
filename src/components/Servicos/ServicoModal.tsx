@@ -7,6 +7,7 @@ import { ROTULO_SERVICO, TIPOS_SERVICO, type TipoServico } from "@/api/viagens";
 import { Button, Field, Input, Select, useField } from "@/components";
 import { Alert } from "@/components/display";
 import { Modal } from "@/components/feedback";
+import { conferirDatas, rotulosDatas } from "@/lib/conferirDatas";
 import s from "./Servicos.module.css";
 
 interface ServicoModalProps {
@@ -15,6 +16,9 @@ interface ServicoModalProps {
   servico?: ServicoDto;
   onClose: () => void;
   onSalvo: () => void;
+  /** Datas da viagem, só para o aviso de serviço fora do período (não bloqueia). */
+  dataIda?: string | null;
+  dataVolta?: string | null;
 }
 
 const TIPOS = TIPOS_SERVICO.map((t) => ({ value: t, label: ROTULO_SERVICO[t] }));
@@ -40,7 +44,15 @@ function Observacoes({ value, onChange }: { value: string; onChange: (v: string)
 const paraInput = (iso: string | null | undefined) => (iso ? iso.slice(0, 16) : "");
 const paraApi = (valor: string) => (valor === "" ? null : valor);
 
-export function ServicoModal({ open, reservaId, servico, onClose, onSalvo }: ServicoModalProps) {
+export function ServicoModal({
+  open,
+  reservaId,
+  servico,
+  onClose,
+  onSalvo,
+  dataIda = null,
+  dataVolta = null,
+}: ServicoModalProps) {
   const qc = useQueryClient();
   const idForm = useId();
   // O chamador monta o modal só quando abre, então o estado inicial já é o "reset".
@@ -55,6 +67,12 @@ export function ServicoModal({ open, reservaId, servico, onClose, onSalvo }: Ser
   const [erros, setErros] = useState<{ tipo?: string; titulo?: string; dataFim?: string }>({});
   const [erroBloco, setErroBloco] = useState<string>();
   const [salvando, setSalvando] = useState(false);
+  const [rotuloInicio, rotuloFim] = rotulosDatas(tipo);
+  const avisosDatas = conferirDatas(
+    { inicio: paraApi(dataInicio), fim: paraApi(dataFim) },
+    { ida: dataIda, volta: dataVolta },
+    tipo,
+  );
 
   async function enviar(e?: SubmitEvent<HTMLFormElement>) {
     e?.preventDefault();
@@ -141,7 +159,7 @@ export function ServicoModal({ open, reservaId, servico, onClose, onSalvo }: Ser
           />
         </Field>
         <div className={s.dupla}>
-          <Field label="Início">
+          <Field label={rotuloInicio}>
             <Input
               type="datetime-local"
               value={dataInicio}
@@ -150,7 +168,7 @@ export function ServicoModal({ open, reservaId, servico, onClose, onSalvo }: Ser
               }}
             />
           </Field>
-          <Field label="Fim" error={erros.dataFim}>
+          <Field label={rotuloFim} error={erros.dataFim}>
             <Input
               type="datetime-local"
               value={dataFim}
@@ -160,6 +178,7 @@ export function ServicoModal({ open, reservaId, servico, onClose, onSalvo }: Ser
             />
           </Field>
         </div>
+        {avisosDatas.length > 0 && <Alert tone="warning">{avisosDatas.join(" · ")}</Alert>}
         <Field label="Localidade">
           <Input
             value={localidade}
