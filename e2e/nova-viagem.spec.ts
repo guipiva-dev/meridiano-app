@@ -32,7 +32,10 @@ async function reserva(page: Page, n: number, fornecedor: string, loc: string, t
   await card.getByLabel("Localizador", { exact: true }).fill(loc);
   await card.getByRole("button", { name: "Aéreo" }).click();
   await preencherDinheiro(card.getByLabel("Total da reserva", { exact: true }), total);
-  await preencherDinheiro(card.getByLabel("Total cobrado do cliente", { exact: true }), cliente);
+  const cobrado = card.getByLabel("Total cobrado do cliente", { exact: true });
+  await expect(cobrado).toBeFocused();
+  await page.keyboard.type(cliente);
+  await page.keyboard.press("Tab");
 }
 
 test("lança viagem com 4 reservas só pelo teclado e mede o tempo", async ({ page }, testInfo) => {
@@ -64,7 +67,7 @@ test("lança viagem com 4 reservas só pelo teclado e mede o tempo", async ({ pa
   testInfo.annotations.push({ type: "tempo-4-reservas-s", description: segundos.toFixed(1) });
   expect(segundos).toBeLessThan(300);
 
-  // 10.500 + 3.200 + 2.500 + 1.400 = 17.600 (venda ao cliente somada em TripSummary)
+  // 10.500 + 3.200 + 2.500 + 1.400 = 17.600 (total cobrado do cliente somado em TripSummary)
   await expect(page.getByText("R$ 17.600,00")).toBeVisible();
 });
 
