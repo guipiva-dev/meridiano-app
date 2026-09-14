@@ -134,10 +134,17 @@ test("chip do passageiro selecionado mostra CPF e data de nascimento na linha se
     { clienteId: "1", nome: "Carlos Mendes", titular: true, cpf: "11144477735", dataNascimento: "1980-05-05" },
   ];
   render(
-    <PassageirosField value={value} onChange={vi.fn()} buscar={vi.fn()} onNovaPessoa={vi.fn()} erro={undefined} />,
+    <PassageirosField
+      value={value}
+      onChange={vi.fn()}
+      buscar={vi.fn()}
+      onNovaPessoa={vi.fn()}
+      erro={undefined}
+      dataIda="2026-10-01"
+    />,
   );
 
-  expect(screen.getByText("111.444.777-35 · nasc. 05/05/1980")).toBeInTheDocument();
+  expect(screen.getByText("111.444.777-35 · nasc. 05/05/1980 · 46 anos")).toBeInTheDocument();
 });
 
 test("chip do passageiro sem permissão de ver CPF mostra só a data de nascimento", () => {
@@ -145,10 +152,50 @@ test("chip do passageiro sem permissão de ver CPF mostra só a data de nascimen
     { clienteId: "1", nome: "Carlos Mendes", titular: true, cpf: undefined, dataNascimento: "1980-05-05" },
   ];
   render(
-    <PassageirosField value={value} onChange={vi.fn()} buscar={vi.fn()} onNovaPessoa={vi.fn()} erro={undefined} />,
+    <PassageirosField
+      value={value}
+      onChange={vi.fn()}
+      buscar={vi.fn()}
+      onNovaPessoa={vi.fn()}
+      erro={undefined}
+      dataIda="2026-10-01"
+    />,
   );
 
-  expect(screen.getByText("nasc. 05/05/1980")).toBeInTheDocument();
+  expect(screen.getByText("nasc. 05/05/1980 · 46 anos")).toBeInTheDocument();
+});
+
+test("chip mostra idade e faixa na data de ida; sem nascimento não mostra idade", () => {
+  const value = [
+    { clienteId: "1", nome: "Ana Mendes", titular: true, dataNascimento: "2019-10-01" },
+    { clienteId: "2", nome: "Bia Mendes", titular: false, dataNascimento: "2024-10-02" },
+    { clienteId: "3", nome: "Carlos Mendes", titular: false },
+  ];
+  render(
+    <PassageirosField
+      value={value}
+      onChange={vi.fn()}
+      buscar={vi.fn()}
+      onNovaPessoa={vi.fn()}
+      erro={undefined}
+      dataIda="2026-10-01"
+    />,
+  );
+  const itens = within(screen.getByRole("list", { name: "Passageiros adicionados" })).getAllByRole("listitem");
+  expect(itens[0]).toHaveTextContent("nasc. 01/10/2019 · 7 anos · criança");
+  expect(itens[1]).toHaveTextContent("nasc. 02/10/2024 · 1 ano · bebê");
+  expect(itens[2]).not.toHaveTextContent("ano");
+});
+
+test("chip sem data de ida calcula a idade em hoje", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date(2026, 8, 14, 12));
+  const value = [{ clienteId: "1", nome: "Ana Mendes", titular: true, dataNascimento: "2024-09-14" }];
+  render(
+    <PassageirosField value={value} onChange={vi.fn()} buscar={vi.fn()} onNovaPessoa={vi.fn()} erro={undefined} />,
+  );
+  expect(screen.getByText("nasc. 14/09/2024 · 2 anos · criança")).toBeInTheDocument();
+  vi.useRealTimers();
 });
 
 test("X09: opção mostra telefone e CPF mascarado para distinguir homônimos", async () => {
@@ -225,7 +272,7 @@ test("cartão do passageiro mostra iniciais (ignora tokens numéricos), document
   const lista = screen.getByRole("list", { name: "Passageiros adicionados" });
   const itens = within(lista).getAllByRole("listitem");
   expect(itens[0]).toHaveTextContent(/^QA/); // iniciais "QA" (ignora "20260912"/"1205")
-  expect(itens[0]).toHaveTextContent("529.982.247-25 · nasc. 15/01/1990");
+  expect(itens[0]).toHaveTextContent("529.982.247-25 · nasc. 15/01/1990 ·"); // + idade em hoje
   expect(itens[1]).toHaveTextContent(/^CM/);
   expect(screen.queryByText("Titular")).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Remover Carlos Mendes" })).toBeInTheDocument();

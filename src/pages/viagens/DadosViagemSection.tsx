@@ -64,6 +64,7 @@ export function DadosViagemSection({
           buscar={buscarClientes}
           onNovaPessoa={onNovaPessoa}
           erro={erros.passageiros}
+          dataIda={form.watch("dataIda")}
         />
       </div>
       <Field label="Destino" required className="span-3" error={erros.destino}>
