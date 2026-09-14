@@ -26,7 +26,7 @@ const MAPA: Record<string, string> = {
   // A12: back confirma o mesmo cálculo checado localmente antes de enviar.
   esperado_negativo: "novoValorCliente",
 };
-const MSG_ESPERADO_NEGATIVO = "Com RAV via operadora a venda não pode ficar abaixo do custo";
+const MSG_ESPERADO_NEGATIVO = "Desconto maior que a comissão: o total da comissão ficaria negativo";
 
 function Descricao({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const f = useField();

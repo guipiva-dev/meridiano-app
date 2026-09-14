@@ -177,7 +177,7 @@ test("A12: RAV do cliente via operadora, novo custo deixa o esperado negativo �
 
   await user.type(screen.getByLabelText(/Descrição/), "Cliente trocou o hotel");
   fireEvent.change(screen.getByLabelText("Novo valor da reserva"), { target: { value: "12.000,00" } });
-  expect(screen.getByText("Com RAV via operadora a venda não pode ficar abaixo do custo")).toBeInTheDocument();
+  expect(screen.getByText("Desconto maior que a comissão: o total da comissão ficaria negativo")).toBeInTheDocument();
 
   await user.click(screen.getByRole("button", { name: "Remarcar" }));
 

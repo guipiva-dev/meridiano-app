@@ -101,34 +101,23 @@
   padding: var(--space-2) var(--space-3);
   resize: vertical;
 }
-.result {
+.conta {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: var(--color-bg-subtle);
-}
-.resultItem {
-  padding: var(--space-3) var(--space-4);
-  display: flex;
-  flex-direction: column;
   gap: var(--space-1);
+  max-width: 28rem;
 }
-.resultItem small {
-  font: var(--type-caption);
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
+.contaLinha {
+  display: grid;
+  grid-template-columns: 1.25rem 1fr auto;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.contaSinal {
   color: var(--color-text-muted);
+  text-align: center;
 }
-.resultItem .sub {
-  font: var(--type-helper);
-  color: var(--color-text-muted);
-}
-.resultHighlight {
-  background: var(--color-brand);
-  color: var(--color-text-inverse);
-}
-.resultHighlight small,
-.resultHighlight .sub {
-  color: var(--color-text-on-dark-muted);
+.contaTotal {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-1);
+  font-weight: 600;
 }
