@@ -1,9 +1,13 @@
+import { clientesApi } from "@/api/clientes";
+import { mensagemDeErro } from "@/api/http";
 import type { PendenciaDto } from "@/api/pendencias";
 import { Button } from "@/components";
 import { StatusBadge } from "@/components/display";
+import { toast } from "@/components/feedback";
 import { type ItemMenu, MenuAcoes } from "@/components/Menu/MenuAcoes";
 import { cx } from "@/lib/cx";
 import { formatarData } from "@/lib/datas";
+import { mensagemDaPendencia, montarLinkWhatsapp } from "@/lib/mensagemWhatsapp";
 import s from "./Pendencias.module.css";
 
 interface LinhaPendenciaProps {
@@ -32,6 +36,18 @@ export function LinhaPendencia({
   const itens: ItemMenu[] = [{ label: "Adiar", onClick: onAdiar }];
   if (p.origem === "manual") {
     itens.push({ label: "Editar", onClick: onEditar }, { label: "Excluir", onClick: onExcluir, tone: "danger" });
+  }
+  const mensagem = mensagemDaPendencia(p);
+
+  function enviarMensagem() {
+    if (!mensagem || !p.titularId || !p.titularWhatsapp) return;
+    window.open(montarLinkWhatsapp({ whatsapp: p.titularWhatsapp, texto: mensagem.texto }), "_blank", "noopener");
+    // Registra o contato; a pendência continua aberta (quem conclui é a pessoa).
+    clientesApi
+      .criarAtendimento(p.titularId, { canal: "whatsapp", resumo: mensagem.resumo, ocorridoEm: null })
+      .catch((e: unknown) => {
+        toast.error(mensagemDeErro(e));
+      });
   }
 
   return (
@@ -63,6 +79,11 @@ export function LinhaPendencia({
       {p.status === "concluida" && <StatusBadge entidade="pendencia" valor="concluida" />}
       {podeEditar && aberta && (
         <div className={s.acoes}>
+          {mensagem && (
+            <Button variant="secondary" size="sm" disabled={!p.titularWhatsapp} onClick={enviarMensagem}>
+              {p.titularWhatsapp ? "Enviar mensagem" : "Titular sem WhatsApp"}
+            </Button>
+          )}
           <Button variant="secondary" size="sm" onClick={onConcluir}>
             ✓ Concluir
           </Button>

@@ -20,6 +20,13 @@ export interface PendenciaDto {
   adiadaDe: string | null;
   concluidaEm: string | null;
   atrasada: boolean;
+  /** Só check-in/pós-viagem e só para quem vê o cliente (mensagem pronta no WhatsApp). */
+  titularId?: string | null;
+  titularNome?: string | null;
+  titularWhatsapp?: string | null;
+  destino?: string | null;
+  dataIda?: string | null;
+  dataVolta?: string | null;
 }
 
 export interface NovaPendenciaRequest {
