@@ -89,7 +89,8 @@ test("aviso de viagem semelhante aparece e não bloqueia", async ({ page }) => {
   await page.getByLabel("Ida").fill(`${ANO}-05-02`);
   await page.getByLabel("Volta").fill(`${ANO}-05-06`);
 
-  const aviso = page.getByText(/Encontramos uma viagem semelhante/);
+  // Datas sobrepostas => aviso mais forte (regras-e-escopo-v2 §"Aviso de viagem duplicada").
+  const aviso = page.getByText(/Esta pessoa já tem viagem com datas que se sobrepõem/);
   await expect(aviso).toBeVisible();
   await page.getByRole("button", { name: "Continuar criando nova" }).click();
   await expect(aviso).toHaveCount(0);
