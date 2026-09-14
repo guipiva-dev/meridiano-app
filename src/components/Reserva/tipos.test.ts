@@ -58,6 +58,13 @@ test("deDto preserva os campos de cancelamento do dto", () => {
   expect(form.desfechoCancelamento).toBe("credito");
 });
 
+test("reservaVazia: defaults de RAV único (ruling 2026-09-14)", () => {
+  const v = reservaVazia(0);
+  expect(v.ravOperadora).toBe(0);
+  expect(v.ravClienteModo).toBe("via_operadora");
+  expect(v.fluxoPagamento).toBe("cliente_paga_operadora");
+});
+
 test("paraRequest: null nos campos de dinheiro vira 0", () => {
   const req = paraRequest(reservaVazia(0));
   expect(req.valorTotal).toBe(0);

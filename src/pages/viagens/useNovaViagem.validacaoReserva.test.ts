@@ -88,7 +88,7 @@ test("A12: venda via operadora abaixo do custo bloqueia salvar com erro em valor
 
   expect(ok).toBe(false);
   expect(result.current.errosReservas[0]?.valorCliente).toBe(
-    "Com RAV via operadora a venda não pode ficar abaixo do custo",
+    "Desconto maior que a comissão: o total da comissão ficaria negativo",
   );
 });
 

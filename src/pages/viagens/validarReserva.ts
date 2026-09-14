@@ -17,7 +17,7 @@ function erroVenda(r: ReservaForm): string | undefined {
       taxaServico: r.taxaServico ?? 0,
       viaOperadora: true,
     }).valorEsperadoOperadora ?? 0) < 0;
-  return negativo ? "Com RAV via operadora a venda não pode ficar abaixo do custo" : undefined;
+  return negativo ? "Desconto maior que a comissão: o total da comissão ficaria negativo" : undefined;
 }
 
 /** Campo que uma reserva ativa cobra antes de gastar uma ida ao servidor (ALT-01, A02, A03, A12).
