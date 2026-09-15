@@ -4,6 +4,9 @@ import { createMemoryRouter, RouterProvider } from "react-router";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
 import { reservaVazia } from "@/components/reserva";
 import { NovaViagemPage } from "./NovaViagemPage";
+import { viagemDto } from "./useNovaViagem.harness";
+
+const viagemEdicao = () => viagemDto("7");
 
 const FORNECEDORES = [
   { id: "f1", nome: "CVC", tipo: "operadora", percentualComissaoPadrao: 10, prazoComissaoDias: 30, ativo: true },
@@ -31,28 +34,6 @@ const auth: AuthValue = {
   recarregar: () => Promise.resolve(),
 };
 
-function viagemEdicao() {
-  return {
-    id: "v9",
-    codigo: "VG-2026-0042",
-    versao: "7",
-    destino: "Lisboa",
-    tipo: "internacional",
-    dataIda: null,
-    dataVolta: null,
-    vendedorId: "u1",
-    vendedorNome: "Ana",
-    agenteId: "u1",
-    ocasiao: null,
-    observacoes: null,
-    cancelada: false,
-    faseOperacional: "sem_reserva",
-    faseFinanceira: "nao_prevista",
-    passageiros: [{ clienteId: "c1", nome: "Carlos", titular: true }],
-    reservas: [],
-  };
-}
-
 function montar(entrada = "/viagens/nova") {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createMemoryRouter(
@@ -71,6 +52,19 @@ function montar(entrada = "/viagens/nova") {
       </AuthContext.Provider>
     </QueryClientProvider>,
   );
+}
+
+/** Edição de `viagemDto` (válida) com fetch registrando as chamadas em `urls`. */
+function montarEdicao() {
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    urls.push(`${init?.method ?? "GET"} ${url}`);
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
+    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, VENDEDORES));
+    if (url.includes("/agencia")) return Promise.resolve(resposta(200, AGENCIA));
+    if (/\/viagens\/[^/?]+$/.test(url)) return Promise.resolve(resposta(200, viagemEdicao()));
+    return Promise.resolve(resposta(200, null));
+  });
+  montar("/viagens/v9/editar");
 }
 
 beforeEach(() => {
@@ -94,8 +88,58 @@ afterEach(() => {
 test("renderiza o cabeçalho, a seção de dados e o botão de adicionar reserva", async () => {
   montar();
   expect(await screen.findByRole("heading", { name: /Nova viagem/ })).toBeInTheDocument();
-  expect(screen.getByRole("heading", { name: "Dados da viagem" })).toBeInTheDocument();
+  const painel = screen.getByRole("complementary", { name: "Resumo da viagem" });
+  const titulos = screen.getAllByRole("heading", { name: "Viagem" }).filter((h) => !painel.contains(h));
+  expect(titulos).toHaveLength(1);
   expect(screen.getByRole("button", { name: "+ Adicionar reserva" })).toBeInTheDocument();
+});
+
+test("sem reservas mostra estado vazio com a ação de adicionar", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+  expect(screen.getByText(/Nenhuma reserva ainda/)).toBeInTheDocument();
+});
+
+test("salvar incompleto mostra 'N campos precisam de atenção' e o erro de reserva no estado vazio", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+  fireEvent.click(screen.getByRole("button", { name: "Salvar viagem" }));
+  expect(await screen.findByRole("button", { name: /campos precisam de atenção/ })).toBeInTheDocument();
+  expect(screen.getByText("Adicione ao menos uma reserva")).toBeInTheDocument();
+  expect(urls.some((u) => u.startsWith("POST"))).toBe(false);
+});
+
+test("clicar no aviso de atenção leva o foco ao primeiro campo inválido", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+  fireEvent.click(screen.getByRole("button", { name: "Salvar viagem" }));
+  fireEvent.click(await screen.findByRole("button", { name: /campos precisam de atenção/ }));
+  expect(document.activeElement).toHaveAttribute("aria-invalid", "true");
+});
+
+test("I4: aviso de atenção abre a reserva recolhida com erro e foca o campo inválido", async () => {
+  montarEdicao();
+  await screen.findByRole("heading", { name: /Lisboa/ });
+  fireEvent.keyDown(window, { key: "Enter", ctrlKey: true });
+  const reserva2 = await screen.findByRole("region", { name: /Reserva 2/ });
+  fireEvent.click(screen.getByRole("button", { name: "Salvar viagem" }));
+  await screen.findByText("Escolha o fornecedor");
+  fireEvent.click(within(reserva2).getByRole("button", { name: "Recolher" }));
+  expect(document.querySelector('[aria-invalid="true"]')).toBeNull();
+
+  fireEvent.click(screen.getByRole("button", { name: /precisa(m)? de atenção/ }));
+
+  await waitFor(() => {
+    expect(document.activeElement).toHaveAttribute("aria-invalid", "true");
+  });
+  expect(within(reserva2).getByRole("button", { name: "Recolher" })).toBeInTheDocument();
+});
+
+test("painel da viagem é o único lugar com o resumo e o botão de adicionar fica fora dele", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+  const painel = screen.getByRole("complementary", { name: "Resumo da viagem" });
+  expect(within(painel).queryByRole("button", { name: "+ Adicionar reserva" })).toBeNull();
 });
 
 test("Ctrl+Enter adiciona um card de reserva", async () => {
@@ -182,17 +226,7 @@ test("ALT-13: Fechar sem viagem existente navega para a lista de viagens", async
 });
 
 test("ALT-13: Fechar após salvar edição navega para a página da viagem, nunca nav(-1)", async () => {
-  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
-    const metodo = init?.method ?? "GET";
-    urls.push(`${metodo} ${url}`);
-    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
-    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, VENDEDORES));
-    if (url.includes("/agencia")) return Promise.resolve(resposta(200, AGENCIA));
-    if (/\/viagens\/[^/?]+$/.test(url)) return Promise.resolve(resposta(200, viagemEdicao()));
-    return Promise.resolve(resposta(200, null));
-  });
-
-  montar("/viagens/v9/editar");
+  montarEdicao();
   await screen.findByRole("heading", { name: /Lisboa/ });
 
   fireEvent.click(screen.getByRole("button", { name: "Salvar viagem" }));
@@ -211,16 +245,7 @@ test("reservaVazia gera chaveLocal distinta a cada chamada (key estável do card
 });
 
 test("edição mostra '{titular} · {destino}' como título e 'Vendedor:' sem '(a)'", async () => {
-  vi.stubGlobal("fetch", (url: string) => {
-    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
-    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, VENDEDORES));
-    if (url.includes("/agencia")) return Promise.resolve(resposta(200, AGENCIA));
-    if (/\/viagens\/[^/?]+$/.test(url)) {
-      return Promise.resolve(resposta(200, viagemEdicao()));
-    }
-    return Promise.resolve(resposta(200, null));
-  });
-  montar("/viagens/v9/editar");
+  montarEdicao();
   expect(await screen.findByRole("heading", { name: /^Carlos · Lisboa/ })).toBeInTheDocument();
   expect(screen.getByText(/Vendedor: Ana/)).toBeInTheDocument();
   expect(screen.queryByText(/Vendedor\(a\)/)).toBeNull();

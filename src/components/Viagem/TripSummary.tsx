@@ -1,7 +1,9 @@
 import { CircleHelp } from "lucide-react";
-import { Button, MoneyValue } from "@/components";
+import type { ReactNode } from "react";
+import { MoneyValue } from "@/components";
 import { Tooltip } from "@/components/display";
 import { arredondar2, calcularReserva } from "@/dominio/calculoReserva";
+import { cx } from "@/lib/cx";
 import s from "./Viagem.module.css";
 
 export interface ReservaValores {
@@ -82,64 +84,85 @@ interface TripSummaryProps {
   reservas: ReservaValores[];
   repasseValor: number | null;
   despesas: number;
-  onAdicionarReserva: () => void;
   /** Sem `viagem.ver_resultado` (agente): só total cobrado, custo e receita da agência. */
   mostrarResultado?: boolean;
+  /** Bloco da reserva aberta (título + ResultSummary), montado pela página. Ausente = dica "Abra uma reserva…". */
+  detalheReserva?: ReactNode;
+  /** Rodapé do painel (atalhos). */
+  rodape?: ReactNode;
 }
 
 export function TripSummary({
   reservas,
   repasseValor,
   despesas,
-  onAdicionarReserva,
   mostrarResultado = true,
+  detalheReserva,
+  rodape,
 }: TripSummaryProps) {
   const { vendaTotal, custo, receitaPrevista, comissaoMedia: media, incompleta } = somarReservas(reservas);
   const resultado = arredondar2(receitaPrevista - (repasseValor ?? 0) - despesas);
+  const primeiraIncompleta = reservas.findIndex((r) => r.status !== "cancelada" && r.valorCliente === null);
   return (
-    <div className={s.summaryStrip}>
-      <div className={s.item}>
-        <small>Total cobrado</small>
-        <MoneyValue value={vendaTotal} />
-      </div>
-      <span className={s.sep} aria-hidden />
-      <div className={s.item}>
-        <small>Custo das reservas</small>
-        <MoneyValue value={custo} />
-      </div>
-      <span className={s.sep} aria-hidden />
-      <div className={s.item}>
-        <small>Receita da agência</small>
-        <MoneyValue value={receitaPrevista} />
-        {media !== null && <small>{rotuloComissaoMedia(media)}</small>}
-      </div>
-      <span className={s.sep} aria-hidden />
-      {mostrarResultado && (
-        <>
-          <div className={s.item}>
-            <small>Comissão do vendedor</small>
-            <MoneyValue value={repasseValor} />
+    <aside aria-label="Resumo da viagem" className={s.painel}>
+      <section className={s.painelBloco}>
+        <h2 className={s.painelTitulo}>Viagem</h2>
+        <dl className={s.kpis}>
+          <div className={s.kpi}>
+            <dt>Total cobrado</dt>
+            <dd>
+              <MoneyValue value={vendaTotal} />
+            </dd>
           </div>
-          <span className={s.sep} aria-hidden />
-          <div className={s.item}>
-            <small>Despesas da viagem</small>
-            <MoneyValue value={despesas} />
+          <div className={cx(s.kpi, s.soLargo)}>
+            <dt>Custo das reservas</dt>
+            <dd>
+              <MoneyValue value={custo} />
+            </dd>
           </div>
-          <span className={s.sep} aria-hidden />
-          <div className={s.item} title={incompleta ? "Preencha o total cobrado do cliente das reservas" : undefined}>
-            <small>
-              Resultado da viagem{" "}
-              <Tooltip text="Receita da agência − comissão do vendedor − despesas vinculadas">
-                <CircleHelp size={16} aria-hidden />
-              </Tooltip>
-            </small>
-            <MoneyValue value={incompleta ? null : resultado} emphasis="result" />
+          <div className={s.kpi}>
+            <dt>Receita da agência</dt>
+            <dd>
+              <MoneyValue value={receitaPrevista} />
+              {media !== null && <small className={cx(s.kpiNota, s.soLargo)}>{rotuloComissaoMedia(media)}</small>}
+            </dd>
           </div>
-        </>
-      )}
-      <Button variant="business" className={s.addReserva} onClick={onAdicionarReserva}>
-        + Adicionar reserva
-      </Button>
-    </div>
+          {mostrarResultado && (
+            <>
+              <div className={cx(s.kpi, s.soLargo)}>
+                <dt>Comissão do vendedor</dt>
+                <dd>
+                  <MoneyValue value={repasseValor} />
+                </dd>
+              </div>
+              <div className={cx(s.kpi, s.soLargo)}>
+                <dt>Despesas da viagem</dt>
+                <dd>
+                  <MoneyValue value={despesas} />
+                </dd>
+              </div>
+              <div className={cx(s.kpi, s.resultado)}>
+                <dt>
+                  Resultado da viagem{" "}
+                  <Tooltip text="Receita da agência − comissão do vendedor − despesas vinculadas">
+                    <CircleHelp size={16} aria-hidden />
+                  </Tooltip>
+                </dt>
+                <dd data-testid="resultado-viagem">
+                  <MoneyValue value={incompleta ? null : resultado} emphasis="result" />
+                </dd>
+              </div>
+              {incompleta && primeiraIncompleta >= 0 && (
+                <p className={cx(s.kpiNota, s.soLargo)}>Preencha o total cobrado da Reserva {primeiraIncompleta + 1}</p>
+              )}
+            </>
+          )}
+        </dl>
+      </section>
+      <section className={cx(s.painelBloco, s.soLargo)}>
+        {detalheReserva ?? <p className={s.kpiNota}>Abra uma reserva para ver o cálculo</p>}
+      </section>
+      {rodape && <div className={cx(s.painelRodape, s.soLargo)}>{rodape}</div>}
+    </aside>
   );
 }

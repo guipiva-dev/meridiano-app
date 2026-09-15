@@ -80,6 +80,7 @@ test("aviso de viagem semelhante aparece e não bloqueia", async ({ page }) => {
   await page.getByLabel("Destino").fill("Cancún");
   await page.getByLabel("Ida").fill(`${ANO}-05-01`);
   await page.getByLabel("Volta").fill(`${ANO}-05-05`);
+  await reserva(page, 1, "CVC", "CNC-0501", "2000", "2000");
   await page.keyboard.press("Control+S");
   await expect(page).toHaveURL(/\/viagens\/[0-9a-f-]+\/editar/);
 

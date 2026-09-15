@@ -100,13 +100,17 @@ function paraViagemRequest(v: ViagemForm, versao: string | undefined): ViagemReq
   };
 }
 
-/** Campos que a tela cobra antes de gastar uma ida ao servidor (spec §4.1). */
+/** Campos que a tela cobra antes de gastar uma ida ao servidor (spec §4.1; ruling 2026-09-14: viagem só salva completa). */
 function validar(v: ViagemForm): Record<string, string> {
   const e: Record<string, string> = {};
   if (!v.destino.trim()) e.destino = "Informe o destino";
   if (v.passageiros.length === 0) e.passageiros = "Adicione ao menos um passageiro";
   if (!v.vendedorId) e.vendedorId = "Escolha quem vendeu";
-  if (v.dataIda && v.dataVolta && v.dataVolta < v.dataIda) e.dataVolta = "Volta antes da ida";
+  if (!v.dataIda) e.dataIda = "Informe a data de ida";
+  if (!v.dataVolta) e.dataVolta = "Informe a data de volta";
+  else if (v.dataIda && v.dataVolta < v.dataIda) e.dataVolta = "Volta antes da ida";
+  // Qualquer status conta: viagem com todas as reservas canceladas continua editável.
+  if (v.reservas.length === 0) e.reservas = "Adicione ao menos uma reserva";
   return e;
 }
 
@@ -178,12 +182,8 @@ export function useNovaViagem(id: string | undefined) {
     form.setValue("agenteId", me.usuarioId);
   }, [id, me, vendedores, form]);
 
-  const reservas = form.watch("reservas");
-  const passageiros = form.watch("passageiros");
-  const dataIda = form.watch("dataIda");
-  const dataVolta = form.watch("dataVolta");
-  const vendedorId = form.watch("vendedorId");
-  const vendedorSelecionado = vendedores.find((v) => v.id === vendedorId);
+  const [reservas, passageiros, dataIda, dataVolta] = form.watch(["reservas", "passageiros", "dataIda", "dataVolta"]);
+  const vendedorSelecionado = vendedores.find((v) => v.id === form.watch("vendedorId"));
 
   const setReservas = useCallback(
     (proximas: ReservaForm[]) => {
@@ -212,11 +212,15 @@ export function useNovaViagem(id: string | undefined) {
     [form, setReservas, fornecedores],
   );
 
+  // Abrir/recolher é estado de tela, não edição: não pode acender "Alterações não salvas".
   const alternarReserva = useCallback(
     (i: number) => {
-      setReservas(form.getValues("reservas").map((r, j) => (j === i ? { ...r, aberta: !r.aberta } : r)));
+      form.setValue(
+        "reservas",
+        form.getValues("reservas").map((r, j) => (j === i ? { ...r, aberta: !r.aberta } : r)),
+      );
     },
-    [form, setReservas],
+    [form],
   );
 
   // Chegou de "Adicionar reserva à viagem existente": abre já com uma reserva em branco.
@@ -230,8 +234,7 @@ export function useNovaViagem(id: string | undefined) {
   }, [agencia, viagem, adicionarReserva]);
 
   // Viagem semelhante: na criação e na edição (excluindo a própria viagem), ao ter titular; datas afinam a busca.
-  const titular = passageiros.find((p) => p.titular);
-  const titularId = titular?.clienteId ?? "";
+  const titularId = passageiros.find((p) => p.titular)?.clienteId ?? "";
   const [semelhante, setSemelhante] = useState<ViagemSemelhanteDto | null>(null);
   // Guarda titular+datas dispensados: outro titular reabre o aviso; mudar só as datas
   // reabre apenas se elas passarem a se sobrepor à viagem encontrada.
@@ -299,8 +302,7 @@ export function useNovaViagem(id: string | undefined) {
       const req = paraViagemRequest(dados, viagem?.versao);
       // Vendedor que não gera repasse: os campos ficam ocultos, então não enviam valor (evita 422 invisível).
       if (vendedores.find((v) => v.id === dados.vendedorId)?.geraRepasse === false) {
-        req.repasseValor = null;
-        req.repassePercentual = null;
+        req.repasseValor = req.repassePercentual = null;
       }
       const salva = id ? await viagensApi.atualizar(id, req) : await viagensApi.criar(req);
       qc.setQueryData(chaves.viagem(salva.id), salva);
@@ -401,6 +403,7 @@ export function useNovaViagem(id: string | undefined) {
     recarregar,
     erros,
     errosReservas,
+    totalErros: Object.keys(erros).length + errosReservas.reduce((n, e) => n + Object.keys(e).length, 0),
     erroBloco: erroCarga ?? daApi.bloco,
     conflito: daApi.conflito,
   };

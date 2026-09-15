@@ -128,18 +128,14 @@ test("chip 'Dinheiro' existe e alterna formasPagamento ao clicar", async () => {
   expect(chip).toHaveAttribute("aria-pressed", "true");
 });
 
-test("Comissão (%), RAV e Taxa de serviço têm tooltip explicando o cálculo com exemplo", () => {
+test("Comissão (%) e Taxa de serviço têm tooltip explicando o cálculo com exemplo", () => {
   render(<Harness />);
   const tooltips = screen.getAllByTitle(/ex\.:/i);
   const rotulos = tooltips.map((el) => el.closest("label")?.textContent);
   expect(rotulos).toEqual(
-    expect.arrayContaining([
-      expect.stringContaining("Comissão (%)"),
-      expect.stringContaining("RAV"),
-      expect.stringContaining("Taxa de serviço"),
-    ]),
+    expect.arrayContaining([expect.stringContaining("Comissão (%)"), expect.stringContaining("Taxa de serviço")]),
   );
-  expect(tooltips).toHaveLength(3);
+  expect(tooltips).toHaveLength(2);
 });
 
 test("comissão em % e R$ lado a lado: digitar % calcula R$", async () => {
@@ -232,23 +228,6 @@ test("% negativo ou acima de 100 mostra erro e não altera a comissão", async (
   expect(screen.getByRole("alert")).toHaveTextContent("entre 0 e 100");
 });
 
-test("RAV e Total da comissão são calculados e não editáveis", () => {
-  render(
-    <Harness
-      inicial={{
-        valorTotal: 10000,
-        valorCliente: 10500,
-        valorComissao: 1000,
-        comissaoSugerida: false,
-      }}
-    />,
-  );
-  expect(screen.getByLabelText("RAV")).toHaveAttribute("readonly");
-  expect(screen.getByLabelText("RAV")).toHaveValue("R$ 500,00");
-  expect(screen.getByLabelText("Total da comissão")).toHaveAttribute("readonly");
-  expect(screen.getByLabelText("Total da comissão")).toHaveValue("R$ 1.500,00");
-});
-
 test("sem Fluxo, sem RAV da operadora, sem modo do RAV", () => {
   render(<Harness />);
   expect(screen.queryByLabelText(/Fluxo/)).toBeNull();
@@ -256,9 +235,13 @@ test("sem Fluxo, sem RAV da operadora, sem modo do RAV", () => {
   expect(screen.queryByLabelText(/RAV do cliente vem/)).toBeNull();
 });
 
-test("Taxa de serviço visível fora de '+ mais campos', com explicação", () => {
+test("Taxa de serviço visível fora de '+ mais campos', com tooltip explicativo", () => {
   render(<Harness />);
   const campo = screen.getByLabelText("Taxa de serviço");
   expect(campo.closest("details")).toBeNull();
-  expect(screen.getByText("Cobrada do cliente por fora da reserva; soma direto na receita da agência.")).toBeVisible();
+  expect(
+    screen.getByTitle(
+      "Valor fixo cobrado do cliente por fora da reserva, sem custo por trás (ex.: assessoria, visto). Soma direto na receita da agência.",
+    ),
+  ).toBeInTheDocument();
 });

@@ -61,12 +61,31 @@ test("'Expandir' chama onToggle", async () => {
   expect(onToggle).toHaveBeenCalledTimes(1);
 });
 
-test("aberta mostra o ResultSummary com receita R$ 520,00 (3000/300/20/3200 via_operadora)", () => {
+test("aberta mostra o resultado em texto: RAV, total da comissão e receita (3000/300/20/3200 via_operadora)", () => {
   render(<ReservationCard {...base({ value: reservaPreenchida(true) })} />);
-  expect(screen.getByLabelText("Total da reserva")).toBeInTheDocument();
-  const receita = screen.getByText("Receita da agência").closest("div");
-  expect(receita).not.toBeNull();
-  expect(within(receita as HTMLElement).getByText("R$ 520,00")).toBeInTheDocument();
+  const resultado = screen.getByLabelText("Resultado desta reserva");
+  expect(resultado).toHaveTextContent("RAV");
+  expect(resultado).toHaveTextContent("Total da comissão");
+  expect(resultado).toHaveTextContent("Receita da agência");
+  // total da comissão e receita coincidem aqui (taxa de serviço = 0): as duas linhas mostram R$ 520,00.
+  expect(within(resultado).getAllByText("R$ 520,00")).toHaveLength(2);
+  // calculado não é input
+  expect(screen.queryByLabelText("RAV")).toBeNull();
+  expect(screen.queryByLabelText("Total da comissão")).toBeNull();
+});
+
+test("recolhida com erro mostra marcador 'com erro' na linha", () => {
+  render(<ReservationCard {...base({ erros: { fornecedorId: "Escolha o fornecedor" } })} />);
+  const header = screen.getByRole("region", { name: "Reserva 1" }).querySelector("header");
+  expect(header).toHaveTextContent("com erro");
+});
+
+test("aberta não mostra marcador de erro na linha (o erro está no campo)", () => {
+  render(
+    <ReservationCard {...base({ value: reservaPreenchida(true), erros: { fornecedorId: "Escolha o fornecedor" } })} />,
+  );
+  const header = screen.getByRole("region", { name: "Reserva 1" }).querySelector("header");
+  expect(header).not.toHaveTextContent("com erro");
 });
 
 test("'Remover reserva' fica no rodapé do corpo aberto, não no header", () => {

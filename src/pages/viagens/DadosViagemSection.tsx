@@ -5,6 +5,7 @@ import { DateInput, Field, Input, MoneyInput, Select, useField } from "@/compone
 import { PassageirosField } from "@/components/viagem";
 import { parsearPercentual } from "@/lib/comissao";
 import { formatarDinheiro } from "@/lib/dinheiro";
+import { noites } from "@/lib/noites";
 import s from "./NovaViagem.module.css";
 import type { ViagemForm } from "./useNovaViagem";
 
@@ -78,84 +79,98 @@ export function DadosViagemSection({
     onRepassePercentual(p);
   }
   const observacoes = (form.watch("observacoes") as string | undefined) ?? "";
+  const dataIda = form.watch("dataIda");
+  const dataVolta = form.watch("dataVolta");
+  const qtdNoites = noites(dataIda, dataVolta);
   return (
-    <div className="grid-form">
-      <div className="span-12">
-        <PassageirosField
-          value={passageiros}
-          onChange={(v) => {
-            form.setValue("passageiros", v, { shouldDirty: true });
-          }}
-          buscar={buscarClientes}
-          onNovaPessoa={onNovaPessoa}
-          erro={erros.passageiros}
-          dataIda={form.watch("dataIda")}
-        />
-      </div>
-      <Field label="Destino" required className="span-3" error={erros.destino}>
-        <Input autoComplete="off" maxLength={120} {...form.register("destino")} />
-      </Field>
-      <Field label="Tipo" className="span-3">
-        <Select options={TIPOS} {...form.register("tipo")} />
-      </Field>
-      <Field label="Ida" className="span-2" error={erros.dataIda}>
-        <DateInput {...form.register("dataIda")} />
-      </Field>
-      <Field label="Volta" className="span-2" error={erros.dataVolta}>
-        <DateInput {...form.register("dataVolta")} />
-      </Field>
-      <Field label="Vendedor" required className="span-3" error={erros.vendedorId}>
-        <Select
-          options={vendedores.map((v) => ({ value: v.id, label: v.nome }))}
-          placeholder="Selecione"
-          {...form.register("vendedorId")}
-        />
-      </Field>
-      {mostrarRepasse && (
-        <>
-          <Field
-            label="Comissão do vendedor (%)"
-            className="span-2"
-            tooltip="Percentual sobre a comissão total da viagem (comissão + RAV, sem taxa de serviço). O valor acompanha as reservas até o repasse ser pago."
-            error={erroPctRepasse ?? erros.repassePercentual}
-          >
-            <Input
-              inputMode="decimal"
-              autoComplete="off"
-              value={pctRepasseTexto ?? (repassePercentual === null ? "" : String(repassePercentual).replace(".", ","))}
-              onChange={(e) => {
-                mudarPctRepasse(e.target.value);
-              }}
-            />
-          </Field>
-          <Field
-            label="Comissão do vendedor (R$)"
-            className="span-2"
-            helper={repasseSugerido === null ? undefined : `Sugerido: ${formatarDinheiro(repasseSugerido)}`}
-            error={erros.repasseValor}
-          >
-            <MoneyInput
-              value={repasseValorMostrado}
-              onChange={(v) => {
-                setPctRepasseTexto(null);
-                setErroPctRepasse(null);
-                onRepasseValor(v);
-              }}
-            />
-          </Field>
-        </>
-      )}
-      <details className={s.mais}>
-        <summary>+ mais campos (ocasião, observações)</summary>
-        <div className="grid-form">
-          <Field label="Ocasião" className="span-4">
-            <Input autoComplete="off" placeholder="Lua de mel, aniversário…" {...form.register("ocasiao")} />
-          </Field>
-          <Field label="Observações" helper={`${observacoes.length}/2000`} className="span-8">
-            <Observacoes maxLength={2000} {...form.register("observacoes")} />
-          </Field>
+    <div className={s.bloco}>
+      <h2 className={s.blocoTitulo}>Viagem</h2>
+      <div className="grid-form">
+        <div className="span-7">
+          <PassageirosField
+            value={passageiros}
+            onChange={(v) => {
+              form.setValue("passageiros", v, { shouldDirty: true });
+            }}
+            buscar={buscarClientes}
+            onNovaPessoa={onNovaPessoa}
+            erro={erros.passageiros}
+            dataIda={dataIda}
+          />
         </div>
-      </details>
+        <Field label="Destino" required className="span-5" error={erros.destino}>
+          <Input autoComplete="off" maxLength={120} {...form.register("destino")} />
+        </Field>
+        <Field label="Tipo" className="span-3">
+          <Select options={TIPOS} {...form.register("tipo")} />
+        </Field>
+        <Field label="Ida" required className="span-3" error={erros.dataIda}>
+          <DateInput {...form.register("dataIda")} />
+        </Field>
+        <Field
+          label="Volta"
+          required
+          className="span-3"
+          error={erros.dataVolta}
+          helper={qtdNoites === null ? undefined : `${qtdNoites} ${qtdNoites === 1 ? "noite" : "noites"}`}
+        >
+          <DateInput {...form.register("dataVolta")} />
+        </Field>
+        <Field label="Vendedor" required className="span-3" error={erros.vendedorId}>
+          <Select
+            options={vendedores.map((v) => ({ value: v.id, label: v.nome }))}
+            placeholder="Selecione"
+            {...form.register("vendedorId")}
+          />
+        </Field>
+        {mostrarRepasse && (
+          <>
+            <Field
+              label="Comissão do vendedor (%)"
+              className="span-3"
+              tooltip="Percentual sobre a comissão total da viagem (comissão + RAV, sem taxa de serviço). O valor acompanha as reservas até o repasse ser pago."
+              error={erroPctRepasse ?? erros.repassePercentual}
+            >
+              <Input
+                inputMode="decimal"
+                autoComplete="off"
+                value={
+                  pctRepasseTexto ?? (repassePercentual === null ? "" : String(repassePercentual).replace(".", ","))
+                }
+                onChange={(e) => {
+                  mudarPctRepasse(e.target.value);
+                }}
+              />
+            </Field>
+            <Field
+              label="Comissão do vendedor (R$)"
+              className="span-3"
+              helper={repasseSugerido === null ? undefined : `Sugerido: ${formatarDinheiro(repasseSugerido)}`}
+              error={erros.repasseValor}
+            >
+              <MoneyInput
+                value={repasseValorMostrado}
+                onChange={(v) => {
+                  setPctRepasseTexto(null);
+                  setErroPctRepasse(null);
+                  onRepasseValor(v);
+                }}
+              />
+            </Field>
+          </>
+        )}
+        <details className={s.mais}>
+          <summary>Ocasião e observações</summary>
+          <div className="grid-form">
+            <Field label="Ocasião" className="span-4">
+              <Input autoComplete="off" placeholder="Lua de mel, aniversário…" {...form.register("ocasiao")} />
+            </Field>
+            <Field label="Observações" helper={`${observacoes.length}/2000`} className="span-8">
+              <Observacoes maxLength={2000} {...form.register("observacoes")} />
+            </Field>
+          </div>
+        </details>
+      </div>
     </div>
   );
 }

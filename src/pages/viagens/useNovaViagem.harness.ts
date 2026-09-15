@@ -45,7 +45,7 @@ export function viagemDto(versao: string) {
     destino: "Lisboa",
     tipo: "internacional",
     dataIda: "2026-04-18",
-    dataVolta: null,
+    dataVolta: "2026-04-28",
     vendedorId: "u1",
     vendedorNome: "Ana",
     agenteId: "u1",

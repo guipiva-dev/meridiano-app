@@ -38,7 +38,7 @@
   --color-brand:                 var(--navy-800);
   --color-action:                var(--blue-600);   /* Button primary: salvar, confirmar */
   --color-action-hover:          var(--blue-700);
-  --color-action-business:       var(--orange-600); /* Button business: UMA por tela (Adicionar reserva, Nova viagem) */
+  --color-action-business:       var(--orange-600); /* Button business: ação principal, UMA por tela (Salvar viagem, Nova viagem) */
   --color-action-business-hover: var(--orange-700);
   --color-selected:              var(--navy-800);   /* chip selecionado, item ativo */
 
@@ -166,6 +166,8 @@
   --sidebar-pad-x:  16px;
   --topbar-h:       64px;
   --content-max:    1400px;
+  --painel-viagem-w:    340px;  /* painel lateral do formulário de viagem ≥1440 */
+  --painel-viagem-w-xl: 300px;  /* 1280–1439 */
 
   --toast-bg:   var(--navy-800);
   --toast-link: var(--yellow-500);

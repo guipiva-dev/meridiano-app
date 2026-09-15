@@ -129,6 +129,8 @@ test("vendedor que não gera repasse: request vai sem % e sem R$ do vendedor", a
     result.current.form.setValue("destino", "Lisboa");
     result.current.form.setValue("passageiros", [{ clienteId: "c1", nome: "Carlos", titular: true }]);
     result.current.form.setValue("vendedorId", "u2");
+    result.current.form.setValue("dataIda", "2026-04-18");
+    result.current.form.setValue("dataVolta", "2026-04-28");
   });
   await act(async () => {
     await result.current.salvar();

@@ -36,7 +36,7 @@ export function BookingFields({
   const opcoesFornecedor = fornecedores.map((f) => ({ value: f.id, label: f.nome }));
   return (
     <div className="grid-form">
-      <Field label="Fornecedor" className="span-3" error={erros.fornecedorId}>
+      <Field label="Fornecedor" className="span-4" error={erros.fornecedorId}>
         <div className={s.fornecedorRow}>
           <Select
             options={opcoesFornecedor}
@@ -67,7 +67,7 @@ export function BookingFields({
           }}
         />
       </Field>
-      <Field label="Data da compra" className="span-2" error={erros.dataCompra}>
+      <Field label="Data da compra" className="span-3" error={erros.dataCompra}>
         <DateInput
           value={value.dataCompra}
           readOnly={readOnly}
@@ -76,7 +76,7 @@ export function BookingFields({
           }}
         />
       </Field>
-      <Field label="NFSe" className="span-2" error={erros.nfseStatus}>
+      <Field label="NFSe" className="span-3" error={erros.nfseStatus}>
         <Select
           options={OPCOES_NFSE}
           value={value.nfseStatus}
