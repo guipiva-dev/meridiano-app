@@ -43,7 +43,7 @@ export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaA
     .map((reserva, indice) => ({ reserva, indice: indice + 1 }))
     .sort((a, b) => Number(a.reserva.status === "cancelada") - Number(b.reserva.status === "cancelada"));
 
-  // Duplicar (REQ-04): card de nova reserva pré-preenchido logo abaixo da lista; salvar = POST da reserva.
+  // Duplicar (REQ-04): card de nova reserva pré-preenchido no fim da lista; salvar = POST da reserva.
   const [duplicada, setDuplicada] = useState<ReservaForm | null>(null);
   const [tentouSalvar, setTentouSalvar] = useState(false);
   const [novoFornecedor, setNovoFornecedor] = useState(false);
@@ -135,42 +135,44 @@ export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaA
         </Alert>
       )}
 
-      {ordenadas.map(({ reserva, indice }) => (
-        <ReservaDetalheCard
-          key={reserva.id}
-          indice={indice}
-          reserva={reserva}
-          verValores={verValores}
-          podeEditar={podeEditar && !viagem.cancelada}
-          aberta={abertas.includes(reserva.id)}
-          onToggle={() => {
-            alternar(reserva);
-          }}
-          onEditar={() => {
-            void nav(`/viagens/${viagem.id}/editar?reserva=${reserva.id}`);
-          }}
-          onRemarcar={() => {
-            abrir({ tipo: "remarcar", reserva });
-          }}
-          onCancelar={() => {
-            abrir({ tipo: "cancelarReserva", reserva });
-          }}
-          onNfse={() => {
-            abrir({ tipo: "nfse", reserva });
-          }}
-          onDuplicar={
-            podeDuplicar
-              ? () => {
-                  duplicar(reserva);
-                }
-              : undefined
-          }
-        />
-      ))}
-
-      {duplicada && (
-        <div ref={refDuplicada} className={s.reservas}>
-          <div className={s.bloco}>
+      <div className={s.listaReservas}>
+        {viagem.reservas.length === 0 && (
+          <p className={s.vazio}>Nenhuma reserva ainda. Toda viagem precisa de ao menos uma reserva.</p>
+        )}
+        {ordenadas.map(({ reserva, indice }) => (
+          <ReservaDetalheCard
+            key={reserva.id}
+            indice={indice}
+            reserva={reserva}
+            verValores={verValores}
+            podeEditar={podeEditar && !viagem.cancelada}
+            aberta={abertas.includes(reserva.id)}
+            onToggle={() => {
+              alternar(reserva);
+            }}
+            onEditar={() => {
+              void nav(`/viagens/${viagem.id}/editar?reserva=${reserva.id}`);
+            }}
+            onRemarcar={() => {
+              abrir({ tipo: "remarcar", reserva });
+            }}
+            onCancelar={() => {
+              abrir({ tipo: "cancelarReserva", reserva });
+            }}
+            onNfse={() => {
+              abrir({ tipo: "nfse", reserva });
+            }}
+            onDuplicar={
+              podeDuplicar
+                ? () => {
+                    duplicar(reserva);
+                  }
+                : undefined
+            }
+          />
+        ))}
+        {duplicada && (
+          <div ref={refDuplicada}>
             <ReservationCard
               indice={viagem.reservas.length + 1}
               value={duplicada}
@@ -190,49 +192,50 @@ export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaA
               erros={tentouSalvar ? validarReserva(duplicada) : {}}
               avisoDuplicada={codigoDuplicata ? `Este localizador já está na viagem ${codigoDuplicata}.` : null}
             />
+            <div className={s.adicionar}>
+              {salvar.conflito && (
+                <Alert tone="danger">
+                  Alguém alterou esta viagem enquanto você editava. Recarregue e tente de novo.
+                </Alert>
+              )}
+              {salvar.erroBloco && <Alert tone="danger">{salvar.erroBloco}</Alert>}
+              <Button
+                variant="primary"
+                loading={salvar.salvando}
+                onClick={() => {
+                  void salvarDuplicada();
+                }}
+              >
+                Salvar reserva
+              </Button>
+            </div>
+            <FornecedorInlineModal
+              open={novoFornecedor}
+              onClose={() => {
+                setNovoFornecedor(false);
+              }}
+              onCriado={(f) => {
+                qc.setQueryData<FornecedorDto[]>(chaves.fornecedores, (atuais) => [...(atuais ?? []), f]);
+                setDuplicada((atual) => atual && { ...atual, fornecedorId: f.id });
+              }}
+              criar={viagensApi.criarFornecedor}
+            />
           </div>
-          {salvar.conflito && (
-            <Alert tone="danger">Alguém alterou esta viagem enquanto você editava. Recarregue e tente de novo.</Alert>
-          )}
-          {salvar.erroBloco && <Alert tone="danger">{salvar.erroBloco}</Alert>}
-          <div>
+        )}
+        {podeEditar && !viagem.cancelada && (
+          <div className={s.adicionar}>
             <Button
-              variant="primary"
-              loading={salvar.salvando}
+              variant="secondary"
               onClick={() => {
-                void salvarDuplicada();
+                // F03: mesmo sinal que AvisoViagemSemelhante usa para abrir já com uma reserva em branco.
+                void nav(`/viagens/${viagem.id}/editar`, { state: { novaReserva: true } });
               }}
             >
-              Salvar reserva
+              + Adicionar reserva
             </Button>
           </div>
-          <FornecedorInlineModal
-            open={novoFornecedor}
-            onClose={() => {
-              setNovoFornecedor(false);
-            }}
-            onCriado={(f) => {
-              qc.setQueryData<FornecedorDto[]>(chaves.fornecedores, (atuais) => [...(atuais ?? []), f]);
-              setDuplicada((atual) => atual && { ...atual, fornecedorId: f.id });
-            }}
-            criar={viagensApi.criarFornecedor}
-          />
-        </div>
-      )}
-
-      {podeEditar && !viagem.cancelada && (
-        <div>
-          <Button
-            variant="business"
-            onClick={() => {
-              // F03: mesmo sinal que AvisoViagemSemelhante usa para abrir já com uma reserva em branco.
-              void nav(`/viagens/${viagem.id}/editar`, { state: { novaReserva: true } });
-            }}
-          >
-            + Adicionar reserva
-          </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

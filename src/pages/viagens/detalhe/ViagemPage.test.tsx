@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import type { ViagemDto } from "@/api/viagens";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
@@ -63,7 +63,7 @@ afterEach(() => {
 test("cabeçalho traz titular · destino, código e período", async () => {
   montar();
   expect(await screen.findByRole("heading", { name: /Carlos Mendes · Lisboa/ })).toBeInTheDocument();
-  expect(screen.getByText("VG-2026-0042")).toBeInTheDocument();
+  expect(screen.getByRole("navigation", { name: "Trilha" })).toHaveTextContent("VG-2026-0042");
   expect(
     screen.getByText("18–28/04/2026 · Internacional · 2 passageiros · Vendedor: Ana Paula · Agente: Guilherme"),
   ).toBeInTheDocument();
@@ -78,16 +78,39 @@ test("badge financeiro do cabeçalho traz o prefixo Comissão e explica o que re
   );
 });
 
-test("faixa do resumo mostra o resultado da viagem", async () => {
+test("painel lateral mostra o resultado da viagem", async () => {
   montar();
-  expect(await screen.findByText("R$ 1.640,00")).toBeInTheDocument();
-  expect(screen.getByText("R$ 13.700,00")).toBeInTheDocument();
+  const painel = await screen.findByRole("complementary", { name: "Resumo da viagem" });
+  expect(within(painel).getByText("R$ 1.640,00")).toBeInTheDocument();
+  expect(within(painel).getByText("R$ 13.700,00")).toBeInTheDocument();
+});
+
+test("abas começam em Reservas, sem Resumo e sem Subnav", async () => {
+  montar();
+  await screen.findByRole("tab", { name: /Reservas/ });
+  expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual([
+    expect.stringMatching(/^Reservas/),
+    "Financeiro",
+    expect.stringMatching(/^Pendências/),
+    expect.stringMatching(/^Documentos/),
+    "Timeline",
+  ]);
+  expect(screen.queryByRole("tab", { name: /Resumo/ })).toBeNull();
+  expect(screen.getByRole("tab", { name: /Reservas/ })).toHaveAttribute("aria-selected", "true");
+  expect(screen.queryByRole("navigation", { name: "Seções do módulo" })).toBeNull();
+});
+
+test("Ver todas do painel troca para a aba Pendências", async () => {
+  montar();
+  const painel = await screen.findByRole("complementary", { name: "Resumo da viagem" });
+  fireEvent.click(within(painel).getByRole("button", { name: "Ver todas" }));
+  expect(screen.getByRole("tab", { name: /Pendências/ })).toHaveAttribute("aria-selected", "true");
 });
 
 test("aba Reservas mostra os dois cards", async () => {
-  montar("/viagens/v1?tab=reservas");
-  expect(await screen.findByText("Reserva 1")).toBeInTheDocument();
-  expect(screen.getByText("Reserva 2")).toBeInTheDocument();
+  montar();
+  expect(await screen.findByLabelText("Reserva 1")).toBeInTheDocument();
+  expect(screen.getByLabelText("Reserva 2")).toBeInTheDocument();
   expect(screen.getByRole("tab", { name: /Reservas/ })).toHaveTextContent("2");
 });
 
@@ -99,13 +122,14 @@ test("com reserva cancelada, a aba Reservas mostra Ativas N · Total M", async (
 
 test("sem auditoria.ver a aba Timeline não aparece", async () => {
   montar("/viagens/v1", (p) => p !== "auditoria.ver");
-  await screen.findByRole("tab", { name: /Resumo/ });
+  await screen.findByRole("tab", { name: /Reservas/ });
   expect(screen.queryByRole("tab", { name: /Timeline/ })).toBeNull();
 });
 
 test("Cancelar viagem… abre o modal", async () => {
   montar();
-  fireEvent.click(await screen.findByRole("button", { name: "Cancelar viagem…" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Mais ações" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Cancelar viagem…" }));
   expect(await screen.findByRole("dialog")).toHaveTextContent("Cancelar viagem");
 });
 

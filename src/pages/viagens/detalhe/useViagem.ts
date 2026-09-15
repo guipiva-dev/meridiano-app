@@ -39,7 +39,9 @@ export function useViagem(id: string) {
   const viagem = viagemQ.data;
   // `?reserva=<id>` é o link de "abrir esta reserva": manda para a aba Reservas e abre o card.
   const reservaAberta = params.get("reserva") ?? undefined;
-  const tab = reservaAberta ? "reservas" : (params.get("tab") ?? "resumo");
+  // A aba Resumo saiu (painel lateral): links antigos `?tab=resumo` caem em Reservas.
+  const abaUrl = params.get("tab");
+  const tab = reservaAberta ? "reservas" : abaUrl && abaUrl !== "resumo" ? abaUrl : "reservas";
 
   function trocarUrl(patch: (p: URLSearchParams) => void) {
     setParams(
@@ -55,15 +57,8 @@ export function useViagem(id: string) {
   function setTab(t: string) {
     trocarUrl((p) => {
       p.delete("reserva");
-      if (t === "resumo") p.delete("tab");
+      if (t === "reservas") p.delete("tab");
       else p.set("tab", t);
-    });
-  }
-
-  function abrirReserva(reservaId: string) {
-    trocarUrl((p) => {
-      p.delete("tab");
-      p.set("reserva", reservaId);
     });
   }
 
@@ -88,7 +83,6 @@ export function useViagem(id: string) {
     tab,
     setTab,
     reservaAberta,
-    abrirReserva,
     modal,
     abrir: setModal,
     fechar: () => {

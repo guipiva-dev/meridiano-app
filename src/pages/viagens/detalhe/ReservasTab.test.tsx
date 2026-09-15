@@ -218,6 +218,14 @@ test("F03: + Adicionar reserva navega para editar já sinalizando novaReserva", 
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
-  fireEvent.click(screen.getByRole("button", { name: "+ Adicionar reserva" }));
+  const adicionar = screen.getByRole("button", { name: "+ Adicionar reserva" });
+  expect(adicionar.className).not.toMatch(/business/);
+  fireEvent.click(adicionar);
   expect(screen.getByText("novaReserva=true")).toBeInTheDocument();
+});
+
+test("viagem sem reservas mostra o estado vazio com + Adicionar reserva", () => {
+  montar([], { ...VIAGEM, reservas: [] });
+  expect(screen.getByText("Nenhuma reserva ainda. Toda viagem precisa de ao menos uma reserva.")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "+ Adicionar reserva" })).toBeInTheDocument();
 });
