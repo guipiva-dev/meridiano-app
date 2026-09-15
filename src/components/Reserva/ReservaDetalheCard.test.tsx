@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { chavesAuditoria } from "@/api/auditoria";
@@ -375,7 +375,13 @@ test("histórico de alterações só consulta a API ao abrir o details", async (
   });
 });
 
-test("resultado em texto só com verValores", () => {
+test("seção Resultado desta reserva traz a conta completa só com verValores", () => {
   montar({ reserva: RESERVA_1, aberta: true, verValores: true });
-  expect(screen.getByLabelText("Resultado desta reserva")).toHaveTextContent("Receita da agência");
+  const secao = screen.getByRole("group", { name: "Resultado desta reserva" });
+  for (const rotulo of ["Total da reserva", /^Comissão/, "Taxa de serviço", "Receita da agência"]) {
+    expect(within(secao).getByText(rotulo)).toBeInTheDocument();
+  }
+  cleanup();
+  montar({ reserva: RESERVA_1, aberta: true, verValores: false });
+  expect(screen.queryByRole("group", { name: "Resultado desta reserva" })).toBeNull();
 });

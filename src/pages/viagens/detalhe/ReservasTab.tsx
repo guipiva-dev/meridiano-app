@@ -34,6 +34,12 @@ export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaA
   const nav = useNavigate();
   const qc = useQueryClient();
   const [abertas, setAbertas] = useState<string[]>(reservaAberta ? [reservaAberta] : []);
+  // `?reserva=` pode mudar com a aba já montada (busca global na mesma viagem): abre o card sem fechar os outros.
+  const [reservaAbertaAntes, setReservaAbertaAntes] = useState(reservaAberta);
+  if (reservaAbertaAntes !== reservaAberta) {
+    setReservaAbertaAntes(reservaAberta);
+    if (reservaAberta && !abertas.includes(reservaAberta)) setAbertas([...abertas, reservaAberta]);
+  }
   const disponiveis = creditos.filter((c) => c.status === "disponivel");
   const disponiveisComValor = disponiveis.filter((c) => c.valor !== undefined);
   const totalCreditos = disponiveisComValor.reduce((total, c) => total + (c.valor ?? 0), 0);

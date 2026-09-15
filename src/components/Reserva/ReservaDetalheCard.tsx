@@ -18,14 +18,14 @@ import { Skeleton } from "@/components/feedback";
 import { type ItemMenu, MenuAcoes } from "@/components/Menu/MenuAcoes";
 import { ListaServicos } from "@/components/servicos";
 import { useOperacao } from "@/components/ViagemOperacoes/useOperacao";
-import { calcularReserva } from "@/dominio/calculoReserva";
 import { cx } from "@/lib/cx";
 import { formatarCarimbo, formatarData } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
 import { aplicarViagem } from "@/pages/viagens/detalhe/useViagem";
 import r from "./Reserva.module.css";
 import s from "./ReservaDetalhe.module.css";
-import { deDto, paraValoresReserva } from "./tipos";
+import { ResultSummary } from "./ResultSummary";
+import { deDto } from "./tipos";
 
 interface ReservaDetalheCardProps {
   indice: number;
@@ -108,6 +108,7 @@ export function ReservaDetalheCard({
   onDuplicar,
 }: ReservaDetalheCardProps) {
   const idTitulo = useId();
+  const idResultado = useId();
   const qc = useQueryClient();
   // "Marcar emitida" / "Voltar a em emissão" (§6.1). O card só recebe a reserva; a versão da viagem
   // (xmin exigido pelo PUT) vem do cache da rota `/viagens/:id`, e a resposta substitui a viagem em
@@ -142,8 +143,6 @@ export function ReservaDetalheCard({
     ...(onDuplicar ? [{ label: "Duplicar", onClick: onDuplicar }] : []),
     ...(podeEditar && !cancelada ? [{ label: "Cancelar reserva…", onClick: onCancelar, tone: "danger" as const }] : []),
   ];
-  const r0 = deDto(reserva);
-  const calc = calcularReserva(paraValoresReserva(r0));
 
   return (
     <section aria-labelledby={idTitulo} className={cx(r.reserva, aberta && r.aberta, cancelada && r.cancelada)}>
@@ -199,20 +198,12 @@ export function ReservaDetalheCard({
           </div>
 
           {verValores && (
-            <p className={r.resultado} aria-label="Resultado desta reserva">
-              <span>
-                RAV <MoneyValue value={calc.ravCliente} />
+            <div className={s.secao} role="group" aria-labelledby={idResultado}>
+              <span id={idResultado} className={s.rotulo}>
+                Resultado desta reserva
               </span>
-              <span aria-hidden>·</span>
-              <span>
-                Total da comissão <MoneyValue value={calc.totalComissao} />
-              </span>
-              <span aria-hidden>·</span>
-              <span className={r.resultadoReceita}>
-                Receita da agência{" "}
-                <MoneyValue value={reserva.receitaPrevista ?? calc.receitaPrevista} emphasis="result" />
-              </span>
-            </p>
+              <ResultSummary value={deDto(reserva)} />
+            </div>
           )}
 
           {cancelada && (

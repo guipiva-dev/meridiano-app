@@ -117,6 +117,7 @@ export function ViagemPage() {
           <Tabs tabs={tabs} active={tab} onChange={v.setTab}>
             <Tabs.Panel id="reservas" active={tab}>
               <ReservasTab
+                key={viagem.id}
                 viagem={viagem}
                 creditos={v.creditos}
                 verValores={v.verValores}
