@@ -1,11 +1,13 @@
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import type { ViagemDto } from "@/api/viagens";
 import { Button } from "@/components";
 import { Alert, Badge, StatusBadge } from "@/components/display";
+import { type ItemMenu, MenuAcoes } from "@/components/Menu/MenuAcoes";
 import { PageHeader } from "@/components/shell";
 import { apresentacaoStatus } from "@/dominio/status";
 import { formatarCarimbo, formatarPeriodo } from "@/lib/datas";
 import { plural } from "@/lib/plural";
+import c from "./CabecalhoViagem.module.css";
 import s from "./Viagem.module.css";
 
 const ROTULO_TIPO = { nacional: "Nacional", internacional: "Internacional" };
@@ -36,8 +38,19 @@ export function CabecalhoViagem({ viagem, pode, onTransferir, onCancelar }: Cabe
     `Agente: ${viagem.agenteNome ?? "—"}`,
   ].join(" · ");
 
+  const podeEditar = pode("viagem.editar") && !viagem.cancelada;
+  const itens: ItemMenu[] = [
+    ...(pode("viagem.transferir") && !viagem.cancelada ? [{ label: "Transferir", onClick: onTransferir }] : []),
+    ...(podeEditar ? [{ label: "Cancelar viagem…", onClick: onCancelar, tone: "danger" as const }] : []),
+  ];
+
   return (
     <>
+      <nav aria-label="Trilha" className={c.trilha}>
+        <Link to="/viagens">Viagens</Link>
+        <span aria-hidden>/</span>
+        <span>{viagem.codigo}</span>
+      </nav>
       <PageHeader
         title={`${titularDa(viagem)} · ${viagem.destino}`}
         subtitle={subtitle}
@@ -60,25 +73,16 @@ export function CabecalhoViagem({ viagem, pode, onTransferir, onCancelar }: Cabe
         }
         actions={
           <>
-            {pode("viagem.transferir") && !viagem.cancelada && (
-              <Button variant="secondary" onClick={onTransferir}>
-                Transferir
+            <MenuAcoes label="Mais ações" itens={itens} />
+            {podeEditar && (
+              <Button
+                variant="business"
+                onClick={() => {
+                  void nav(`/viagens/${viagem.id}/editar`);
+                }}
+              >
+                Editar
               </Button>
-            )}
-            {pode("viagem.editar") && !viagem.cancelada && (
-              <>
-                <Button variant="danger" onClick={onCancelar}>
-                  Cancelar viagem…
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    void nav(`/viagens/${viagem.id}/editar`);
-                  }}
-                >
-                  Editar
-                </Button>
-              </>
             )}
           </>
         }
