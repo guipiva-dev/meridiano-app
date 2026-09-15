@@ -31,6 +31,22 @@ test("salvar sem ida, volta e reserva não chama a API e aponta os três erros",
   expect(chamadas.some((c) => c.metodo === "POST")).toBe(false);
 });
 
+test("volta preenchida e ida vazia aponta só a ida", async () => {
+  const { result } = montar();
+  await esperar.agencia(result);
+  preencherCabecalho(result);
+  act(() => {
+    result.current.form.setValue("dataVolta", "2026-05-10");
+  });
+
+  await act(async () => {
+    await result.current.salvar();
+  });
+
+  expect(result.current.erros.dataIda).toBe("Informe a data de ida");
+  expect(result.current.erros.dataVolta).toBeUndefined();
+});
+
 test("volta antes da ida continua com a mensagem própria", async () => {
   const { result } = montar();
   await esperar.agencia(result);

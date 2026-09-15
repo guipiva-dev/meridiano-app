@@ -115,7 +115,7 @@
   background: var(--color-bg-subtle);
   font: var(--type-code);
 }
-@media not all and (min-width: 1024px) {
+@media (max-width: 1024px) {
   .topo {
     position: static;
   }

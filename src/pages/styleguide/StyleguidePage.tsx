@@ -32,6 +32,7 @@ const FORNECEDORES_EXEMPLO: FornecedorDto[] = [
 ];
 const RESERVA_ABERTA: ReservaForm = {
   ...reservaVazia(0),
+  dataCompra: "2026-09-14",
   fornecedorId: "f1",
   localizador: "K7X2PQ",
   tiposServico: ["aereo", "hospedagem"],

@@ -23,6 +23,8 @@ export function NovaViagemPage() {
   const v = useNovaViagem(id);
   const [pessoaAberta, setPessoaAberta] = useState(false);
   const [fornecedorPara, setFornecedorPara] = useState<number | null>(null);
+  // A04: o aviso "N campos precisam de atenção" só aparece depois de uma tentativa de salvar.
+  const [tentouSalvar, setTentouSalvar] = useState(false);
   const idTituloReservas = useId();
   const idErroReservas = useId();
 
@@ -44,9 +46,12 @@ export function NovaViagemPage() {
   if (titular && !editando) partes.push(`Titular: ${titular.nome}`);
   if (vendedorNome) partes.push(`Vendedor: ${vendedorNome}`);
 
-  useAtalho("ctrl+s", () => {
+  function salvar() {
+    setTentouSalvar(true);
     void v.salvar();
-  });
+  }
+
+  useAtalho("ctrl+s", salvar);
   useAtalho("ctrl+enter", v.adicionarReserva);
   useAtalho(
     "escape",
@@ -124,7 +129,7 @@ export function NovaViagemPage() {
           salvoEm={v.salvamento.salvoEm}
           actions={
             <>
-              {v.totalErros > 0 && (
+              {tentouSalvar && v.totalErros > 0 && (
                 <Button variant="tertiary" size="sm" className={s.atencao} onClick={focarPrimeiroErro}>
                   {v.totalErros === 1 ? "1 campo precisa de atenção" : `${v.totalErros} campos precisam de atenção`}
                 </Button>
@@ -133,14 +138,7 @@ export function NovaViagemPage() {
                 Fechar
               </Button>
               {/* title em vez de Tooltip: o Tooltip vira <button> e aninharia botões. */}
-              <Button
-                variant="business"
-                title="Ctrl+S"
-                loading={v.salvamento.estado === "saving"}
-                onClick={() => {
-                  void v.salvar();
-                }}
-              >
+              <Button variant="business" title="Ctrl+S" loading={v.salvamento.estado === "saving"} onClick={salvar}>
                 Salvar viagem
               </Button>
             </>
@@ -156,6 +154,7 @@ export function NovaViagemPage() {
                 variant="secondary"
                 size="sm"
                 onClick={() => {
+                  setTentouSalvar(false);
                   void v.recarregar();
                 }}
               >
@@ -260,10 +259,10 @@ export function NovaViagemPage() {
           detalheReserva={
             abertaReserva && (
               <>
-                <h2 className={s.blocoTitulo}>
+                <p className={s.blocoTitulo}>
                   Reserva {abertaIndice + 1}
                   {fornecedorAberta ? ` · ${fornecedorAberta.nome}` : ""}
-                </h2>
+                </p>
                 <ResultSummary value={abertaReserva} />
               </>
             )
