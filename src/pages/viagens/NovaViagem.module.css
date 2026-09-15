@@ -115,6 +115,11 @@
   background: var(--color-bg-subtle);
   font: var(--type-code);
 }
+@media not all and (min-width: 1024px) {
+  .topo {
+    position: static;
+  }
+}
 @media not all and (min-width: 1440px) {
   .area {
     grid-template-columns: minmax(0, 1fr) var(--painel-viagem-w-xl);

@@ -170,25 +170,27 @@ export function ReservasTab({ viagem, creditos, verValores, podeEditar, reservaA
 
       {duplicada && (
         <div ref={refDuplicada} className={s.reservas}>
-          <ReservationCard
-            indice={viagem.reservas.length + 1}
-            value={duplicada}
-            onChange={(patch) => {
-              setDuplicada({ ...duplicada, ...patch });
-            }}
-            onToggle={() => {
-              setDuplicada({ ...duplicada, aberta: !duplicada.aberta });
-            }}
-            onRemover={() => {
-              setDuplicada(null);
-            }}
-            fornecedores={fornecedoresQ.data ?? []}
-            onNovoFornecedor={() => {
-              setNovoFornecedor(true);
-            }}
-            erros={tentouSalvar ? validarReserva(duplicada) : {}}
-            avisoDuplicada={codigoDuplicata ? `Este localizador já está na viagem ${codigoDuplicata}.` : null}
-          />
+          <div className={s.bloco}>
+            <ReservationCard
+              indice={viagem.reservas.length + 1}
+              value={duplicada}
+              onChange={(patch) => {
+                setDuplicada({ ...duplicada, ...patch });
+              }}
+              onToggle={() => {
+                setDuplicada({ ...duplicada, aberta: !duplicada.aberta });
+              }}
+              onRemover={() => {
+                setDuplicada(null);
+              }}
+              fornecedores={fornecedoresQ.data ?? []}
+              onNovoFornecedor={() => {
+                setNovoFornecedor(true);
+              }}
+              erros={tentouSalvar ? validarReserva(duplicada) : {}}
+              avisoDuplicada={codigoDuplicata ? `Este localizador já está na viagem ${codigoDuplicata}.` : null}
+            />
+          </div>
           {salvar.conflito && (
             <Alert tone="danger">Alguém alterou esta viagem enquanto você editava. Recarregue e tente de novo.</Alert>
           )}

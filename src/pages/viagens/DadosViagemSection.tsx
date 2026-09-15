@@ -101,7 +101,7 @@ export function DadosViagemSection({
         <Field label="Destino" required className="span-5" error={erros.destino}>
           <Input autoComplete="off" maxLength={120} {...form.register("destino")} />
         </Field>
-        <Field label="Tipo" className="span-2">
+        <Field label="Tipo" className="span-3">
           <Select options={TIPOS} {...form.register("tipo")} />
         </Field>
         <Field label="Ida" required className="span-3" error={erros.dataIda}>
@@ -116,7 +116,7 @@ export function DadosViagemSection({
         >
           <DateInput {...form.register("dataVolta")} />
         </Field>
-        <Field label="Vendedor" required className="span-4" error={erros.vendedorId}>
+        <Field label="Vendedor" required className="span-3" error={erros.vendedorId}>
           <Select
             options={vendedores.map((v) => ({ value: v.id, label: v.nome }))}
             placeholder="Selecione"

@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useId, useState } from "react";
+import { type CSSProperties, useEffect, useId, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { chaves, type FornecedorDto, viagensApi } from "@/api/viagens";
 import { useAuth } from "@/auth/useAuth";
@@ -59,10 +59,33 @@ export function NovaViagemPage() {
   const abertaReserva = abertaIndice >= 0 ? reservas[abertaIndice] : undefined;
   const fornecedorAberta = v.fornecedores.find((f) => f.id === abertaReserva?.fornecedorId);
 
+  // I1: publica a altura do cabeçalho sticky para o painel lateral grudar abaixo dele.
+  const refTopo = useRef<HTMLDivElement>(null);
+  const [topoH, setTopoH] = useState(0);
+  useEffect(() => {
+    const el = refTopo.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      setTopoH(el.offsetHeight);
+    });
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+    };
+  }, [v.carregando]);
+
   function focarPrimeiroErro() {
-    const alvo =
-      document.querySelector<HTMLElement>('[aria-invalid="true"]') ?? document.getElementById(idErroReservas);
-    alvo?.focus();
+    const invalido = () => document.querySelector<HTMLElement>('[aria-invalid="true"]');
+    const alvo = invalido() ?? document.getElementById(idErroReservas);
+    if (alvo) {
+      alvo.focus();
+      return;
+    }
+    // Erro só em reserva recolhida: abre a primeira e foca o campo depois do render.
+    const i = reservas.findIndex((r, k) => !r.aberta && Object.keys(v.errosReservas[k] ?? {}).length > 0);
+    if (i < 0) return;
+    v.alternarReserva(i);
+    setTimeout(() => invalido()?.focus(), 0);
   }
 
   if (v.carregando) {
@@ -82,7 +105,7 @@ export function NovaViagemPage() {
 
   return (
     <Page dirty={dirty} titulo={v.viagem?.codigo ?? "Nova viagem"} onSalvarESair={v.salvar}>
-      <div className={s.topo}>
+      <div ref={refTopo} className={s.topo}>
         <nav aria-label="Trilha" className={s.trilha}>
           <Link to="/viagens">Viagens</Link>
           {v.viagem && (
@@ -161,7 +184,7 @@ export function NovaViagemPage() {
         />
       )}
 
-      <div className={s.area}>
+      <div className={s.area} style={{ "--topo-h": `${topoH}px` } as CSSProperties}>
         <div className={s.principal}>
           <DadosViagemSection
             form={v.form}

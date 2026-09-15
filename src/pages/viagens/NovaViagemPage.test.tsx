@@ -54,6 +54,19 @@ function montar(entrada = "/viagens/nova") {
   );
 }
 
+/** Edição de `viagemDto` (válida) com fetch registrando as chamadas em `urls`. */
+function montarEdicao() {
+  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
+    urls.push(`${init?.method ?? "GET"} ${url}`);
+    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
+    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, VENDEDORES));
+    if (url.includes("/agencia")) return Promise.resolve(resposta(200, AGENCIA));
+    if (/\/viagens\/[^/?]+$/.test(url)) return Promise.resolve(resposta(200, viagemEdicao()));
+    return Promise.resolve(resposta(200, null));
+  });
+  montar("/viagens/v9/editar");
+}
+
 beforeEach(() => {
   urls.length = 0;
   vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
@@ -102,6 +115,24 @@ test("clicar no aviso de atenção leva o foco ao primeiro campo inválido", asy
   fireEvent.click(screen.getByRole("button", { name: "Salvar viagem" }));
   fireEvent.click(await screen.findByRole("button", { name: /campos precisam de atenção/ }));
   expect(document.activeElement).toHaveAttribute("aria-invalid", "true");
+});
+
+test("I4: aviso de atenção abre a reserva recolhida com erro e foca o campo inválido", async () => {
+  montarEdicao();
+  await screen.findByRole("heading", { name: /Lisboa/ });
+  fireEvent.keyDown(window, { key: "Enter", ctrlKey: true });
+  const reserva2 = await screen.findByRole("region", { name: /Reserva 2/ });
+  fireEvent.click(screen.getByRole("button", { name: "Salvar viagem" }));
+  await screen.findByText("Escolha o fornecedor");
+  fireEvent.click(within(reserva2).getByRole("button", { name: "Recolher" }));
+  expect(document.querySelector('[aria-invalid="true"]')).toBeNull();
+
+  fireEvent.click(screen.getByRole("button", { name: /precisa(m)? de atenção/ }));
+
+  await waitFor(() => {
+    expect(document.activeElement).toHaveAttribute("aria-invalid", "true");
+  });
+  expect(within(reserva2).getByRole("button", { name: "Recolher" })).toBeInTheDocument();
 });
 
 test("painel da viagem é o único lugar com o resumo e o botão de adicionar fica fora dele", async () => {
@@ -195,17 +226,7 @@ test("ALT-13: Fechar sem viagem existente navega para a lista de viagens", async
 });
 
 test("ALT-13: Fechar após salvar edição navega para a página da viagem, nunca nav(-1)", async () => {
-  vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
-    const metodo = init?.method ?? "GET";
-    urls.push(`${metodo} ${url}`);
-    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
-    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, VENDEDORES));
-    if (url.includes("/agencia")) return Promise.resolve(resposta(200, AGENCIA));
-    if (/\/viagens\/[^/?]+$/.test(url)) return Promise.resolve(resposta(200, viagemEdicao()));
-    return Promise.resolve(resposta(200, null));
-  });
-
-  montar("/viagens/v9/editar");
+  montarEdicao();
   await screen.findByRole("heading", { name: /Lisboa/ });
 
   fireEvent.click(screen.getByRole("button", { name: "Salvar viagem" }));
@@ -224,16 +245,7 @@ test("reservaVazia gera chaveLocal distinta a cada chamada (key estável do card
 });
 
 test("edição mostra '{titular} · {destino}' como título e 'Vendedor:' sem '(a)'", async () => {
-  vi.stubGlobal("fetch", (url: string) => {
-    if (url.includes("/fornecedores")) return Promise.resolve(resposta(200, FORNECEDORES));
-    if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, VENDEDORES));
-    if (url.includes("/agencia")) return Promise.resolve(resposta(200, AGENCIA));
-    if (/\/viagens\/[^/?]+$/.test(url)) {
-      return Promise.resolve(resposta(200, viagemEdicao()));
-    }
-    return Promise.resolve(resposta(200, null));
-  });
-  montar("/viagens/v9/editar");
+  montarEdicao();
   expect(await screen.findByRole("heading", { name: /^Carlos · Lisboa/ })).toBeInTheDocument();
   expect(screen.getByText(/Vendedor: Ana/)).toBeInTheDocument();
   expect(screen.queryByText(/Vendedor\(a\)/)).toBeNull();
