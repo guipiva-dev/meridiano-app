@@ -2,10 +2,9 @@ import { type ChangeEvent, useState } from "react";
 import { FORMAS_PAGAMENTO, type FormaPagamento, ROTULO_FORMA } from "@/api/viagens";
 import { Field, Input, MoneyInput, useField } from "@/components";
 import { Chip } from "@/components/display";
-import { calcularReserva } from "@/dominio/calculoReserva";
 import { comissaoPorPercentual, parsearPercentual, percentualDaComissao } from "@/lib/comissao";
 import s from "./Reserva.module.css";
-import { paraValoresReserva, type ReservaForm } from "./tipos";
+import type { ReservaForm } from "./tipos";
 
 interface FinancialFieldsProps {
   value: ReservaForm;
@@ -109,7 +108,6 @@ export function FinancialFields({
         : {}),
     });
   }
-  const r = calcularReserva(paraValoresReserva(value));
   const helperComissao =
     value.comissaoSugerida && percentualSugerido !== null ? `Sugerido: ${percentualSugerido} %` : undefined;
 
@@ -117,7 +115,7 @@ export function FinancialFields({
     <div className="grid-form">
       <Field
         label="Total da reserva"
-        className="span-2"
+        className="span-3"
         tooltip="O que o fornecedor cobrou, taxas incluídas"
         error={erros.valorTotal}
       >
@@ -125,7 +123,7 @@ export function FinancialFields({
       </Field>
       <Field
         label="Total cobrado do cliente"
-        className="span-2"
+        className="span-3"
         tooltip="Quanto o cliente pagou no total. Começa igual ao total da reserva; mude se cobrou a mais (RAV) ou deu desconto."
         error={erros.valorCliente}
       >
@@ -158,20 +156,9 @@ export function FinancialFields({
         <MoneyInput value={value.valorComissao} readOnly={readOnly} onChange={mudarValorComissao} />
       </Field>
       <Field
-        label="RAV"
-        className="span-2"
-        tooltip="Calculado: total cobrado do cliente − total da reserva (ex.: R$ 10.500 − R$ 10.000 = R$ 500). Negativo = desconto."
-      >
-        <MoneyInput value={r.ravCliente} readOnly calculated onChange={() => undefined} tabIndex={-1} />
-      </Field>
-      <Field label="Total da comissão" className="span-2" tooltip="Comissão + RAV.">
-        <MoneyInput value={r.totalComissao} readOnly calculated onChange={() => undefined} tabIndex={-1} />
-      </Field>
-      <Field
         label="Taxa de serviço"
         className="span-2"
-        tooltip="Valor fixo cobrado do cliente sem custo por trás, como assessoria ou emissão de visto (ex.: R$ 150)."
-        helper="Cobrada do cliente por fora da reserva; soma direto na receita da agência."
+        tooltip="Valor fixo cobrado do cliente por fora da reserva, sem custo por trás (ex.: assessoria, visto). Soma direto na receita da agência."
         error={erros.taxaServico}
       >
         <MoneyInput
@@ -182,7 +169,7 @@ export function FinancialFields({
           }}
         />
       </Field>
-      <Field label="Formas de pagamento" className="span-2">
+      <Field label="Formas de pagamento" className="span-12">
         <div role="group" aria-label="Formas de pagamento" className={s.chips}>
           {FORMAS_PAGAMENTO.map((forma) => (
             <Chip
