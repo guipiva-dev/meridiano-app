@@ -166,6 +166,8 @@
   --sidebar-pad-x:  16px;
   --topbar-h:       64px;
   --content-max:    1400px;
+  --painel-viagem-w:    340px;  /* painel lateral do formulário de viagem ≥1440 */
+  --painel-viagem-w-xl: 300px;  /* 1280–1439 */
 
   --toast-bg:   var(--navy-800);
   --toast-link: var(--yellow-500);

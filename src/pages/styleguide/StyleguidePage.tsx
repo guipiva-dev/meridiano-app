@@ -293,7 +293,6 @@ export function StyleguidePage() {
             reservas={[RESERVA_ABERTA, RESERVA_FECHADA]}
             repasseValor={500}
             despesas={200}
-            onAdicionarReserva={() => undefined}
             mostrarResultado
           />
         </Section>
