@@ -34,17 +34,94 @@
   resize: vertical;
 }
 
-.rodape {
+.topo {
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 6;
   display: flex;
-  justify-content: flex-end;
-  padding: var(--space-4) 0;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  background: var(--color-bg-page);
+  border-bottom: 1px solid var(--color-border);
+}
+.trilha {
+  display: flex;
+  gap: var(--space-2);
   font: var(--type-helper);
   color: var(--color-text-muted);
 }
-.rodape kbd {
+.trilha a {
+  color: var(--color-text-link);
+}
+.atencao {
+  color: var(--color-danger-text);
+}
+.area {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--painel-viagem-w);
+  align-items: start;
+  gap: var(--space-6);
+}
+.principal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.reservas {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.reservasTopo {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.vazio {
+  padding: var(--space-6) var(--space-4);
+  font: var(--type-body);
+  color: var(--color-text-secondary);
+}
+.vazioErro {
+  color: var(--color-danger-text);
+}
+.adicionar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+.dica,
+.atalhos {
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+}
+.atalhos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dica kbd,
+.atalhos kbd {
   padding: 0 var(--space-1);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg-subtle);
   font: var(--type-code);
+}
+@media not all and (min-width: 1440px) {
+  .area {
+    grid-template-columns: minmax(0, 1fr) var(--painel-viagem-w-xl);
+  }
+}
+@media not all and (min-width: 1280px) {
+  .area {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

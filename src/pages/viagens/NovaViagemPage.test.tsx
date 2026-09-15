@@ -4,6 +4,9 @@ import { createMemoryRouter, RouterProvider } from "react-router";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
 import { reservaVazia } from "@/components/reserva";
 import { NovaViagemPage } from "./NovaViagemPage";
+import { viagemDto } from "./useNovaViagem.harness";
+
+const viagemEdicao = () => viagemDto("7");
 
 const FORNECEDORES = [
   { id: "f1", nome: "CVC", tipo: "operadora", percentualComissaoPadrao: 10, prazoComissaoDias: 30, ativo: true },
@@ -30,28 +33,6 @@ const auth: AuthValue = {
   sair: () => Promise.resolve(),
   recarregar: () => Promise.resolve(),
 };
-
-function viagemEdicao() {
-  return {
-    id: "v9",
-    codigo: "VG-2026-0042",
-    versao: "7",
-    destino: "Lisboa",
-    tipo: "internacional",
-    dataIda: null,
-    dataVolta: null,
-    vendedorId: "u1",
-    vendedorNome: "Ana",
-    agenteId: "u1",
-    ocasiao: null,
-    observacoes: null,
-    cancelada: false,
-    faseOperacional: "sem_reserva",
-    faseFinanceira: "nao_prevista",
-    passageiros: [{ clienteId: "c1", nome: "Carlos", titular: true }],
-    reservas: [],
-  };
-}
 
 function montar(entrada = "/viagens/nova") {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -94,8 +75,40 @@ afterEach(() => {
 test("renderiza o cabeçalho, a seção de dados e o botão de adicionar reserva", async () => {
   montar();
   expect(await screen.findByRole("heading", { name: /Nova viagem/ })).toBeInTheDocument();
-  expect(screen.getByRole("heading", { name: "Dados da viagem" })).toBeInTheDocument();
+  const painel = screen.getByRole("complementary", { name: "Resumo da viagem" });
+  const titulos = screen.getAllByRole("heading", { name: "Viagem" }).filter((h) => !painel.contains(h));
+  expect(titulos).toHaveLength(1);
   expect(screen.getByRole("button", { name: "+ Adicionar reserva" })).toBeInTheDocument();
+});
+
+test("sem reservas mostra estado vazio com a ação de adicionar", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+  expect(screen.getByText(/Nenhuma reserva ainda/)).toBeInTheDocument();
+});
+
+test("salvar incompleto mostra 'N campos precisam de atenção' e o erro de reserva no estado vazio", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+  fireEvent.click(screen.getByRole("button", { name: "Salvar viagem" }));
+  expect(await screen.findByRole("button", { name: /campos precisam de atenção/ })).toBeInTheDocument();
+  expect(screen.getByText("Adicione ao menos uma reserva")).toBeInTheDocument();
+  expect(urls.some((u) => u.startsWith("POST"))).toBe(false);
+});
+
+test("clicar no aviso de atenção leva o foco ao primeiro campo inválido", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+  fireEvent.click(screen.getByRole("button", { name: "Salvar viagem" }));
+  fireEvent.click(await screen.findByRole("button", { name: /campos precisam de atenção/ }));
+  expect(document.activeElement).toHaveAttribute("aria-invalid", "true");
+});
+
+test("painel da viagem é o único lugar com o resumo e o botão de adicionar fica fora dele", async () => {
+  montar();
+  await screen.findByRole("heading", { name: /Nova viagem/ });
+  const painel = screen.getByRole("complementary", { name: "Resumo da viagem" });
+  expect(within(painel).queryByRole("button", { name: "+ Adicionar reserva" })).toBeNull();
 });
 
 test("Ctrl+Enter adiciona um card de reserva", async () => {
