@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, useLocation } from "react-router";
 import { chavesAuditoria } from "@/api/auditoria";
 import { chaves } from "@/api/viagens";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
@@ -27,9 +27,8 @@ const auth: AuthValue = {
   recarregar: () => Promise.resolve(),
 };
 
-function montar(caminho = "/viagens/v1") {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const wrapper = ({ children }: { children: ReactNode }) =>
+function embrulho(caminho: string, qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
+  return ({ children }: { children: ReactNode }) =>
     createElement(
       QueryClientProvider,
       { client: qc },
@@ -39,7 +38,11 @@ function montar(caminho = "/viagens/v1") {
         createElement(MemoryRouter, { initialEntries: [caminho] }, children),
       ),
     );
-  return { qc, ...renderHook(() => useViagem("v1"), { wrapper }) };
+}
+
+function montar(caminho = "/viagens/v1") {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return { qc, ...renderHook(() => useViagem("v1"), { wrapper: embrulho(caminho, qc) }) };
 }
 
 beforeEach(() => {
@@ -64,8 +67,18 @@ test("?tab=pendencias seleciona a tab", async () => {
   expect(result.current.reservaAberta).toBeUndefined();
 });
 
+test("sem ?tab a tab inicial é reservas; ?tab=resumo (link antigo) também cai em reservas", async () => {
+  const { result } = montar("/viagens/v1?tab=resumo");
+  await waitFor(() => {
+    expect(result.current.viagem).toBeDefined();
+  });
+  expect(result.current.tab).toBe("reservas");
+  const semTab = montar("/viagens/v1");
+  expect(semTab.result.current.tab).toBe("reservas");
+});
+
 test("?reserva=<id> força a tab reservas e marca o card a abrir", async () => {
-  const { result } = montar("/viagens/v1?tab=resumo&reserva=r2");
+  const { result } = montar("/viagens/v1?tab=financeiro&reserva=r2");
   await waitFor(() => {
     expect(result.current.viagem).toBeDefined();
   });
@@ -83,6 +96,21 @@ test("setTab troca a tab e limpa ?reserva", async () => {
   });
   expect(result.current.tab).toBe("financeiro");
   expect(result.current.reservaAberta).toBeUndefined();
+});
+
+test("setTab grava tab=financeiro na URL e setTab(reservas) remove tab", () => {
+  const { result } = renderHook(() => ({ v: useViagem("v1"), search: useLocation().search }), {
+    wrapper: embrulho("/viagens/v1"),
+  });
+  act(() => {
+    result.current.v.setTab("financeiro");
+  });
+  expect(result.current.search).toBe("?tab=financeiro");
+  act(() => {
+    result.current.v.setTab("reservas");
+  });
+  expect(result.current.search).toBe("");
+  expect(result.current.v.tab).toBe("reservas");
 });
 
 test("aplicar(dto) atualiza o cache e a próxima leitura", async () => {

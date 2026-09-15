@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import type { ViagemDto } from "@/api/viagens";
+import { chaves, type ViagemDto } from "@/api/viagens";
 import { AuthContext, type AuthValue } from "@/auth/AuthProvider";
 import { formatarCarimbo } from "@/lib/datas";
 import { VIAGEM } from "./fixtures";
@@ -28,6 +28,7 @@ function autorizacao(permitido: (p: string) => boolean): AuthValue {
 }
 
 let viagem: ViagemDto = VIAGEM;
+const VIAGEM_2: ViagemDto = { ...VIAGEM, id: "v2", codigo: "VG-2026-0043" };
 
 function montar(entrada = "/viagens/v1", pode: (p: string) => boolean = () => true) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -41,6 +42,7 @@ function montar(entrada = "/viagens/v1", pode: (p: string) => boolean = () => tr
       </AuthContext.Provider>
     </QueryClientProvider>,
   );
+  return { qc, router };
 }
 
 beforeEach(() => {
@@ -52,6 +54,7 @@ beforeEach(() => {
     if (url.includes("/auditoria")) return Promise.resolve(resposta(200, []));
     if (url.includes("/usuarios/vendedores")) return Promise.resolve(resposta(200, []));
     if (url.endsWith("/viagens/v1")) return Promise.resolve(resposta(200, viagem));
+    if (url.endsWith("/viagens/v2")) return Promise.resolve(resposta(200, VIAGEM_2));
     return Promise.resolve(resposta(200, []));
   });
 });
@@ -63,7 +66,7 @@ afterEach(() => {
 test("cabeçalho traz titular · destino, código e período", async () => {
   montar();
   expect(await screen.findByRole("heading", { name: /Carlos Mendes · Lisboa/ })).toBeInTheDocument();
-  expect(screen.getByText("VG-2026-0042")).toBeInTheDocument();
+  expect(screen.getByRole("navigation", { name: "Trilha" })).toHaveTextContent("VG-2026-0042");
   expect(
     screen.getByText("18–28/04/2026 · Internacional · 2 passageiros · Vendedor: Ana Paula · Agente: Guilherme"),
   ).toBeInTheDocument();
@@ -78,17 +81,71 @@ test("badge financeiro do cabeçalho traz o prefixo Comissão e explica o que re
   );
 });
 
-test("faixa do resumo mostra o resultado da viagem", async () => {
+test("painel lateral mostra o resultado da viagem", async () => {
   montar();
-  expect(await screen.findByText("R$ 1.640,00")).toBeInTheDocument();
-  expect(screen.getByText("R$ 13.700,00")).toBeInTheDocument();
+  const painel = await screen.findByRole("complementary", { name: "Resumo da viagem" });
+  expect(within(painel).getByText("R$ 1.640,00")).toBeInTheDocument();
+  expect(within(painel).getByText("R$ 13.700,00")).toBeInTheDocument();
+});
+
+test("abas começam em Reservas, sem Resumo e sem Subnav", async () => {
+  montar();
+  await screen.findByRole("tab", { name: /Reservas/ });
+  expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual([
+    expect.stringMatching(/^Reservas/),
+    "Financeiro",
+    expect.stringMatching(/^Pendências/),
+    expect.stringMatching(/^Documentos/),
+    "Timeline",
+  ]);
+  expect(screen.queryByRole("tab", { name: /Resumo/ })).toBeNull();
+  expect(screen.getByRole("tab", { name: /Reservas/ })).toHaveAttribute("aria-selected", "true");
+  expect(screen.queryByRole("navigation", { name: "Seções do módulo" })).toBeNull();
+});
+
+test("Ver todas do painel troca para a aba Pendências", async () => {
+  montar();
+  const painel = await screen.findByRole("complementary", { name: "Resumo da viagem" });
+  fireEvent.click(within(painel).getByRole("button", { name: "Ver todas" }));
+  expect(screen.getByRole("tab", { name: /Pendências/ })).toHaveAttribute("aria-selected", "true");
 });
 
 test("aba Reservas mostra os dois cards", async () => {
-  montar("/viagens/v1?tab=reservas");
-  expect(await screen.findByText("Reserva 1")).toBeInTheDocument();
-  expect(screen.getByText("Reserva 2")).toBeInTheDocument();
+  montar();
+  expect(await screen.findByLabelText("Reserva 1")).toBeInTheDocument();
+  expect(screen.getByLabelText("Reserva 2")).toBeInTheDocument();
   expect(screen.getByRole("tab", { name: /Reservas/ })).toHaveTextContent("2");
+});
+
+test("?reserva= com a aba Reservas já montada expande o card sem fechar os abertos", async () => {
+  const { router } = montar("/viagens/v1?reserva=r1");
+  const reserva1 = await screen.findByRole("region", { name: "Reserva 1" });
+  expect(within(reserva1).getByRole("button", { name: "Recolher" })).toBeInTheDocument();
+  const reserva2 = screen.getByRole("region", { name: "Reserva 2" });
+  expect(within(reserva2).getByRole("button", { name: "Expandir" })).toBeInTheDocument();
+
+  await act(() => router.navigate("/viagens/v1?reserva=r2"));
+
+  expect(
+    within(screen.getByRole("region", { name: "Reserva 2" })).getByRole("button", { name: "Recolher" }),
+  ).toBeInTheDocument();
+  expect(
+    within(screen.getByRole("region", { name: "Reserva 1" })).getByRole("button", { name: "Recolher" }),
+  ).toBeInTheDocument();
+});
+
+test("trocar de viagem (já em cache) descarta o card duplicado", async () => {
+  const { qc, router } = montar("/viagens/v1?reserva=r1");
+  qc.setQueryData(chaves.viagem("v2"), VIAGEM_2);
+  const reserva1 = await screen.findByRole("region", { name: "Reserva 1" });
+  fireEvent.click(within(reserva1).getByRole("button", { name: "Mais ações da reserva" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Duplicar" }));
+  expect(screen.getByRole("button", { name: "Salvar reserva" })).toBeInTheDocument();
+
+  await act(() => router.navigate("/viagens/v2"));
+
+  expect(await screen.findByRole("navigation", { name: "Trilha" })).toHaveTextContent("VG-2026-0043");
+  expect(screen.queryByRole("button", { name: "Salvar reserva" })).toBeNull();
 });
 
 test("com reserva cancelada, a aba Reservas mostra Ativas N · Total M", async () => {
@@ -99,13 +156,14 @@ test("com reserva cancelada, a aba Reservas mostra Ativas N · Total M", async (
 
 test("sem auditoria.ver a aba Timeline não aparece", async () => {
   montar("/viagens/v1", (p) => p !== "auditoria.ver");
-  await screen.findByRole("tab", { name: /Resumo/ });
+  await screen.findByRole("tab", { name: /Reservas/ });
   expect(screen.queryByRole("tab", { name: /Timeline/ })).toBeNull();
 });
 
 test("Cancelar viagem… abre o modal", async () => {
   montar();
-  fireEvent.click(await screen.findByRole("button", { name: "Cancelar viagem…" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Mais ações" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Cancelar viagem…" }));
   expect(await screen.findByRole("dialog")).toHaveTextContent("Cancelar viagem");
 });
 

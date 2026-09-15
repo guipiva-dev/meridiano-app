@@ -10,9 +10,9 @@ import { type ItemRecebimento, ReceberModal } from "@/components/financeiro";
 import { FaixaResumo, type ItemFaixa } from "@/components/viagem";
 import { formatarData } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
+import { Bloco, TOOLTIP_RECEBIDA } from "./Bloco";
 import { DespesasViagem } from "./DespesasViagem";
 import { MovimentosViagem } from "./MovimentosViagem";
-import { Bloco, TOOLTIP_RECEBIDA } from "./ResumoTab";
 import s from "./Viagem.module.css";
 
 /** Financeiro da viagem (R10): faixa de resumo, atalho de recebimento, movimentos de caixa e

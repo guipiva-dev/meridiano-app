@@ -1,12 +1,12 @@
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--space-4);
   margin: 0;
 }
-@media (max-width: 1280px) {
+@media not all and (min-width: 1280px) {
   .grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 .item {
@@ -30,6 +30,10 @@
 }
 .mono {
   font: var(--type-code);
+}
+/* Badge como primeiro valor: o texto alinha com o rótulo (o badge neutro não tem fundo visível sobre o corpo). */
+.valor > span:first-child {
+  margin-inline-start: calc(-1 * var(--space-2));
 }
 .cancelamento {
   display: flex;
@@ -66,7 +70,21 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  justify-content: flex-end;
+  justify-content: flex-start;
+  align-items: center;
   border-top: 1px solid var(--card-border);
   padding-top: var(--space-4);
+}
+.secao {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.historicoDetalhes summary {
+  font: var(--type-label);
+  color: var(--color-text-link);
+  cursor: pointer;
+}
+.historicoDetalhes[open] summary {
+  margin-bottom: var(--space-2);
 }

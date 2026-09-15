@@ -26,7 +26,8 @@ test.describe("viagens", () => {
 
     await page.getByRole("tab", { name: /Reservas/ }).click();
     await page.getByRole("button", { name: "Expandir" }).first().click();
-    await page.getByRole("button", { name: "Cancelar reserva…" }).first().click();
+    await page.getByRole("button", { name: "Mais ações da reserva" }).first().click();
+    await page.getByRole("menuitem", { name: "Cancelar reserva…" }).click();
 
     const modal = page.getByRole("dialog");
     await modal.getByLabel("Motivo").fill("cliente desistiu");
