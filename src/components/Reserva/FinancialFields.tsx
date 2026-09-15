@@ -3,6 +3,7 @@ import { FORMAS_PAGAMENTO, type FormaPagamento, ROTULO_FORMA } from "@/api/viage
 import { Field, Input, MoneyInput, useField } from "@/components";
 import { Chip } from "@/components/display";
 import { comissaoPorPercentual, parsearPercentual, percentualDaComissao } from "@/lib/comissao";
+import { cx } from "@/lib/cx";
 import s from "./Reserva.module.css";
 import type { ReservaForm } from "./tipos";
 
@@ -112,7 +113,7 @@ export function FinancialFields({
     value.comissaoSugerida && percentualSugerido !== null ? `Sugerido: ${percentualSugerido} %` : undefined;
 
   return (
-    <div className="grid-form">
+    <div className={cx("grid-form", s.alinhaBase)}>
       <Field
         label="Total da reserva"
         className="span-3"

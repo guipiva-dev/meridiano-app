@@ -62,12 +62,14 @@ export function ReservationCard({
             </span>
           )}
         </span>
-        <span className={s.valor}>
-          <MoneyValue value={value.valorCliente} />
+        <span className={s.valores}>
+          <span className={s.valor}>
+            <MoneyValue value={value.valorCliente} />
+          </span>
+          <small className={s.receita}>
+            receita <MoneyValue value={resultado.receitaPrevista} />
+          </small>
         </span>
-        <small className={s.receita}>
-          receita <MoneyValue value={resultado.receitaPrevista} />
-        </small>
         <Button
           variant="tertiary"
           size="sm"

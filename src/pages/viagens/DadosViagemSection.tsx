@@ -104,7 +104,7 @@ export function DadosViagemSection({
         <Field label="Tipo" className="span-2">
           <Select options={TIPOS} {...form.register("tipo")} />
         </Field>
-        <Field label="Ida" required className="span-2" error={erros.dataIda}>
+        <Field label="Ida" required className="span-3" error={erros.dataIda}>
           <DateInput {...form.register("dataIda")} />
         </Field>
         <Field
@@ -116,7 +116,7 @@ export function DadosViagemSection({
         >
           <DateInput {...form.register("dataVolta")} />
         </Field>
-        <Field label="Vendedor" required className="span-5" error={erros.vendedorId}>
+        <Field label="Vendedor" required className="span-4" error={erros.vendedorId}>
           <Select
             options={vendedores.map((v) => ({ value: v.id, label: v.nome }))}
             placeholder="Selecione"

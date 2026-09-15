@@ -56,7 +56,7 @@ export function BookingFields({
           </Button>
         </div>
       </Field>
-      <Field label="Localizador" className="span-3" error={erros.localizador}>
+      <Field label="Localizador" className="span-2" error={erros.localizador}>
         <Input
           className={s.mono}
           value={value.localizador}
@@ -67,7 +67,7 @@ export function BookingFields({
           }}
         />
       </Field>
-      <Field label="Data da compra" className="span-2" error={erros.dataCompra}>
+      <Field label="Data da compra" className="span-3" error={erros.dataCompra}>
         <DateInput
           value={value.dataCompra}
           readOnly={readOnly}
