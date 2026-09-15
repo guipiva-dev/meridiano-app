@@ -1,0 +1,101 @@
+.painel {
+  position: sticky;
+  top: calc(var(--topbar-h) + var(--topo-h, 0px) + var(--space-4));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.bloco {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.bloco + .bloco {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+.titulo {
+  margin: 0;
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.kpis {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+.kpi {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+.kpi dt {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--type-body);
+  color: var(--color-text-secondary);
+}
+.kpi dd {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  font: var(--type-label);
+  font-variant-numeric: tabular-nums;
+}
+.destaque {
+  padding-block: var(--space-3);
+  border-block: 1px solid var(--color-border);
+}
+.destaque dd {
+  font: var(--type-section);
+}
+.nota {
+  margin: 0;
+  font: var(--type-helper);
+  color: var(--color-text-muted);
+}
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.itemTexto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.itemTitulo {
+  font: var(--type-label);
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+.itemMeta {
+  font: var(--type-helper);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+@media not all and (min-width: 1280px) {
+  .painel {
+    position: static;
+  }
+}

@@ -8,8 +8,8 @@ import { Button, MoneyValue, StatusCell } from "@/components";
 import { DespesaModal, ExcluirDespesaModal, PagarDespesaModal } from "@/components/financeiro";
 import { apresentacaoStatus } from "@/dominio/status";
 import { formatarData } from "@/lib/datas";
+import { Bloco } from "./Bloco";
 import fs from "./FinanceiroTab.module.css";
-import { Bloco } from "./ResumoTab";
 import s from "./Viagem.module.css";
 
 type ModalDespesa =
