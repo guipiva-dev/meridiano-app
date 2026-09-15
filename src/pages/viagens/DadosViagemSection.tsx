@@ -160,7 +160,7 @@ export function DadosViagemSection({
           </>
         )}
         <details className={s.mais}>
-          <summary>+ mais campos (ocasião, observações)</summary>
+          <summary>Ocasião e observações</summary>
           <div className="grid-form">
             <Field label="Ocasião" className="span-4">
               <Input autoComplete="off" placeholder="Lua de mel, aniversário…" {...form.register("ocasiao")} />
