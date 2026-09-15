@@ -34,6 +34,19 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+/** Datas + 1 reserva completa: o mínimo para `validar` deixar passar até a chamada da API. */
+function comDatasEReserva(result: ReturnType<typeof montar>["result"], destino?: string) {
+  act(() => {
+    if (destino) result.current.form.setValue("destino", destino);
+    result.current.form.setValue("dataIda", "2026-04-18");
+    result.current.form.setValue("dataVolta", "2026-04-28");
+    result.current.adicionarReserva();
+  });
+  act(() => {
+    result.current.atualizarReserva(0, { fornecedorId: "f1", valorTotal: 1000, valorCliente: 1000 });
+  });
+}
+
 test("escolher fornecedor com 10% e total 3000 pré-preenche a comissão em 300", async () => {
   const { result } = montar();
   await esperar.fornecedores(result);
@@ -88,7 +101,7 @@ test("salvar cria a viagem com o request certo e navega para a edição", async 
       destino: "Lisboa",
       tipo: "internacional",
       dataIda: "2026-04-18",
-      dataVolta: null,
+      dataVolta: "2026-04-28",
       vendedorId: "u1",
       vendedorNome: "Ana",
       agenteId: "u1",
@@ -107,16 +120,10 @@ test("salvar cria a viagem com o request certo e navega para a edição", async 
   act(() => {
     result.current.form.setValue("destino", " Lisboa ");
     result.current.form.setValue("dataIda", "2026-04-18");
+    result.current.form.setValue("dataVolta", "2026-04-28");
     result.current.form.setValue("passageiros", [{ clienteId: "c1", nome: "Carlos", titular: true }]);
-  });
-  act(() => {
     result.current.adicionarReserva();
-  });
-  act(() => {
-    result.current.atualizarReserva(0, {
-      fornecedorId: "f1",
-      valorCliente: 3200,
-    });
+    result.current.atualizarReserva(0, { fornecedorId: "f1", valorCliente: 3200 });
   });
 
   let ok = false;
@@ -129,7 +136,7 @@ test("salvar cria a viagem com o request certo e navega para a edição", async 
   expect(post?.corpo).toMatchObject({
     destino: "Lisboa",
     dataIda: "2026-04-18",
-    dataVolta: null,
+    dataVolta: "2026-04-28",
     vendedorId: "u1",
     agenteId: "u1",
     ocasiao: null,
@@ -156,6 +163,7 @@ test("422 titular_obrigatorio vira erro do campo passageiros", async () => {
     result.current.form.setValue("destino", "Lisboa");
     result.current.form.setValue("passageiros", [{ clienteId: "c1", nome: "Carlos", titular: false }]);
   });
+  comDatasEReserva(result);
 
   let ok = true;
   await act(async () => {
@@ -310,9 +318,7 @@ test("erro local some ao corrigir o campo; erro da API some ao alterar o campo",
   expect(result.current.erros.passageiros).toBeUndefined();
   expect(result.current.erros.destino).toBe("Informe o destino");
 
-  act(() => {
-    result.current.form.setValue("destino", "Lisboa");
-  });
+  comDatasEReserva(result, "Lisboa");
   await act(async () => {
     await result.current.salvar();
   });

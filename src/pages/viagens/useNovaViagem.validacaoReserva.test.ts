@@ -105,6 +105,12 @@ test("422 esperado_negativo (sem índice de reserva) vira Alert de bloco, não �
   act(() => {
     result.current.form.setValue("destino", "Lisboa");
     result.current.form.setValue("passageiros", [{ clienteId: "c1", nome: "Carlos", titular: true }]);
+    result.current.form.setValue("dataIda", "2026-04-18");
+    result.current.form.setValue("dataVolta", "2026-04-28");
+    result.current.adicionarReserva();
+  });
+  act(() => {
+    result.current.atualizarReserva(0, { fornecedorId: "f1", valorTotal: 1000, valorCliente: 1000 });
   });
 
   let ok = true;
