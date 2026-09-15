@@ -39,7 +39,7 @@
   font-variant-numeric: tabular-nums;
 }
 .money.calculated {
-  padding-right: calc(var(--space-3) + 4.5em);
+  padding-right: calc(var(--space-2) + 5.25rem);
 }
 .check {
   display: inline-flex;
@@ -57,6 +57,7 @@
 }
 .wrap {
   position: relative;
+  container-type: inline-size;
 }
 .erro {
   display: block;
@@ -74,4 +75,12 @@
   text-transform: uppercase;
   color: var(--color-text-muted);
   pointer-events: none;
+}
+@container (max-width: 220px) {
+  .money.calculated {
+    padding-right: var(--space-3);
+  }
+  .calcBadge {
+    display: none;
+  }
 }

@@ -149,7 +149,12 @@
   flex: 1;
 }
 .alinhaBase {
-  align-items: end;
+  align-items: start;
+}
+.alinhaBase > * > label {
+  display: flex;
+  align-items: flex-end;
+  min-height: 2.6em; /* 2 linhas de --type-label (line-height 1.3): comporta label longo e mantém base alinhada com/sem helper */
 }
 .mais {
   grid-column: span 12;
