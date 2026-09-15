@@ -126,6 +126,7 @@ export function FinancialFields({
         label="Total cobrado do cliente"
         className="span-3"
         tooltip="Quanto o cliente pagou no total. Começa igual ao total da reserva; mude se cobrou a mais (RAV) ou deu desconto."
+        helper={value.vendaSugerida && !readOnly ? "Igual ao total da reserva" : undefined}
         error={erros.valorCliente}
       >
         <MoneyInput
