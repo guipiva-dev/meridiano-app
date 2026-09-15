@@ -1,16 +1,17 @@
 .page {
-  padding: var(--space-6);
+  padding: var(--space-8);
   max-width: var(--content-max);
   width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-6);
 }
 .head {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-4);
+  gap: var(--space-6);
+  padding-bottom: var(--space-2);
   flex-wrap: wrap;
 }
 .head > * {
@@ -18,6 +19,7 @@
 }
 .titulo {
   font: var(--type-page);
+  letter-spacing: -0.025em;
   color: var(--color-text-heading);
   display: flex;
   align-items: center;
@@ -31,12 +33,12 @@
 .subtitulo {
   font: var(--type-body);
   color: var(--color-text-secondary);
-  margin-top: var(--space-1);
+  margin-top: var(--space-2);
 }
 .acoes {
   margin-left: auto;
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-3);
   align-items: center;
 }
 .dirty {

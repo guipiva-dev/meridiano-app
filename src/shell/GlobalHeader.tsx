@@ -1,6 +1,6 @@
 import { LogOut, Menu, Plus, Search } from "lucide-react";
 import { useRef } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { mensagemDeErro } from "@/api/http";
 import { useAuth } from "@/auth/useAuth";
 import { Button, IconButton } from "@/components";
@@ -13,6 +13,7 @@ import { SIDEBAR_ID } from "./Sidebar";
 export function GlobalHeader({ onMenu, menuAberto }: { onMenu: () => void; menuAberto: boolean }) {
   const { me, pode, sair } = useAuth();
   const nav = useNavigate();
+  const loc = useLocation();
   const busca = useRef<HTMLInputElement>(null);
   useAtalho("ctrl+k", () => busca.current?.focus());
   return (
@@ -30,7 +31,7 @@ export function GlobalHeader({ onMenu, menuAberto }: { onMenu: () => void; menuA
         <BuscaGlobal ref={busca} />
         <kbd className={s.kbd}>Ctrl K</kbd>
       </div>
-      {pode("viagem.criar") && (
+      {pode("viagem.criar") && !loc.pathname.startsWith("/viagens") && (
         <Button variant="secondary" icon={<Plus size={16} />} onClick={() => void nav("/viagens/nova")}>
           Nova viagem
         </Button>

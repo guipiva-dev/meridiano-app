@@ -24,9 +24,9 @@
   --red-600:   #d64545;
   --red-100:   #fbe2e2;
   --n-0:   #ffffff;
-  --n-50:  #f5f6fa;
-  --n-100: #eceef4;
-  --n-200: #e4e7ec;
+  --n-50:  #f7f8fb;
+  --n-100: #eef0f5;
+  --n-200: #e1e5ed;
   --n-300: #cdd1dc;
   --n-400: #9ea3ba;
   --n-500: #5f637f;   /* 5,6:1 sobre branco */
@@ -156,15 +156,15 @@
   --card-radius: var(--radius-lg);
   --card-pad:    var(--space-6);
 
-  --sidebar-w:      220px;
+  --sidebar-w:      232px;
   --sidebar-bg:     var(--navy-800);
   --sidebar-text:   #d5d6ea;
-  --sidebar-active: var(--orange-600);
+  --sidebar-active: var(--navy-700);
   --sidebar-hover:  var(--navy-700);
-  --sidebar-row-h:  42px;
-  --sidebar-gap:    10px;
+  --sidebar-row-h:  44px;
+  --sidebar-gap:    12px;
   --sidebar-pad-x:  16px;
-  --topbar-h:       56px;
+  --topbar-h:       64px;
   --content-max:    1400px;
 
   --toast-bg:   var(--navy-800);
