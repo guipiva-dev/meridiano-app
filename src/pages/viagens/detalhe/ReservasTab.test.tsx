@@ -107,7 +107,8 @@ test("X01: viagem cancelada não oferece Usar crédito… mesmo com crédito dis
 test("Cancelar reserva… no card 1 abre o modal daquela reserva", () => {
   montar();
   fireEvent.click(screen.getAllByRole("button", { name: "Expandir" })[0]!);
-  fireEvent.click(screen.getByRole("button", { name: "Cancelar reserva…" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mais ações da reserva" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Cancelar reserva…" }));
   expect(screen.getByRole("dialog")).toHaveTextContent("Cancelar reserva 1");
 });
 
@@ -125,7 +126,8 @@ test("Duplicar abre nova reserva com fornecedor e valor total, localizador vazio
   });
   montar();
   fireEvent.click(screen.getAllByRole("button", { name: "Expandir" })[0]!);
-  fireEvent.click(screen.getByRole("button", { name: "Duplicar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mais ações da reserva" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Duplicar" }));
 
   const nova = screen.getByRole("region", { name: `Reserva ${VIAGEM.reservas.length + 1}` });
   const localizador = within(nova).getByLabelText("Localizador");
@@ -159,7 +161,8 @@ test("§9: localizador já usado (fornecedor+localizador) mostra aviso na reserv
   });
   montar();
   fireEvent.click(screen.getAllByRole("button", { name: "Expandir" })[0]!);
-  fireEvent.click(screen.getByRole("button", { name: "Duplicar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mais ações da reserva" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Duplicar" }));
   const nova = screen.getByRole("region", { name: `Reserva ${VIAGEM.reservas.length + 1}` });
   fireEvent.change(within(nova).getByLabelText("Localizador"), { target: { value: "K7X2PQ" } });
   expect(await within(nova).findByText("Este localizador já está na viagem V-0009.")).toBeInTheDocument();
@@ -191,7 +194,8 @@ test("reserva cancelada também pode ser duplicada", () => {
   montar([], { ...VIAGEM, reservas: [cancelada] });
   fireEvent.click(screen.getByRole("button", { name: "Expandir" }));
   expect(screen.queryByRole("button", { name: "Editar" })).toBeNull();
-  expect(screen.getByRole("button", { name: "Duplicar" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Mais ações da reserva" }));
+  expect(screen.getByRole("menuitem", { name: "Duplicar" })).toBeInTheDocument();
 });
 
 /** F03: sinaliza para `useNovaViagem` abrir já com uma reserva em branco, sem precisar clicar de novo lá. */

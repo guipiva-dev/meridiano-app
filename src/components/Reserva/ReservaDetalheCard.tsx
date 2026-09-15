@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronDown } from "lucide-react";
 import { type ReactNode, useId, useState } from "react";
 import { useParams } from "react-router";
 import { mensagemDeErro } from "@/api/http";
@@ -14,15 +15,17 @@ import {
 import { Button, MoneyValue } from "@/components";
 import { Alert, StatusBadge } from "@/components/display";
 import { Skeleton } from "@/components/feedback";
+import { type ItemMenu, MenuAcoes } from "@/components/Menu/MenuAcoes";
 import { ListaServicos } from "@/components/servicos";
 import { useOperacao } from "@/components/ViagemOperacoes/useOperacao";
+import { calcularReserva } from "@/dominio/calculoReserva";
+import { cx } from "@/lib/cx";
 import { formatarCarimbo, formatarData } from "@/lib/datas";
 import { formatarDinheiro } from "@/lib/dinheiro";
 import { aplicarViagem } from "@/pages/viagens/detalhe/useViagem";
 import r from "./Reserva.module.css";
 import s from "./ReservaDetalhe.module.css";
-import { ResultSummary } from "./ResultSummary";
-import { deDto } from "./tipos";
+import { deDto, paraValoresReserva } from "./tipos";
 
 interface ReservaDetalheCardProps {
   indice: number;
@@ -48,7 +51,7 @@ function Leitura({ rotulo, children }: { rotulo: string; children: ReactNode }) 
   );
 }
 
-function Historico({ reservaId }: { reservaId: string }) {
+function HistoricoLista({ reservaId }: { reservaId: string }) {
   const q = useQuery({ queryKey: chaves.alteracoes(reservaId), queryFn: () => viagensApi.alteracoes(reservaId) });
   if (q.isPending) return <Skeleton lines={2} />;
   if (q.isError) return <Alert tone="danger">{mensagemDeErro(q.error)}</Alert>;
@@ -72,6 +75,21 @@ function Historico({ reservaId }: { reservaId: string }) {
         </div>
       ))}
     </div>
+  );
+}
+
+function Historico({ reservaId }: { reservaId: string }) {
+  const [aberto, setAberto] = useState(false);
+  return (
+    <details
+      className={s.historicoDetalhes}
+      onToggle={(e) => {
+        setAberto(e.currentTarget.open);
+      }}
+    >
+      <summary>Histórico de alterações</summary>
+      {aberto && <HistoricoLista reservaId={reservaId} />}
+    </details>
   );
 }
 
@@ -114,29 +132,56 @@ export function ReservaDetalheCard({
   const servicos = reserva.tiposServico.map((t) => ROTULO_SERVICO[t]).join(" · ");
   const formas = reserva.formasPagamento.map((f) => ROTULO_FORMA[f]).join(" · ");
 
+  const itensMenu: ItemMenu[] = [
+    ...(podeEditar && !cancelada
+      ? [
+          { label: "Remarcar…", onClick: onRemarcar },
+          { label: "NFSe…", onClick: onNfse },
+        ]
+      : []),
+    ...(onDuplicar ? [{ label: "Duplicar", onClick: onDuplicar }] : []),
+    ...(podeEditar && !cancelada ? [{ label: "Cancelar reserva…", onClick: onCancelar, tone: "danger" as const }] : []),
+  ];
+  const r0 = deDto(reserva);
+  const calc = calcularReserva(paraValoresReserva(r0));
+
   return (
-    <section aria-labelledby={idTitulo} className={r.card}>
-      <header className={r.header}>
-        <span id={idTitulo} className={r.numId}>
-          Reserva {indice}
+    <section aria-labelledby={idTitulo} className={cx(r.reserva, aberta && r.aberta, cancelada && r.cancelada)}>
+      <header className={r.linha}>
+        <span id={idTitulo} className={r.num} aria-label={`Reserva ${indice}`}>
+          {indice}
         </span>
-        <span className={r.fornecedor}>{reserva.fornecedorNome}</span>
-        {reserva.localizador && <span className={r.localizador}>{reserva.localizador}</span>}
-        <StatusBadge entidade="reserva" valor={reserva.status} />
-        {servicos && <span className={r.servicos}>{servicos}</span>}
-        {verValores && (
-          <span className={r.total}>
-            <MoneyValue value={reserva.valorCliente ?? null} />
-            <small className={r.receitaSmall}>receita {formatarDinheiro(reserva.receitaPrevista ?? 0)}</small>
-          </span>
-        )}
-        <Button variant="tertiary" size="sm" aria-expanded={aberta} onClick={onToggle}>
+        <span className={r.quem}>
+          <span className={r.fornecedor}>{reserva.fornecedorNome}</span>
+          {servicos && <span className={r.servicos}>{servicos}</span>}
+        </span>
+        <span className={r.localizador}>{reserva.localizador}</span>
+        <span className={r.status}>
+          <StatusBadge entidade="reserva" valor={reserva.status} />
+        </span>
+        <span className={r.valores}>
+          {verValores && (
+            <>
+              <span className={r.valor}>
+                <MoneyValue value={reserva.valorCliente ?? null} />
+              </span>
+              <small className={r.receita}>receita {formatarDinheiro(reserva.receitaPrevista ?? 0)}</small>
+            </>
+          )}
+        </span>
+        <Button
+          variant="tertiary"
+          size="sm"
+          aria-expanded={aberta}
+          icon={<ChevronDown size={16} className={cx(r.chevron, aberta && r.chevronAberto)} />}
+          onClick={onToggle}
+        >
           {aberta ? "Recolher" : "Expandir"}
         </Button>
       </header>
 
       {aberta && (
-        <div className={r.body}>
+        <div className={r.corpo}>
           <div className={s.grid}>
             <Leitura rotulo="Data da compra">{formatarData(reserva.dataCompra)}</Leitura>
             <Leitura rotulo="NFSe">
@@ -154,10 +199,20 @@ export function ReservaDetalheCard({
           </div>
 
           {verValores && (
-            <div className={r.group}>
-              <div className={r.eyebrow}>Resultado desta reserva</div>
-              <ResultSummary value={deDto(reserva)} />
-            </div>
+            <p className={r.resultado} aria-label="Resultado desta reserva">
+              <span>
+                RAV <MoneyValue value={calc.ravCliente} />
+              </span>
+              <span aria-hidden>·</span>
+              <span>
+                Total da comissão <MoneyValue value={calc.totalComissao} />
+              </span>
+              <span aria-hidden>·</span>
+              <span className={r.resultadoReceita}>
+                Receita da agência{" "}
+                <MoneyValue value={reserva.receitaPrevista ?? calc.receitaPrevista} emphasis="result" />
+              </span>
+            </p>
           )}
 
           {cancelada && (
@@ -178,15 +233,12 @@ export function ReservaDetalheCard({
             </div>
           )}
 
-          <div className={r.group}>
-            <div className={r.eyebrow}>Serviços</div>
+          <div className={s.secao}>
+            <span className={s.rotulo}>Serviços</span>
             <ListaServicos reserva={reserva} podeEditar={podeEditar && !cancelada} />
           </div>
 
-          <div className={r.group}>
-            <div className={r.eyebrow}>Histórico de alterações</div>
-            <Historico reservaId={reserva.id} />
-          </div>
+          <Historico reservaId={reserva.id} />
 
           {podeEditar && !cancelada && (
             <>
@@ -200,7 +252,8 @@ export function ReservaDetalheCard({
               )}
             </>
           )}
-          {((podeEditar && !cancelada) || onDuplicar) && (
+
+          {((podeEditar && !cancelada) || itensMenu.length > 0) && (
             <div className={s.acoes}>
               {podeEditar && !cancelada && (
                 <>
@@ -217,24 +270,9 @@ export function ReservaDetalheCard({
                   <Button variant="secondary" size="sm" onClick={onEditar}>
                     Editar
                   </Button>
-                  <Button variant="secondary" size="sm" onClick={onRemarcar}>
-                    Remarcar…
-                  </Button>
-                  <Button variant="secondary" size="sm" onClick={onNfse}>
-                    NFSe…
-                  </Button>
                 </>
               )}
-              {onDuplicar && (
-                <Button variant="secondary" size="sm" onClick={onDuplicar}>
-                  Duplicar
-                </Button>
-              )}
-              {podeEditar && !cancelada && (
-                <Button variant="danger" size="sm" onClick={onCancelar}>
-                  Cancelar reserva…
-                </Button>
-              )}
+              <MenuAcoes label="Mais ações da reserva" itens={itensMenu} />
             </div>
           )}
         </div>

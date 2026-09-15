@@ -7,6 +7,7 @@ import { ConflictError, ValidationError } from "@/api/errors";
 import type * as ViagensApi from "@/api/viagens";
 import { chaves, type ReservaDto, type StatusReservaRequest, type ViagemDto } from "@/api/viagens";
 import { chaveDasPendencias } from "@/components/Pendencias/chave";
+import { RESERVA_1 } from "@/pages/viagens/detalhe/fixtures";
 import { ReservaDetalheCard } from "./ReservaDetalheCard";
 
 const definirStatusReserva = vi.fn<(reservaId: string, r: StatusReservaRequest) => Promise<ViagemDto>>();
@@ -147,13 +148,25 @@ test("aberto mostra o resultado da reserva e as ações", () => {
   montar();
   expect(screen.getByText("Receita da agência").parentElement).toHaveTextContent("R$ 520,00");
   expect(screen.getByText("Histórico de alterações")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Remarcar…" })).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Cancelar reserva…" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Voltar a em emissão" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Mais ações da reserva" })).toBeInTheDocument();
 });
 
 test("histórico não afirma 'sem alterações' antes de a query resolver", async () => {
+  let resolver: (v: Response) => void = () => undefined;
+  vi.stubGlobal(
+    "fetch",
+    () =>
+      new Promise<Response>((res) => {
+        resolver = res;
+      }),
+  );
+  const user = userEvent.setup();
   montar();
+  await user.click(screen.getByText("Histórico de alterações"));
   expect(screen.queryByText("Sem alterações registradas.")).toBeNull();
+  resolver(resposta(200, []));
   expect(await screen.findByText("Sem alterações registradas.")).toBeInTheDocument();
 });
 
@@ -206,6 +219,7 @@ test("sem verValores não mostra receita nem o resultado da reserva", () => {
 });
 
 test("histórico sem valores (vendedor externo) mostra a descrição sem R$", async () => {
+  const user = userEvent.setup();
   vi.stubGlobal("fetch", () =>
     Promise.resolve(
       resposta(200, [
@@ -220,6 +234,7 @@ test("histórico sem valores (vendedor externo) mostra a descrição sem R$", as
     ),
   );
   montar({ verValores: false });
+  await user.click(screen.getByText("Histórico de alterações"));
   expect(await screen.findByText(/Remarcação de datas/)).toBeInTheDocument();
   expect(screen.queryByText(/R\$/)).toBeNull();
 });
@@ -305,4 +320,62 @@ test("sem a viagem no cache mostra erro em vez de silêncio", async () => {
 test("sem podeEditar não mostra o botão de status", () => {
   montar({ reserva: reservaDto({ status: "pendente" }), podeEditar: false });
   expect(screen.queryByRole("button", { name: "Marcar emitida" })).toBeNull();
+});
+
+test("linha recolhida: região traz fornecedor sempre e receita só com verValores", () => {
+  montar({ reserva: RESERVA_1, indice: 1, verValores: true, aberta: false });
+  const region = screen.getByRole("region", { name: "Reserva 1" });
+  expect(region).toHaveTextContent(RESERVA_1.fornecedorNome);
+  expect(region).toHaveTextContent(/receita R\$/);
+  cleanup();
+  montar({ reserva: RESERVA_1, indice: 2, verValores: false, aberta: false });
+  expect(screen.getByRole("region", { name: "Reserva 2" })).not.toHaveTextContent(/receita R\$/);
+});
+
+test("aberta: ações visíveis Marcar emitida e Editar; demais no menu 'Mais ações da reserva'", async () => {
+  const user = userEvent.setup();
+  const onCancelar = vi.fn();
+  montar({ reserva: RESERVA_1, aberta: true, podeEditar: true, onCancelar, onDuplicar: vi.fn() });
+  expect(screen.getByRole("button", { name: "Marcar emitida" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Cancelar reserva…" })).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Mais ações da reserva" }));
+  for (const item of ["Remarcar…", "NFSe…", "Duplicar", "Cancelar reserva…"]) {
+    expect(screen.getByRole("menuitem", { name: item })).toBeInTheDocument();
+  }
+  await user.click(screen.getByRole("menuitem", { name: "Cancelar reserva…" }));
+  expect(onCancelar).toHaveBeenCalledTimes(1);
+});
+
+test("cancelada: sem Marcar emitida/Editar; menu só com Duplicar quando onDuplicar", async () => {
+  const user = userEvent.setup();
+  montar({
+    reserva: { ...RESERVA_1, status: "cancelada" },
+    aberta: true,
+    podeEditar: true,
+    onDuplicar: vi.fn(),
+  });
+  expect(screen.queryByRole("button", { name: "Marcar emitida" })).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Mais ações da reserva" }));
+  expect(screen.getAllByRole("menuitem").map((i) => i.textContent)).toEqual(["Duplicar"]);
+});
+
+test("histórico de alterações só consulta a API ao abrir o details", async () => {
+  const chamadas: string[] = [];
+  vi.stubGlobal("fetch", (url: string) => {
+    chamadas.push(url);
+    return Promise.resolve(resposta(200, []));
+  });
+  const user = userEvent.setup();
+  montar({ reserva: RESERVA_1, aberta: true });
+  expect(chamadas.filter((u) => u.includes("/alteracoes"))).toHaveLength(0);
+  await user.click(screen.getByText("Histórico de alterações"));
+  await waitFor(() => {
+    expect(chamadas.filter((u) => u.includes("/alteracoes")).length).toBeGreaterThan(0);
+  });
+});
+
+test("resultado em texto só com verValores", () => {
+  montar({ reserva: RESERVA_1, aberta: true, verValores: true });
+  expect(screen.getByLabelText("Resultado desta reserva")).toHaveTextContent("Receita da agência");
 });
