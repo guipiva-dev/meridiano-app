@@ -38,7 +38,7 @@
   --color-brand:                 var(--navy-800);
   --color-action:                var(--blue-600);   /* Button primary: salvar, confirmar */
   --color-action-hover:          var(--blue-700);
-  --color-action-business:       var(--orange-600); /* Button business: UMA por tela (Adicionar reserva, Nova viagem) */
+  --color-action-business:       var(--orange-600); /* Button business: ação principal, UMA por tela (Salvar viagem, Nova viagem) */
   --color-action-business-hover: var(--orange-700);
   --color-selected:              var(--navy-800);   /* chip selecionado, item ativo */
 
