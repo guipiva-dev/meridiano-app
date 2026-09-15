@@ -31,19 +31,23 @@
 .principal {
   min-width: 0;
 }
-/* O painel é sticky abaixo do cabeçalho; mais alto que o espaço livre ele rola por dentro,
-   senão o fim da página o arrasta para baixo do cabeçalho. */
-.area > aside {
-  max-height: calc(100vh - var(--topbar-h) - var(--topo-h, 0px) - var(--space-4) - var(--space-8));
-  overflow-y: auto;
-}
 
 /* Aba Reservas: lista única */
 .listaReservas {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--card-radius);
-  overflow: hidden;
+}
+/* Sem overflow: hidden (cortaria o menu de ações da reserva): os cantos vão nos filhos com fundo. */
+.listaReservas > :first-child,
+.listaReservas > :first-child > :first-child {
+  border-top-left-radius: calc(var(--card-radius) - 1px);
+  border-top-right-radius: calc(var(--card-radius) - 1px);
+}
+.listaReservas > :last-child,
+.listaReservas > :last-child > :last-child {
+  border-bottom-left-radius: calc(var(--card-radius) - 1px);
+  border-bottom-right-radius: calc(var(--card-radius) - 1px);
 }
 .adicionar {
   display: flex;
@@ -183,11 +187,9 @@
   .area {
     grid-template-columns: minmax(0, 1fr);
   }
-  /* Abaixo de 1280 o painel sobe para antes das abas. */
-  .area > aside {
+  /* Abaixo de 1280 o painel (ou o skeleton dele) sobe para antes das abas. */
+  .area > :last-child {
     order: -1;
-    max-height: none;
-    overflow-y: visible;
   }
 }
 @media (max-width: 1024px) {

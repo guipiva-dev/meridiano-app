@@ -31,6 +31,10 @@
 .mono {
   font: var(--type-code);
 }
+/* Badge como primeiro valor: o texto alinha com o rótulo (o badge neutro não tem fundo visível sobre o corpo). */
+.valor > span:first-child {
+  margin-inline-start: calc(-1 * var(--space-2));
+}
 .cancelamento {
   display: flex;
   flex-direction: column;
