@@ -3,6 +3,7 @@ import { type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
 import { mensagemDeErro } from "@/api/errors";
 import type { ClienteBuscaDto } from "@/api/viagens";
 import { Button, Field, IconButton, Input } from "@/components";
+import { Badge } from "@/components/display";
 import { cx } from "@/lib/cx";
 import { formatarData } from "@/lib/datas";
 import { formatarCpf, formatarTelefone } from "@/lib/documentos";
@@ -200,6 +201,7 @@ export function PassageirosField({ value, onChange, buscar, onNovaPessoa, erro, 
                     <span className={s.passNome}>{p.nome}</span>
                     {meta && <span className={s.chipMeta}>{meta}</span>}
                   </span>
+                  {p.titular && <Badge tone="neutral">Titular</Badge>}
                   <IconButton
                     label={`Remover ${p.nome}`}
                     icon={<X size={14} />}

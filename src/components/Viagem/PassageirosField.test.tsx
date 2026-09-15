@@ -255,7 +255,7 @@ test("resposta atrasada de busca anterior não sobrescreve as opções da busca 
   vi.useRealTimers();
 });
 
-test("cartão do passageiro mostra iniciais (ignora tokens numéricos), documento e nascimento; sem badge de titular", () => {
+test("cartão do passageiro mostra iniciais (ignora tokens numéricos), documento e nascimento; badge só no titular", () => {
   const value = [
     {
       clienteId: "1",
@@ -274,6 +274,7 @@ test("cartão do passageiro mostra iniciais (ignora tokens numéricos), document
   expect(itens[0]).toHaveTextContent(/^QA/); // iniciais "QA" (ignora "20260912"/"1205")
   expect(itens[0]).toHaveTextContent("529.982.247-25 · nasc. 15/01/1990 ·"); // + idade em hoje
   expect(itens[1]).toHaveTextContent(/^CM/);
-  expect(screen.queryByText("Titular")).not.toBeInTheDocument();
+  expect(within(itens[0]!).getByText("Titular")).toBeInTheDocument();
+  expect(within(itens[1]!).queryByText("Titular")).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Remover Carlos Mendes" })).toBeInTheDocument();
 });

@@ -41,8 +41,8 @@
 }
 .avatar {
   flex: none;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--radius-pill);
   display: inline-flex;
   align-items: center;
@@ -54,7 +54,9 @@
 }
 .passTexto {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--space-2);
   min-width: 0;
   line-height: 1.25;
 }
@@ -72,7 +74,7 @@
   position: relative;
   min-width: 200px;
   flex: 1 1 200px;
-  max-width: 32rem;
+  max-width: none;
 }
 .listbox {
   position: absolute;
